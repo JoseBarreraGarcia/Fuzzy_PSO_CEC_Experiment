@@ -142,13 +142,39 @@ def resumen_experimentos(log_resumen, cantidad):
     print(f"TOTAL EXPERIMENTOS INGRESADOS: {cantidad}")
     print("-" * 100)
     
-def escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST):
+def escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes,
+                       archivoResumenPercentage, MHS_LIST):
+
     for name in MHS_LIST:
         mh = mhs_instances[name]
-        
-        archivoResumenFitness.write(f"{name}, {np.min(mh.fitness)}, {np.round(np.mean(mh.fitness), 3)}, {np.round(np.std(mh.fitness), 3)}\n")
-        archivoResumenTimes.write(f"{name}, {np.min(mh.time)}, {np.round(np.mean(mh.time), 3)}, {np.round(np.std(mh.time), 3)}\n")
-        archivoResumenPercentage.write(f"{name}, {np.round(np.mean(mh.xpl), 3)}, {np.round(np.mean(mh.xpt), 3)}\n")
+
+        # ---------- FITNESS ----------
+        if mh.fitness is None or len(mh.fitness) == 0:
+            archivoResumenFitness.write(f"{name}, NA, NA, NA\n")
+        else:
+            archivoResumenFitness.write(
+                f"{name}, {np.min(mh.fitness)}, "
+                f"{np.round(np.mean(mh.fitness), 3)}, "
+                f"{np.round(np.std(mh.fitness), 3)}\n"
+            )
+
+        # ---------- TIME ----------
+        if mh.time is None or len(mh.time) == 0:
+            archivoResumenTimes.write(f"{name}, NA, NA, NA\n")
+        else:
+            archivoResumenTimes.write(
+                f"{name}, {np.min(mh.time)}, "
+                f"{np.round(np.mean(mh.time), 3)}, "
+                f"{np.round(np.std(mh.time), 3)}\n"
+            )
+
+        # ---------- XPL / XPT ----------
+        if mh.xpl is None or len(mh.xpl) == 0 or mh.xpt is None or len(mh.xpt) == 0:
+            archivoResumenPercentage.write(f"{name}, NA, NA\n")
+        else:
+            archivoResumenPercentage.write(
+                f"{name}, {np.round(np.mean(mh.xpl), 3)}, {np.round(np.mean(mh.xpt), 3)}\n"
+            )
 
 def log_fecha_hora(evento):
     """Muestra la fecha y hora actual."""

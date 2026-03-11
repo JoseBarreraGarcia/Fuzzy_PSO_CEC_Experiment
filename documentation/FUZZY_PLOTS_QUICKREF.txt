@@ -1,0 +1,205 @@
+"""
+FUZZY VISUALIZATION - Quick Reference
+
+Los gráficos de los fuzzy sets están listos para reportes y documentación.
+"""
+
+================================================================================
+¿Dónde están los gráficos?
+================================================================================
+
+FUZZY/plots/
+├── 01_fuzzy_input_diversity.png      (Entrada: Diversidad poblacional)
+├── 02_fuzzy_input_progress.png       (Entrada: Progreso iterativo)
+├── 03_fuzzy_output_w_set_A.png       (Salida: Inertia weight - Set A)
+├── 03_fuzzy_output_w_set_B.png       (Salida: Inertia weight - Set B)
+├── 03_fuzzy_output_w_set_C.png       (Salida: Inertia weight - Set C)
+├── 03_fuzzy_output_w_set_D.png       (Salida: Inertia weight - Set D)
+├── 04_fuzzy_rules_heatmap.png        (Base de reglas Mamdani 3×3)
+└── 05_fuzzy_w_sets_comparison.png    (Comparación de todos los Sets)
+
+Total: 8 gráficos, ~1.2 MB, 300 DPI (publication quality)
+
+================================================================================
+¿Cómo generar los gráficos?
+================================================================================
+
+Opción 1: Script simple
+  $ python generate_fuzzy_plots.py
+  
+  Genera todos los 8 gráficos en ~3 segundos
+
+Opción 2: Desde Python
+  from FUZZY.fuzzy_plots import generate_all_fuzzy_plots
+  generate_all_fuzzy_plots(verbose=True)
+
+Opción 3: Gráfico específico
+  from FUZZY.fuzzy_plots import plot_fuzzy_output_w_set
+  plot_fuzzy_output_w_set('A')  # Genera solo Set A
+
+================================================================================
+¿Qué muestra cada gráfico?
+================================================================================
+
+01_fuzzy_input_diversity.png
+─────────────────────────
+  INPUT: Diversity Ratio [0, 1]
+    0 = Población convergida (sin exploración)
+    1 = Población dispersa (máxima exploración)
+  
+  Fuzzy Sets:
+    Low (0.0-0.4)    → Población convergida
+    Medium (0.3-0.7) → Transición
+    High (0.6-1.0)   → Población dispersa
+  
+  Para reportes: Mostrar cómo se interpreta el nivel de diversidad
+
+02_fuzzy_input_progress.png
+──────────────────────────
+  INPUT: Iteration Progress [0, 1]
+    0 = Inicio del algoritmo
+    1 = Final del algoritmo
+  
+  Fuzzy Sets:
+    Early (0.0-0.4)  → Fases tempranas
+    Mid (0.3-0.7)    → Fase media
+    Late (0.6-1.0)   → Fases finales
+  
+  Para reportes: Mostrar evolución temporal del control
+
+03_fuzzy_output_w_set_*.png
+───────────────────────────
+  OUTPUT: Inertia Weight w [0.1, 0.9]
+  
+  Disponible para cada Set (A, B, C, D):
+    Low w    → Explotación (búsqueda local)
+    Medium w → Transición
+    High w   → Exploración (búsqueda global)
+  
+  Diferencias entre Sets:
+    Set A: Prefiere baja inertia (explotación)
+    Set B: Balanceado
+    Set C: Simétrico
+    Set D: Muy baja inertia (máxima explotación)
+  
+  Para reportes: Explicar características de cada variante PSO_FCS
+
+04_fuzzy_rules_heatmap.png
+──────────────────────────
+  BASE DE REGLAS MAMDANI 3×3
+  
+  Matriz:
+             Early     Mid       Late
+    Low    → Med w   Low w     Low w
+    Medium → High w  Med w     Low w
+    High   → High w  High w    Low w
+  
+  Interpretación:
+    - Al inicio (Early):  Favorecer exploración (w alto)
+    - En medio (Mid):     Según diversidad
+    - Al final (Late):    Favorecer explotación (w bajo)
+  
+  Para reportes: Mostrar lógica del control fuzzy
+
+05_fuzzy_w_sets_comparison.png
+───────────────────────────────
+  COMPARACIÓN: Todos los w_sets lado a lado
+  
+  Muestra:
+    - Set A (izq-sup): Desplazado a baja inertia
+    - Set B (der-sup): Balanceado
+    - Set C (izq-inf): Simétrico
+    - Set D (der-inf): Muy baja inertia
+  
+  Para reportes: Justificar elección de Set, comparar variants
+
+================================================================================
+Usando los gráficos en Papers
+================================================================================
+
+Ejemplo de estructura para paper:
+
+  3. METHODOLOGY
+
+  3.1 Fuzzy Inertia Weight Controller
+  
+  "We employed a Mamdani Fuzzy Inference System (FIS) to dynamically 
+   control the inertia weight of PSO. The FIS has two inputs and one output:"
+  
+  [FIGURA 1: 01_fuzzy_input_diversity.png]
+  [FIGURA 2: 02_fuzzy_input_progress.png]
+  [FIGURA 3: 03_fuzzy_output_w_set_A.png]
+  
+  "The control rules are presented in Table 1 and visualized in Figure 4:"
+  
+  [FIGURA 4: 04_fuzzy_rules_heatmap.png]
+  
+  3.2 Alternative w_set Configurations
+  
+  "To study the impact of different fuzzy membership functions, we designed
+   four w_set variants with varying characteristics (Figure 5):"
+  
+  [FIGURA 5: 05_fuzzy_w_sets_comparison.png]
+  
+  "Set A emphasizes exploitation by assigning lower w values..."
+  "Set B provides a balanced approach..."
+  "Set C uses symmetric membership functions..."
+  "Set D maximally exploits the search space..."
+
+================================================================================
+Especificaciones Técnicas
+================================================================================
+
+Todos los gráficos:
+  Format:     PNG
+  Resolution: 300 DPI (publication quality)
+  Style:      LNCS (Times New Roman 10pt)
+  Size:       ~100-150 KB cada uno
+  Total:      ~1.2 MB
+  
+  Propiedades:
+    ✓ Ready for papers
+    ✓ CMYK compatible (ideal para impresión)
+    ✓ White background
+    ✓ High contrast coloring
+    ✓ Clear legends and labels
+
+================================================================================
+Personalización
+================================================================================
+
+Si necesitas modificar los fuzzy sets:
+
+1. Edita FUZZY/fuzzy_controller_w.py
+   - Busca método _build_w_mfs()
+   - Modifica W_SETS dict
+
+2. Regenera los gráficos:
+   $ python generate_fuzzy_plots.py
+
+3. Los nuevos gráficos estarán en FUZZY/plots/
+
+Ejemplo: Agregar Set E más exploratorio
+
+  "E": {
+      "high":   (0.75, 0.85, 0.95),  # Más alto
+      "medium": (0.50, 0.60, 0.75),
+      "low":    (0.15, 0.30, 0.45),
+  },
+
+Luego:
+  $ python generate_fuzzy_plots.py
+  → Se agrega automáticamente 03_fuzzy_output_w_set_E.png
+  → Se actualiza 05_fuzzy_w_sets_comparison.png
+
+================================================================================
+Notas Importantes
+================================================================================
+
+✓ Los gráficos son generados automáticamente
+✓ Se actualizan cuando modificas fuzzy sets
+✓ No requiere cambios en solvers o experimentos
+✓ 100% reproducibles (código en FUZZY/fuzzy_plots.py)
+✓ Listos para publicación inmediata
+
+================================================================================

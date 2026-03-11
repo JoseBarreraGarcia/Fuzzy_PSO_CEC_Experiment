@@ -23,6 +23,7 @@ from .Codes.POA import iterarPOA
 from .Codes.PGA import iterarPGA
 from .Codes.PSA import iterarPSA
 from .Codes.PSO import iterarPSO
+from .Codes.PSO_FCS import iterarPSO_FCS
 from .Codes.QSO import iterarQSO
 from .Codes.RSA import iterarRSA
 from .Codes.SBOA import iterarSBOA
@@ -63,6 +64,7 @@ metaheuristics = {
     "PGA": iterarPGA,
     "PSA": iterarPSA,
     "PSO": iterarPSO,
+    "PSO_FCS": iterarPSO_FCS,
     "QSO": iterarQSO,
     "RSA": iterarRSA,
     "SBOA": iterarSBOA,
@@ -138,6 +140,7 @@ MH_ARG_MAP = {
     'PGA':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'objective_type'),
     'PSA':   ('maxIter', 'iter', 'dim', 'population', 'best'),
     'PSO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'pBest', 'vel', 'ub0'),
+    'PSO_FCS': ('maxIter', 'iter', 'dim', 'population', 'best', 'pBest', 'vel', 'ub0', 'maxDiversity', 'fcs', 'w_set'),
 
     # Q
     'QSO':   ('population', 'best', 'lb', 'ub'),

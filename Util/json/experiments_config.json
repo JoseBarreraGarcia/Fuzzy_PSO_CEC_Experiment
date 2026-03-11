@@ -8,7 +8,9 @@
         "DS_actions": "Lista de acciones de binarización de la población.",
         "dimensiones": "Mapea cada función BEN a las dimensiones que utiliza.",
         "experimentos": "Parámetros globales de iteraciones y población para cada problema.",
-        "instancias": "Identificadores de los instancias de los problemas que se van a procesar."
+        "seed": "Semilla para la generación de números aleatorios. Si es TRUE se activara una semilla para cada run que compartiran todas las MH. FALSE, no utiliza semilla fija.",
+        "instancias": "Identificadores de los instancias de los problemas que se van a procesar.",
+        "mh_params": "Parámetros específicos para cada metaheurística. En caso de PSO_FCS, se definen diferentes configuraciones de 'w_set'."
     },
 
     "ben": true,
@@ -16,51 +18,54 @@
     "uscp": false,
     "kp": false,
 
-    "mhs": ["TJO"],
+    "mhs": ["PSO", "PSO_FCS"],
 
-    "DS_actions": ["S3-ELIT", "V3-ELIT"],
+    "DS_actions": ["S4-ELIT"],    
 
     "dimensiones": {
         "BEN": {
-            "F1": [30], "F2": [30], "F3": [30], "F4": [30], "F5": [30], "F6": [30], "F7": [30],
-            "F8": [30], "F9": [30], "F10": [30], "F11": [30], "F12": [30], "F13": [30],
-            "F14": [2], "F15": [4], "F16": [2], "F17": [2], "F18": [2], "F19": [3], "F20": [6],
-            "F21": [4], "F22": [4], "F23": [4],
-
-            "F1CEC2017": [30], "F2CEC2017": [30],
-            "F3CEC2017": [30], "F4CEC2017": [30],
-            "F5CEC2017": [30], "F6CEC2017": [30],
-            "F7CEC2017": [30], "F8CEC2017": [30],
-            "F9CEC2017": [30], "F10CEC2017": [30],
-            "F11CEC2017": [30], "F12CEC2017": [30],
-            "F13CEC2017": [30], "F14CEC2017": [30],
-            "F15CEC2017": [30], "F16CEC2017": [30],
-            "F17CEC2017": [30], "F18CEC2017": [30],
-            "F19CEC2017": [30], "F20CEC2017": [30],
-            "F21CEC2017": [30], "F22CEC2017": [30],
-            "F23CEC2017": [30], "F24CEC2017": [30],
-            "F25CEC2017": [30], "F26CEC2017": [30],
-            "F27CEC2017": [30], "F28CEC2017": [30],
-            "F29CEC2017": [30], "F30CEC2017": [30]
+        "F1": [100], "F2": [100], "F3": [100],
+        "F4": [100], "F5": [100], "F6": [100],
+        "F7": [100], "F8": [100], "F9": [100],
+        "F10": [100], "F11": [100], "F12": [100],
+        "F13": [100], "F14": [2], "F15": [4],
+        "F16": [2], "F17": [2], "F18": [2],
+        "F19": [3], "F20": [6], "F21": [4],
+        "F22": [4], "F23": [4]
         }
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 1},
-        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
-        "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
-        "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
+        "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 31},
+        "SCP": {"iteraciones": 500, "poblacion": 20, "num_experimentos": 31},
+        "USCP": {},
+        "KP": {}
     },
 
+    "use_seed": true,
+    "seed": 42,
+
+
     "instancias": {
-        "BEN": ["F1CEC2017", "F2CEC2017", "F3CEC2017", "F4CEC2017", "F5CEC2017", "F6CEC2017",
-            "F7CEC2017", "F8CEC2017", "F9CEC2017", "F10CEC2017", "F11CEC2017", "F12CEC2017",
-            "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017", "F18CEC2017",
-            "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017", "F23CEC2017", "F24CEC2017",
-            "F25CEC2017", "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017", "F30CEC2017"],
-        "SCP": ["41", "51", "61", "a1", "b1", "c1", "d1", "nre1", "nrf1", "nrg1", "nrh1"],
-        "USCP": ["u41", "u51", "ua1", "ub1", "uc1", "uclr10", "ucyc08", "ud1", "unre1", "unrf1",
-            "unrg1", "unrh1"],
+        "BEN": ["F1","F5","F11", "F21","F22", "F23"],
+        "SCP": ["41"],
+        "USCP": [],
         "KP": []
+    },
+
+    "mh_params": {
+        "PSO_FCS": [
+
+            {"w_set": "A", "num_labels": 3},
+            {"w_set": "B", "num_labels": 3},
+
+
+            {"w_set": "A", "num_labels": 5},
+            {"w_set": "B", "num_labels": 5}
+
+        ]
     }
+
+    
+    
 }

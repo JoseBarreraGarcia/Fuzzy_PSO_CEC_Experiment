@@ -1,0 +1,200 @@
+"""
+EXAMPLE OUTPUT: What each level generates
+
+This file shows sample output from each of the 3 levels
+to help you understand what to expect when you run:
+  python analisis.py
+"""
+
+================================================================================
+LEVEL 1: RAW DATA EXTRACTION
+================================================================================
+
+Location: Resultados/resumen/level1_raw/
+
+FILE: scp_experiments_all_runs.csv
+─────────────────────────────────────────────────────────────────────────────
+id_experimento | MH          | binarizacion | iteraciones | poblacion | fitness | tiempoEjecucion
+            1 | PSO_S4_STD  | N/A          |         100 |        50 |  123.45 |          15.32
+            2 | PSO_S4_STD  | N/A          |         100 |        50 |  124.12 |          15.47
+            3 | PSO_S4_STD  | N/A          |         100 |        50 |  122.89 |          15.28
+            4 | PSO_S4_ELIT | N/A          |         100 |        50 |  128.90 |          18.45
+            5 | GA_S4_STD   | N/A          |         100 |        50 |  130.23 |          22.10
+            ...
+
+Use: Export to Excel, R, Python for custom statistical analysis
+
+─────────────────────────────────────────────────────────────────────────────
+
+FILE: scp_best_per_config.csv
+─────────────────────────────────────────────────────────────────────────────
+MH          | binarizacion | iteraciones | poblacion | fitness_best | fitness_mean
+PSO_S4_STD  | N/A          |         100 |        50 |       122.89 |      123.49
+PSO_S4_ELIT | N/A          |         100 |        50 |       128.23 |      129.01
+GA_S4_STD   | N/A          |         100 |        50 |       129.45 |      131.12
+PSO_S4_STD  | N/A          |         200 |       100 |       121.34 |      122.78
+GA_S4_STD   | N/A          |         200 |       100 |       127.89 |      129.56
+...
+
+Use: Avoid noise from multiple runs, see best performance of each config
+
+
+================================================================================
+LEVEL 2: AGGREGATED STATISTICS & PLOTS
+================================================================================
+
+Location: Resultados/resumen/level2_aggregated/
+
+FILE: descriptive_stats_by_mh.csv
+─────────────────────────────────────────────────────────────────────────────
+MH          | Count | Mean    | Median  | Min     | Max     | Range   | Std   | CV%  | Q1      | Q3      | IQR
+PSO_S4_STD  |   50  | 123.45  | 123.12  | 121.34  | 126.78  |  5.44   | 1.23  | 1.0% | 122.45  | 124.23  | 1.78
+PSO_S4_ELIT |   50  | 128.90  | 128.56  | 126.23  | 132.45  |  6.22   | 1.67  | 1.3% | 127.89  | 129.78  | 1.89
+GA_S4_STD   |   50  | 130.23  | 129.89  | 127.12  | 134.56  |  7.44   | 2.34  | 1.8% | 128.45  | 132.01  | 3.56
+PSO_FCS:A   |   50  | 124.12  | 123.89  | 122.01  | 127.34  |  5.33   | 1.45  | 1.2% | 123.23  | 125.01  | 1.78
+PSO_FCS:B   |   50  | 123.78  | 123.45  | 121.89  | 127.01  |  5.12   | 1.32  | 1.1% | 122.89  | 124.56  | 1.67
+
+Key metrics:
+- Mean = Average fitness (lower = better)
+- Std = Standard deviation (consistency)
+- CV% = Coefficient of Variation = (Std/Mean)*100 (< 20% = robust)
+- IQR = Interquartile range (Q3-Q1), middle 50% spread
+
+Interpretation:
+  PSO_S4_STD: Best average (123.45), most consistent (CV% = 1.0%) ✓ WINNER
+  GA_S4_STD: Worst average (130.23), least consistent (CV% = 1.8%)
+
+─────────────────────────────────────────────────────────────────────────────
+
+FILE: descriptive_stats_by_instance.csv
+─────────────────────────────────────────────────────────────────────────────
+Instance | Optimum | Count | Mean    | Median  | Min     | Max     | Range | Std   | CV%
+SCP41    |   429   |  250  | 431.23  | 430.89  | 429.10  | 434.56  | 5.46  | 1.34  | 0.3%
+SCP42    |   512   |  250  | 515.67  | 515.34  | 512.45  | 519.78  | 7.33  | 1.89  | 0.4%
+SCP51    |   253   |  250  | 257.89  | 257.34  | 253.20  | 263.45  | 10.25 | 2.56  | 1.0%
+SCP52    |   302   |  250  | 308.90  | 308.12  | 302.34  | 315.67  | 13.33 | 3.45  | 1.1%
+
+Interpretation:
+  SCP41: Easiest (closest to optimum, CV% = 0.3%)
+  SCP52: Hardest (farthest from optimum, CV% = 1.1%)
+
+─────────────────────────────────────────────────────────────────────────────
+
+PLOTS: (PNG files, LNCS format, 300 dpi, publication-ready)
+
+✓ boxplot_by_mh.png
+  ┌─────────────────────────────────────────┐
+  │   ╭────╮    ╭────╮    ╭────╮          │
+  │   │ PSO│    │ GA │    │FCS │          │
+  │───┼────┼────┼────┼────┼────┼────      │
+  │   ├────┤    ├────┤    ├────┤          │
+  │   ╰────╯    ╰────╯    ╰────╯          │
+  └─────────────────────────────────────────┘
+  Shows: Median (line), quartiles (box), range (whiskers)
+
+✓ percentile_by_mh.png
+  Shows P10, P25, P50 (median), P75, P90 as bar chart
+  Useful for: Best-case, worst-case, typical performance
+
+✓ violinplot_by_mh.png
+  Shows: Full distribution shape (kernel density estimation)
+  Useful for: Multimodality, skewness, concentration
+
+✓ boxplot_by_instance.png
+  Same as boxplot_by_mh but for instances instead of algorithms
+
+
+================================================================================
+LEVEL 3: DISAGGREGATED RANKINGS
+================================================================================
+
+Location: Resultados/resumen/level3_disaggregated/
+
+FILE: instance_SCP41_ranking.csv
+─────────────────────────────────────────────────────────────────────────────
+rank | MH          | optimum | num_runs | best_fitness | mean_fitness | fitness_gap | std_fitness
+  1  | PSO_S4_STD  |   429   |    10    |     429.23   |     430.01   |    0.23     |    0.67
+  2  | PSO_FCS:A   |   429   |    10    |     429.45   |     430.45   |    0.45     |    0.89
+  3  | PSO_FCS:B   |   429   |    10    |     429.67   |     430.78   |    0.67     |    0.95
+  4  | PSO_S4_ELIT |   429   |    10    |     430.12   |     431.23   |    1.12     |    1.23
+  5  | GA_S4_STD   |   429   |    10    |     432.34   |     434.56   |    3.34     |    2.34
+
+Interpretation:
+  "For SCP41, PSO_S4_STD is best (rank 1)"
+  "PSO algorithms are better than GA for SCP41"
+  "fitness_gap = 0.23 means best result is 0.23 away from optimum (very good!)"
+
+Use: Answer "Which algorithm for this specific problem?"
+
+─────────────────────────────────────────────────────────────────────────────
+
+FILE: instance_SCP51_ranking.csv
+─────────────────────────────────────────────────────────────────────────────
+rank | MH          | optimum | num_runs | best_fitness | mean_fitness | fitness_gap | std_fitness
+  1  | PSO_FCS:A   |   253   |    10    |     253.34   |     254.56   |    0.34     |    0.78
+  2  | PSO_FCS:B   |   253   |    10    |     253.56   |     254.89   |    0.56     |    0.89
+  3  | PSO_S4_STD  |   253   |    10    |     254.12   |     255.67   |    1.12     |    1.34
+  4  | PSO_S4_ELIT |   253   |    10    |     254.45   |     256.01   |    1.45     |    1.56
+  5  | GA_S4_STD   |   253   |    10    |     256.78   |     258.90   |    3.78     |    2.89
+
+Interpretation:
+  "For SCP51, PSO_FCS:A is best"
+  "Different instance → different winner (SCP41: PSO_S4_STD, SCP51: PSO_FCS:A)"
+  "Algorithms show specialization (some good on specific instances)"
+
+─────────────────────────────────────────────────────────────────────────────
+
+FILE: config_PSO_S4_STD_ranking.csv (example)
+─────────────────────────────────────────────────────────────────────────────
+rank | instance | optimum | num_runs | best_fitness | mean_fitness | fitness_gap | std_fitness
+  1  | SCP41    |   429   |    10    |     429.23   |     430.01   |    0.23     |    0.67
+  2  | SCP42    |   512   |    10    |     512.45   |     513.56   |    0.45     |    0.78
+  3  | SCP43    |   214   |    10    |     214.67   |     215.89   |    0.67     |    0.89
+  4  | SCP51    |   253   |    10    |     254.12   |     255.67   |    1.12     |    1.34
+  5  | SCP52    |   302   |    10    |     305.23   |     307.45   |    3.23     |    2.45
+
+Interpretation:
+  "PSO_S4_STD is best on SCP41, SCP42, SCP43"
+  "PSO_S4_STD struggles more on SCP51, SCP52"
+  "Useful for: Understanding algorithm strengths/weaknesses"
+
+Use: Answer "Which instances is this algorithm good/bad at?"
+
+─────────────────────────────────────────────────────────────────────────────
+
+FILE: top_configs_global.csv
+─────────────────────────────────────────────────────────────────────────────
+rank | MH         | binarizacion | w_set | fitness_mean | fitness_min | fitness_max | fitness_std | num_runs
+  1  | PSO_S4_STD | N/A          | N/A   |     123.45   |     121.34  |     126.78  |     1.23    |   50
+  2  | PSO_FCS:A  | N/A          | A     |     124.12   |     122.01  |     127.34  |     1.45    |   50
+  3  | PSO_FCS:B  | N/A          | B     |     123.78   |     121.89  |     127.01  |     1.32    |   50
+  4  | PSO_S4_ELIT| N/A          | N/A   |     128.90   |     126.23  |     132.45  |     1.67    |   50
+  5  | GA_S4_STD  | N/A          | N/A   |     130.23   |     127.12  |     134.56  |     2.34    |   50
+
+Interpretation:
+  "PSO_S4_STD is the best configuration overall"
+  "Top 3 are all PSO variants (PSO_S4_STD, PSO_FCS:A, PSO_FCS:B)"
+  "GA_S4_STD is ranked 5th globally"
+
+Use: Quick overview of which configs work best in general
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+When you run: python analisis.py
+
+You get:
+
+✓ LEVEL 1: 4-5 CSVs with raw data (for external analysis)
+✓ LEVEL 2: 2 statistic CSVs + 4 publication-ready plots (for papers)
+✓ LEVEL 3: 1 + (# instances + # configs) CSVs with detailed rankings
+
+Total time: ~1-2 minutes for typical 1000-5000 experiment runs
+Total size: ~100-200 MB (mostly PNG plots)
+
+Everything organized in: Resultados/resumen/
+  ├── level1_raw/
+  ├── level2_aggregated/
+  └── level3_disaggregated/

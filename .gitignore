@@ -2,3 +2,10 @@ env
 __pycache__/
 *.pyc
 .venv
+
+*.db
+BD/*.db
+Resultados/
+backups/
+__pycache__/
+*.pyc

@@ -354,7 +354,7 @@ class BD:
         conn = sqlite3.connect(self.getDataBase())
         conn.execute('BEGIN EXCLUSIVE')
         cursor = conn.cursor()
-        cursor.execute(''' SELECT * FROM experimentos WHERE estado = 'pendiente' LIMIT 1''')
+        cursor.execute(''' SELECT * FROM experimentos WHERE estado = 'pendiente' ORDER BY id_experimento ASC LIMIT 1''')
         data = cursor.fetchall()
         
         if data:

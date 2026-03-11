@@ -102,19 +102,40 @@ def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iterac
     for instancia in instancias:
         for dim in dimensiones:
             for mh in mhs:
-                # Verifica si el problema actual requiere binarización
-                if problemaActual in ['SCP', 'USCP']:
-                    for binarizacion in config['DS_actions']:  # Solo iterar si el problema es discreto
-                        data = crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual)
+                # Obtener parámetros específicos del MH si existen
+                mh_params_list = config.get('mh_params', {}).get(mh, [{}])
+                
+                # Si no hay parámetros específicos, usar lista con un diccionario vacío
+                if not mh_params_list or not isinstance(mh_params_list, list):
+                    mh_params_list = [{}]
+                
+                # Iterar sobre cada combinación de parámetros para este MH
+                for mh_param_dict in mh_params_list:
+                    # Construir extra_params extendido con los parámetros específicos del MH
+                    extended_extra_params = extra_params
+                    mh_label_suffix = ""
+                    
+                    if mh_param_dict:  # Si hay parámetros específicos
+                        for param_key, param_val in mh_param_dict.items():
+                            extended_extra_params += f',{param_key}:{param_val}'
+                            mh_label_suffix += f":{param_val}"
+                    
+                    # Crear MH name con el sufijo (ej: PSO_FCS:A)
+                    mh_name = mh + mh_label_suffix
+                    
+                    # Verifica si el problema actual requiere binarización
+                    if problemaActual in ['SCP', 'USCP']:
+                        for binarizacion in config['DS_actions']:  # Solo iterar si el problema es discreto
+                            data = crear_data_experimento(instancia, dim, mh_name, binarizacion, iteraciones, poblacion, extended_extra_params, problemaActual)
+                            bd.insertarExperimentos(data, num_experimentos, instancia[0])
+                            cantidad += num_experimentos
+                            log_resumen.append(crear_resumen_log(instancia, dim, mh_name, binarizacion, iteraciones, poblacion, extended_extra_params, problemaActual, num_experimentos))
+                    else:
+                        # No aplicar binarización a problemas BEN
+                        data = crear_data_experimento(instancia, dim, mh_name, None, iteraciones, poblacion, extended_extra_params, problemaActual)
                         bd.insertarExperimentos(data, num_experimentos, instancia[0])
                         cantidad += num_experimentos
-                        log_resumen.append(crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos))
-                else:
-                    # No aplicar binarización a problemas BEN
-                    data = crear_data_experimento(instancia, dim, mh, None, iteraciones, poblacion, extra_params, problemaActual)
-                    bd.insertarExperimentos(data, num_experimentos, instancia[0])
-                    cantidad += num_experimentos
-                    log_resumen.append(crear_resumen_log(instancia, dim, mh, None, iteraciones, poblacion, extra_params, problemaActual, num_experimentos))
+                        log_resumen.append(crear_resumen_log(instancia, dim, mh_name, None, iteraciones, poblacion, extended_extra_params, problemaActual, num_experimentos))
 
 def agregar_experimentos():
     if config.get('ben', False):

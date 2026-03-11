@@ -17,7 +17,10 @@ from Solver.population.population_SCP import (
 
 from BD.sqlite import BD
 
-def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
+from FUZZY.fuzzy_controller_w import get_fuzzy_controller
+
+
+def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost, extra_params=None):
     bd = BD()
     dirResult = './Resultados/Transitorio/'
     os.makedirs(dirResult, exist_ok=True)
@@ -36,7 +39,8 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
     results_divj_path= os.path.join(dirResult, f"{base_name}_divj.csv")
 
     results = open(results_path, "w")
-    results.write("iter,best_fitness,mean_fitness,std_fitness,time,XPL,XPT,DIV,GAP,RDP,ENT,Divj_mean,Divj_min,Divj_max\n")
+    results.write("iter,best_fitness,mean_fitness,std_fitness,time,XPL,XPT,w,DIV,GAP,RDP,ENT,Divj_mean,Divj_min,Divj_max\n")
+
 
     results_divj = open(results_divj_path, "w")
     divj_header = ",".join([f"Divj_{j+1}" for j in range(dim)])
@@ -45,6 +49,26 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
     # Inicialización de población
     population, vel, pBestScore, pBest = initialize_population(mh, pop, instance)
     maxDiversity, XPL, XPT = initialize_diversity(population)
+
+    ### JBG
+    fcs = None
+    w_set = "B"  # Default
+    num_labels = 3  # Default
+    if mh == 'PSO_FCS' or (mh.startswith('PSO_FCS') and ':' in mh):
+        # Extraer w_set del nombre si viene en formato PSO_FCS:A
+        if ':' in mh:
+            mh_base, w_set = mh.split(':')
+            w_set = w_set.upper()
+        elif isinstance(param, dict) and 'w_set' in param:
+            # Obtener w_set desde param si está disponible
+            w_set = str(param['w_set']).upper()
+        
+        # Obtener num_labels de extra_params si existe
+        if extra_params and 'num_labels' in extra_params:
+            num_labels = int(extra_params['num_labels'])
+        
+        fcs = get_fuzzy_controller(w_set, num_labels=num_labels)
+
 
     # Evaluación inicial
     fitness = np.zeros(pop)
@@ -55,6 +79,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
     initializationTime2 = time.time()
 
     # === Fila iter 0 con TODAS las métricas ===
+    w0 = np.nan
     meanFitness0 = float(np.mean(fitness))
     stdFitness0  = float(np.std(fitness))
     gap0, rdp0   = compute_gap_rdp(bestFitness, instance.getOptimum())
@@ -69,8 +94,8 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
     time0 = initializationTime2 - initializationTime1
     results.write(
         f"0,{bestFitness:.6e},{meanFitness0:.6f},{stdFitness0:.6f},"
-        f"{time0:.3f},{XPL:.6f},{XPT:.6f},{maxDiversity:.6f},"
-        f"{gap0:.6f},{rdp0:.6f},{ent_avg0:.6f},{divj_mean0:.6f},{divj_min0:.6f},{divj_max0:.6f}\n"
+        f"{time0:.3f},{XPL:.6f},{XPT:.6f},{w0},"
+        f"{maxDiversity:.6f},{gap0:.6f},{rdp0:.6f},{ent_avg0:.6f},{divj_mean0:.6f},{divj_min0:.6f},{divj_max0:.6f}\n"
     )
     results_divj.write("0," + ",".join([f"{v:.6f}" for v in divj_vec0]) + "\n")
 
@@ -112,8 +137,29 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
             vel=vel,
             pBest=pBest,
             fo=fo,
-            param=param
+            param=param,
+            maxDiversity=maxDiversity,
+            fcs=fcs,
+            w_set=w_set
         )
+        
+        w_iter = np.nan
+        
+        # Para PSO normal: calcular w linealmente
+        if mh == "PSO":
+            wMax = 0.9
+            wMin = 0.1
+            w_iter = float(wMax - iter * ((wMax - wMin) / maxIter))
+        
+        # Para PSO_FCS: obtener w del controlador fuzzy
+        elif (mh == "PSO_FCS" or (mh.startswith('PSO_FCS') and ':' in mh)) and fcs is not None and hasattr(fcs, "w_history") and len(fcs.w_history) > 0:
+            w_iter = float(fcs.w_history[-1])
+
+        if (mh == "PSO_FCS" or (mh.startswith('PSO_FCS') and ':' in mh)) and posibles_mejoras is not None:
+            maxDiversity = posibles_mejoras["maxDiversity"]
+
+
+
 
         # Binarizar + reparar + evaluar
         population, fitness, pBest = binarize_and_evaluate(
@@ -143,8 +189,8 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
         # Escribir fila iter t
         results.write(
             f"{iter},{bestFitness:.6e},{meanFitness:.6f},{stdFitness:.6f},"
-            f"{dt:.3f},{XPL:.6f},{XPT:.6f},{div_t:.6f},"
-            f"{gap:.6f},{rdp:.6f},{ent_avg:.6f},{divj_mean:.6f},{divj_min:.6f},{divj_max:.6f}\n"
+            f"{dt:.3f},{XPL:.6f},{XPT:.6f},{w_iter:.6f},"
+            f"{div_t:.6f},{gap:.6f},{rdp:.6f},{ent_avg:.6f},{divj_mean:.6f},{divj_min:.6f},{divj_max:.6f}\n"
         )
         results_divj.write(f"{iter}," + ",".join([f"{v:.6f}" for v in divj_vec]) + "\n")
 

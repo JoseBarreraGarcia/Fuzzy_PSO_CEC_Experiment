@@ -7,8 +7,10 @@ from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
 from Diversity.imports import compute_gap_rdp, diversity_per_dimension, population_entropy
 from Metaheuristics.imports import IterarPO
 from Problem.Benchmark.Problem import fitness as f
+from FUZZY.fuzzy_controller_w import get_fuzzy_controller
 
 from Solver.population.population_BEN import initialize_population, evaluate_population, update_population, iterate_population
+from FUZZY.fuzzy_controller_w import FuzzyInertiaController
 from Util.console_logging import print_initial, print_iteration, print_final
 from Util.csv_writer import open_csv, write_csv_row, close_csv
 from Util.util import convert_into_binary
@@ -62,6 +64,17 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     
     maxDiversity, XPL, XPT = initialize_diversity(population)
     initializationTime2 = time.time()
+
+    # Configurar controlador difuso si es PSO_FCS
+    fcs = None
+    w_set = None
+    if mh == 'PSO_FCS':
+        # Obtener w_set desde extra_params (ej: 'A', 'B', 'C', 'D')
+        w_set = str(extra_params.get('w_set', 'B')).upper() if extra_params else 'B'
+        # Obtener número de etiquetas lingüísticas (3 o 5)
+        num_labels = int(extra_params.get('num_labels', 3)) if extra_params else 3
+        # Crear controller con factory function
+        fcs = get_fuzzy_controller(w_set, num_labels=num_labels)
     
     # Iteración 0
     meanFitness0 = float(np.mean(fitness))
@@ -97,12 +110,20 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     # ========== EL BUCLE SIGUE SIENDO POR ITERACIONES ==========
     for iter in range(1, maxIter + 1):  # ← NO cambiar esto
         timerStart = time.time()
+        posibles_mejoras = None
         
-        population, vel, posibles_mejoras = iterate_population(
-            mh, population, iter, maxIter, dim, fitness, best,
-            vel=vel, pBest=pBest, ub=ub, lb=lb, fo=fo_vectorized, userData=userData
-        )
-        
+        # Pasar argumentos extra para PSO_FCS
+        if mh == 'PSO_FCS':
+            population, vel, maxDiversity = iterate_population(
+                mh, population, iter, maxIter, dim, fitness, best,
+                vel=vel, pBest=pBest, ub=ub, lb=lb, fo=fo_vectorized, userData=userData,
+                maxDiversity=maxDiversity, fcs=fcs, w_set=w_set
+            )
+        else:
+            population, vel, posibles_mejoras = iterate_population(
+                mh, population, iter, maxIter, dim, fitness, best,
+                vel=vel, pBest=pBest, ub=ub, lb=lb, fo=fo_vectorized, userData=userData
+            )
         if mh == 'PO':
             iterarPO.pob(population, iter)
             population = iterarPO.optimizer(iter)

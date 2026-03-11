@@ -6,7 +6,10 @@ from Metaheuristics.imports import metaheuristics, MH_ARG_MAP
 def initialize_population(mh, pop, instance):
     vel, pBestScore, pBest = None, None, None
     
-    if mh == 'PSO':
+    # Extraer MH base si viene en formato "MH:param" (ej: PSO_FCS:A)
+    mh_base = mh.split(':')[0] if ':' in mh else mh
+    
+    if mh_base in ('PSO', 'PSO_FCS'):
         vel = np.zeros((pop, instance.getColumns()))
         pBestScore = np.full(pop, float("inf"))  # Más directo
         pBest = np.zeros((pop, instance.getColumns()))
@@ -18,6 +21,10 @@ def initialize_population(mh, pop, instance):
 
 def evaluate_population(mh, population, fitness, instance, pBest, pBestScore, repairType):
     # Calculo de factibilidad de cada individuo y calculo del fitness inicial
+    
+    # Extraer MH base si viene en formato "MH:param" (ej: PSO_FCS:A)
+    mh_base = mh.split(':')[0] if ':' in mh else mh
+    
     for i in range(population.__len__()):
         flag, _ = instance.factibilityTest(population[i])
         
@@ -26,7 +33,7 @@ def evaluate_population(mh, population, fitness, instance, pBest, pBestScore, re
             
         fitness[i] = instance.fitness(population[i])
         
-        if mh == 'PSO':
+        if mh_base in ('PSO', 'PSO_FCS'):
             if pBestScore[i] > fitness[i]:
                 pBestScore[i] = fitness[i]
                 pBest[i, :] = population[i, :].copy()
@@ -39,7 +46,7 @@ def evaluate_population(mh, population, fitness, instance, pBest, pBestScore, re
     return fitness, best, bestFitness, pBest, pBestScore
 
 def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, best,
-                           vel=None, pBest=None, fo=None, param=None, userData=None):
+                           vel=None, pBest=None, fo=None, param=None, userData=None, maxDiversity=None, fcs=None, w_set="B"):
     """
     Itera sobre la población para SCP usando la metaheurística especificada ('mh'),
     construyendo los argumentos dinámicamente basados en MH_ARG_MAP.
@@ -70,17 +77,23 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
     if mh == 'HLOA':
         mh = 'HLOA_SCP'
     
+    # --- Extraer MH base si viene en formato "MH:param" (ej: PSO_FCS:A) ---
+    mh_base = mh.split(':')[0] if ':' in mh else mh
+    
     # --- Verificaciones esenciales (para MHs no especiales) ---
-    if mh not in metaheuristics:
-        raise ValueError(f"Metaheurística '{mh}' no encontrada en 'metaheuristics' (Metaheuristics/imports.py).")
-    if mh not in MH_ARG_MAP:
-        raise ValueError(f"Mapa de argumentos MH_ARG_MAP para '{mh}' no definido (Metaheuristics/imports.py).")
+    if mh_base not in metaheuristics:
+        raise ValueError(f"Metaheurística '{mh_base}' no encontrada en 'metaheuristics' (Metaheuristics/imports.py).")
+    if mh_base not in MH_ARG_MAP:
+        raise ValueError(f"Mapa de argumentos MH_ARG_MAP para '{mh_base}' no definido (Metaheuristics/imports.py).")
 
     lb0_val = 0
     ub0_val = 1
     dim = instance.getColumns()
     lb_arr = np.zeros(dim)
     ub_arr = np.ones(dim)
+
+    # 2. Obtener los nombres de los argumentos requeridos para esta MH
+    required_args_names = MH_ARG_MAP[mh_base]
 
     context = {
         'maxIter': maxIter,
@@ -97,36 +110,40 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
         'lb0': lb0_val,         # Escalar 0
         'fo': fo,
         'userData': userData,
-        'objective_type': 'MIN'
+        'objective_type': 'MIN',
+        'maxDiversity': maxDiversity,
+        'fcs': fcs,
+        'w_set': w_set,
     }
-
-    # 2. Obtener los nombres de los argumentos requeridos para esta MH
-    required_args_names = MH_ARG_MAP[mh]
 
     # 3. Construir diccionario 'kwargs' solo con los argumentos necesarios
     kwargs = {}
     for arg_name in required_args_names:
         if arg_name not in context:
-            raise KeyError(f"Error Interno: Argumento '{arg_name}' requerido por {mh} (según MH_ARG_MAP) no encontrado en 'context'.")
+            raise KeyError(f"Error Interno: Argumento '{arg_name}' requerido por {mh_base} (según MH_ARG_MAP) no encontrado en 'context'.")
         kwargs[arg_name] = context[arg_name]
 
-    mh_function = metaheuristics[mh]
+    mh_function = metaheuristics[mh_base]
     try:
-        # print(f"Iter {iter}: Llamando a {mh} con args: {list(kwargs.keys())}") # Debug
+        # print(f"Iter {iter}: Llamando a {mh_base} con args: {list(kwargs.keys())}") # Debug
         result = mh_function(**kwargs)
     except TypeError as e:
-        raise TypeError(f"Error de tipo al llamar a la función para {mh}. Revisa MH_ARG_MAP['{mh}'] y la definición de la función.") from e
+        raise TypeError(f"Error de tipo al llamar a la función para {mh_base}. Revisa MH_ARG_MAP['{mh_base}'] y la definición de la función.") from e
 
     new_population = None
     new_vel = vel
     posibles_mejoras = None
 
-    if mh == 'LOA':
+    if mh_base == 'LOA':
         if isinstance(result, tuple) and len(result) == 2:
             new_population, posibles_mejoras = result
         else:
              raise TypeError(f"Retorno inesperado de LOA (SCP). Se esperaba (population, posibles_mejoras), se obtuvo {type(result)}")
 
+    elif mh_base == 'PSO_FCS' and isinstance(result, tuple) and len(result) == 3:
+        new_population, new_vel, maxDiversity_out = result
+        posibles_mejoras = {'maxDiversity': maxDiversity_out} 
+    
     elif isinstance(result, tuple) and len(result) == 2:
         new_population, new_vel = result
 

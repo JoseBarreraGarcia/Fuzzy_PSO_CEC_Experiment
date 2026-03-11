@@ -8,12 +8,12 @@ def initialize_population(mh, pop, dim, lb, ub):
     vel, pBestScore, pBest = None, None, None
     
      # Inicialización de Memoria (pBest) - Común para PSO y TJO
-    if mh in ['PSO', 'TJO']:
+    if mh in ['PSO', 'PSO_FCS', 'TJO']:
         pBestScore = np.full(pop, np.inf)
         pBest = np.zeros((pop, dim))
     
     # Inicialización de Velocidad (vel) - Exclusivo para PSO
-    if mh == 'PSO':
+    if mh in ['PSO', 'PSO_FCS']:
         vel = np.zeros((pop, dim))
     
     # Generación de la población inicial (Común para todos)
@@ -27,7 +27,7 @@ def evaluate_population(mh, population, fitness, _, lb, ub, function, nfe_counte
     """Evalúa fitness inicial de la población."""
     pBest, pBestScore = None, None
     
-    if mh == 'PSO':
+    if mh in ['PSO', 'PSO_FCS']:
         pBest = np.zeros_like(population)
         pBestScore = np.full(population.shape[0], float("inf"))
     
@@ -41,7 +41,7 @@ def evaluate_population(mh, population, fitness, _, lb, ub, function, nfe_counte
         fitness[i] = f(function, population[i])
         nfe_counter[0] += 1
         
-        if mh == 'PSO' and pBestScore[i] > fitness[i]:
+        if mh in ['PSO', 'PSO_FCS'] and pBestScore[i] > fitness[i]:
             pBestScore[i] = fitness[i]
             pBest[i] = population[i].copy()
         
@@ -109,7 +109,7 @@ def update_population(population, fitness, _, lb, ub, function, best, bestFitnes
 
     return population, fitness, best, bestFitness, div_t
 
-def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=None, pBest=None, ub=None, lb=None, fo=None, userData=None):
+def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=None, pBest=None, ub=None, lb=None, fo=None, userData=None, **extra_args):
     """
     Itera sobre la población usando la metaheurística especificada ('mh'),
     construyendo los argumentos dinámicamente basados en MH_ARG_MAP.
@@ -153,6 +153,10 @@ def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=No
     
     if userData:
         context.update(userData)
+
+    # Merge extra arguments (e.g., maxDiversity, fcs, w_set for PSO_FCS)
+    if extra_args:
+        context.update(extra_args)
 
     required_args_names = MH_ARG_MAP[mh]
     
@@ -205,6 +209,12 @@ def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=No
         else:
             raise TypeError(f"Retorno inesperado de {mh}. Se esperaba np.ndarray")
     
+    elif mh == 'PSO_FCS':
+        if isinstance(result, tuple) and len(result) == 3:
+            new_population, new_vel, posibles_mejoras = result  # usamos posibles_mejoras para devolver maxDiversity
+        else:
+            raise TypeError(f"Retorno inesperado de {mh}. Se esperaba (population, vel, maxDiversity)")
+
     elif isinstance(result, tuple) and len(result) == 2:
         new_population, new_vel = result
         

@@ -1,0 +1,76 @@
+"""
+VERIFICACIÓN DE ESCALABILIDAD DE analisisBEN.py
+
+Este script documenta por qué analisisBEN.py es escalable.
+"""
+
+print("=" * 70)
+print("ESCALABILIDAD DE analisisBEN.py")
+print("=" * 70)
+
+print("""
+1. FUNCIONES BENCHMARK (BEN):
+   ✅ ESCALABLE - Obtiene dinámicamente:
+      - Línea 133: `funciones = df_todos['funcion_nombre'].unique()`
+      - Lee de la DB todas las funciones completadas
+      - NO necesita hardcodear F1, F8, F9, F16
+      
+   Para agregar F2, F3, etc.:
+      1. En experiments_config.json:
+         - Agregar a "instancias.BEN": ["F1", "F2", "F3", ...]
+         - Agregar a "dimensiones.BEN": {"F1": [30], "F2": [30], ...}
+      2. Ejecutar: python reiniciarDB.py && python poblarDB.py && python main.py
+      3. Los gráficos se generan automáticamente - NO requiere cambios en analisisBEN.py
+
+2. METAHEURÍSTICAS (MH):
+   ✅ ESCALABLE - Obtiene dinámicamente:
+      - Línea 139: `mhs_unicos = df_funcion['MH'].unique()`
+      - Obtiene exactamente los MH que están en la DB para esa función
+      - Soporta PSO, PSO_FCS:A/B/C/D o cualquier otra variante
+      
+   Para agregar PSO_FCS:E o GA:X:
+      1. En experiments_config.json:
+         - Agregar a "mhs": ["PSO", "PSO_FCS", "GA"]
+         - Agregar parámetros en "mh_params"
+      2. Ejecutar: python poblarDB.py && python main.py
+      3. Los gráficos se generan automáticamente - NO requiere cambios en analisisBEN.py
+
+3. COLORES DE GRÁFICOS:
+   ✅ ESCALABLE - Ahora tiene:
+      - 12 colores predefinidos (en lugar de 4)
+      - Si necesita más, repite el patrón automáticamente
+      - Línea 212: `colores_para_usar = COLORS * ((num_mh // len(COLORS)) + 1)`
+
+4. DIRECTORIOS DE SALIDA:
+   ✅ ESCALABLE - Se crean dinámicamente:
+      - Línea 78-81: mkdir para BEN, BEN/boxplot, BEN/violinplot
+      - Línea 221: mkdir para boxplot si no existe
+      - Línea 253: mkdir para violinplot si no existe
+
+5. ESTADÍSTICAS Y RESÚMENES:
+   ✅ ESCALABLE - Procesa todo dinámicamente:
+      - `generar_estadisticas_funcion()` itera sobre `mhs_instances.keys()`
+      - `generar_resumen_global()` procesa df_todos completo
+      - No hay límites hardcodeados
+
+CONCLUSIÓN:
+===========
+analisisBEN.py es COMPLETAMENTE ESCALABLE para:
+- Cualquier número de funciones benchmark
+- Cualquier número de metaheurísticas
+- Cualquier combinación de (función, MH)
+
+SIN MODIFICAR el código de análisis, solo cambiando experiments_config.json
+
+FLUJO RECOMENDADO PARA ESCALABILIDAD:
+=====================================
+1. Editar experiments_config.json (agregar funciones/MH)
+2. Ejecutar: python reiniciarDB.py  (limpia BD)
+3. Ejecutar: python poblarDB.py      (crea experimentos)
+4. Ejecutar: python main.py           (ejecuta experimentos)
+5. Ejecutar: python analisis.py       (genera análisis automáticamente)
+
+✅ analisisBEN.py genera resultados para TODO automáticamente
+""")
+
+print("=" * 70)
