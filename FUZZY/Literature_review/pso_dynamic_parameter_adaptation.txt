@@ -1,0 +1,121 @@
+## **Adaptación dinámica de los parámetros de PSO: Survey breve**
+
+La adaptación dinámica de parámetros en PSO busca ajustar en tiempo de ejecución los hiperparámetros clave (peso de inercia w, coeficientes de aceleración c1, c2, y a veces otros) para equilibrar mejor **exploración/explotación** y evitar convergencia prematura. La literatura reciente muestra tres grandes familias: esquemas deterministas (no adaptativos al estado), adaptativos “basados en estado” y adaptación mediante sistemas inteligentes, especialmente lógica difusa.
+
+### Tipos principales de adaptación dinámica
+
+### 1. Adaptación dinámica de un solo parámetro (típicamente w)
+
+- **Reglas deterministas no lineales:** el peso de inercia se hace variar de forma no lineal a lo largo de las iteraciones, para acelerar la convergencia y mejorar el ajuste fino. Chatterjee y Siarry proponen una variación no lineal de w junto con un método sistemático para fijar los parámetros libres, mostrando mejores resultados que PSO estándar en múltiples benchmarks [1].  
+- Otros trabajos formulan w como función de indicadores de evolución, como la tasa de cambio evolutivo o medidas de agregación del enjambre, ajustando w en cada iteración según el “estado” de la búsqueda [2] [3].
+
+### 2. Adaptación conjunta de varios parámetros (w, c1, c2, factores extra)
+
+- **Inercia y coeficientes de aceleración dinámicos:** ADIWACO combina un peso de inercia dinámico-adaptativo con coeficientes c1 y c2 también adaptativos, definidos con funciones hiperbólicas suaves que dependen de la distancia entre el mejor local y global. Se logra una transición progresiva de exploración a explotación y se reporta superioridad frente PSO estándar y varias variantes en funciones uni- y multimodales [4].  
+- **Estabilidad/adaptación acoplada:** SAIW determina w por dimensión y partícula en función de su rendimiento y distancia a su mejor posición, y ajusta c1, c2 respetando condiciones de estabilidad. Se muestra mejora clara en calidad de solución y velocidad de convergencia, también en entornos dinámicos (moving peaks, radar) [5].  
+- **Algoritmos adaptativos más recientes:** DCWPSO introduce un peso de inercia oscilatorio dinámico y estrategias de vecindario y aprendizaje “worst–best”, reforzando tanto diversidad como refinamiento local; la actualización de w está integrada en una estrategia evolutiva más amplia [6]. CAPSO ajusta adaptativamente w, c1 y c2 incorporando además un factor caótico γ para controlar la búsqueda caótica, mejorando la capacidad de escapar de óptimos locales [7].
+
+### 3. Adaptación basada en lógica difusa y sistemas inteligentes
+
+#### 3.1. Lógica difusa tipo-1 y tipo-2
+
+- **Difusa tipo-1 sobre varios parámetros:** se proponen sistemas de inferencia difusa que reciben como entradas medidas de desempeño del enjambre (diversidad, progreso, etc.) y generan salidas para w, c1 y c2. Melin et al. usan lógica difusa para adaptar dinámicamente parámetros de PSO al diseñar sistemas de clasificación difusos, mejorando convergencia y diversidad respecto a PSO clásico [8].  
+- **Lógica difusa interval type-2:** Olivas et al. extienden el enfoque anterior usando lógica difusa tipo-2 por intervalos para la adaptación dinámica de parámetros, mostrando rendimiento superior al PSO original y al PSO con adaptación tipo-1, gracias a mayor capacidad para manejar incertidumbre en las reglas [9].  
+- **Adaptación difusa de c1 y c2 basada en diversidad/iteración:** en el contexto de redes neuronales con pesos tipo-2 difusos, Gaxiola et al. usan un sistema difuso tipo-2 para ajustar dinámicamente c1, c2 en función de la diversidad del enjambre y el progreso en iteraciones, mejorando el compromiso exploración–explotación y el rendimiento en predicción de series temporales bursátiles [10].  
+
+- **Diseños “fuzzy PSO” de gran escala:** Roy et al. presentan un marco de control por realimentación difusa continua aplicado a hasta siete parámetros de PSO; se entrenan automáticamente 127 variantes de PSO difuso y muchas superan tanto al PSO clásico como a variantes de control de parámetros de referencia en CEC 2020 [11].  
+
+- **Aplicaciones específicas:**  
+  - MPPT fotovoltaico: un MPPT basado en PSO con sistema difuso que ajusta dinámicamente w y c1, c2 acelera la convergencia y mantiene robustez bajo sombreado parcial, superando PSO convencional y otros algoritmos (Jaya, hill climbing) [12].  
+  - Reconocimiento de patrones/redes modulares: ajuste difuso de parámetros de PSO durante la optimización de redes neuronales modulares granulare mejora tasa de reconocimiento y tiempo de ejecución frente a PSO sin ajuste dinámico [13].  
+  - Navegación de enjambres robóticos: en QRDPSO se adapta difusamente el conjunto de parámetros para mejorar velocidad de convergencia, evasión de obstáculos y robustez en robótica móvil [14].
+
+#### 3.2. Hibridación con aprendizaje por refuerzo y otros métodos
+
+- **PSO + DQN (RL) para control adaptativo:** una estrategia híbrida PSO–DQN–RL con pesos dinámicos se usa para ajustar controladores FOPID, donde los parámetros de PSO evolucionan en el tiempo gracias al componente de RL, logrando mejor respuesta, menor sobreimpulso y error estacionario comparado con PSO estático, GA y otros controladores inteligentes [15].  
+- **Control difuso de parámetros relacionados con PSO:** aunque en algunos trabajos PSO se usa off-line, la idea de adaptar en línea parámetros mediante reglas difusas entrenadas por PSO (por ejemplo, en filtros de control L1) muestra el mismo patrón conceptual: parámetros que tradicionalmente son fijos se ajustan online para mejorar robustez y velocidad de adaptación [16] [17].
+
+### 4. Revisiones y marcos conceptuales
+
+- Nickabadi et al. ofrecen una revisión amplia y temprana de estrategias sobre **peso de inercia**, clasificándolas en constantes, dependientes del tiempo y adaptativas. Proponen además un nuevo w adaptativo basado en la tasa de éxito del enjambre como realimentación, que mejora PSO en 15 funciones estáticas, un problema dinámico y uno de ingeniería real [18].  
+- Otros trabajos de revisión más recientes (no listados aquí) extienden la clasificación a control de múltiples parámetros y a arquitecturas fuzzy/híbridas; sin embargo, Nickabadi et al. siguen siendo referencia central para estructurar el espacio de diseño de w [18].
+
+### 5. Efectos en rendimiento y trade‑offs
+
+En conjunto, los estudios muestran tendencias claras:
+
+- **Mejor balance exploración–explotación y menos convergencia prematura:**  
+  - NDWPSO [2], variaciones no lineales de w [1]y DWPSO con ajuste no lineal aleatorizado [19]mejoran velocidad de convergencia y precisión frente a PSO con w lineal o constante.  
+  - Modelos con w y c adaptativos (ADIWACO, SAIW, DCWPSO, CAPSO) ofrecen mejoras consistentes en funciones multimodales y de alta dimensión [7] [4] [5] [6].  
+
+- **Mayor robustez en entornos dinámicos / aplicaciones reales:**  
+  - SAIW rinde bien en benchmarks dinámicos (moving peaks) y problemas reales como diseño de radar [5].  
+  - PSO con parámetros difusos tipo-1 y tipo-2 mejora resultados en clasificación, series temporales financieras y MPPT fotovoltaico bajo condiciones cambiantes [8] [9] [10] [12] [13].  
+
+- **Costo y complejidad:**  
+  - La adaptación difusa y estrategias complejas (tipo‑2, múltiples entradas/salidas) aumentan complejidad de diseño y, en algunos casos, el coste computacional, aunque muchos autores señalan que el overhead es aceptable frente a la mejora en calidad de solución [8] [9] [11] [10].  
+  - En aplicaciones muy simples, las ganancias sobre esquemas lineales pueden ser marginales [18] [19].
+
+### 6. Tabla resumen
+
+### Estrategias de adaptación dinámica de parámetros en PSO
+
+| Tipo de estrategia | Parámetros adaptados | Idea clave / mecanismo | Beneficios principales | Citations |
+|--------------------|----------------------|------------------------|------------------------|-----------|
+| No lineal / dependiente del tiempo | w | Funciones no lineales del tiempo o de índices de evolución (tasa de cambio, agregación, éxito) | Mejor convergencia y precisión vs. w lineal/constante | [1] [2] [3] [18] [19]|
+| Adaptativa basada en estado | w; w, c1, c2 | w y/o c calculados a partir de distancia pbest–gbest, estabilidad, diversidad, etc. | Balance exploración–explotación más fino, mejor en problemas complejos | [4] [5] [6] [3]|
+| Difusa tipo‑1 | w; w, c1, c2 | FIS tipo‑1 con entradas como diversidad, progreso, error | Mejora rendimiento PSO en clasificación, MPPT, MNN | [8] [12] [13]|
+| Difusa tipo‑2 | Múltiples parámetros | Interval type‑2 FIS para manejar incertidumbre en métricas/ reglas | Mejor que PSO y PSO difuso tipo‑1 en benchmarks y RN | [9] [10]|
+| Fuzzy feedback general | Hasta 7 parámetros | Control emisor–sensor difuso aprendido en benchmarks | Muchas variantes superan PSO y controladores de referencia | [11]|
+| Híbridos PSO + RL u otros | Parámetros + pesos de control | RL/otras metaheurísticas actualizan dinámica/online los parámetros de PSO | Alta adaptabilidad en control no lineal con retrasos | [15] [17]|
+
+**Figure 1:** Resumen comparativo de estrategias de adaptación dinámica de parámetros en PSO.
+
+### 7. Conclusiones para la survey
+
+- Hay un **consenso amplio** en que la adaptación dinámica de parámetros (no solo w, también c1 y c2) mejora significativamente la capacidad de PSO para abordar problemas multimodales, de alta dimensión y/o dinámicos frente a configuraciones estáticas o meramente lineales [1] [7] [2] [4] [5] [6] [18] [19].  
+- La línea más activa y prometedora combina **medidas internas del estado del enjambre** (diversidad, éxito, distancia pbest–gbest, estabilidad) con **mecanismos inteligentes de adaptación**, en particular lógica difusa tipo‑1 y tipo‑2, y más recientemente marcos de control difuso general y aprendizaje por refuerzo [8] [9] [15] [11] [5] [10] [12] [13].  
+- Los trade‑offs clave están en la complejidad de diseño y análisis (especialmente para sistemas difusos tipo‑2 y esquemas híbridos), pero en la mayoría de las aplicaciones exigentes los beneficios en robustez, velocidad de convergencia y calidad de solución justifican su uso.
+ 
+_These search results were found and analyzed using Consensus, an AI-powered search engine for research. Try it at https://consensus.app. © 2026 Consensus NLP, Inc. Personal, non-commercial use only; redistribution requires copyright holders’ consent._
+ 
+## References
+ 
+`1.` Chatterjee, A., & Siarry, P. Nonlinear inertia weight variation for dynamic adaptation in particle swarm optimization. *Comput. Oper. Res..* 2006; 33. https://doi.org/10.1016/j.cor.2004.08.012
+ 
+`2.` Liao, W., Wang, J., & Wang, J. Nonlinear Inertia Weight Variation for Dynamic Adaptation in Particle Swarm Optimization. *.* 2011 https://doi.org/10.1007/978-3-642-21515-5_10
+ 
+`3.` Yang, X., Yuan, J., Yuan, J., & Mao, H. A modified particle swarm optimizer with dynamic adaptation. *Appl. Math. Comput..* 2007; 189. https://doi.org/10.1016/j.amc.2006.12.045
+ 
+`4.` Sekyere, Y., Effah, F., & Okyere, P. An Enhanced Particle Swarm Optimization Algorithm via Adaptive Dynamic Inertia Weight and Acceleration Coefficients. *Journal of Electronics and Electrical Engineering.* 2024 https://doi.org/10.37256/jeee.3120243868
+ 
+`5.` Taherkhani, M., & Safabakhsh, R. A novel stability-based adaptive inertia weight for particle swarm optimization. *Appl. Soft Comput..* 2015; 38. https://doi.org/10.1016/j.asoc.2015.10.004
+ 
+`6.` Han, Y., Lin, M., Li, N., Qi, Q., Li, J., & Liu, Q. DCWPSO: particle swarm optimization with dynamic inertia weight updating and enhanced learning strategies. *PeerJ Computer Science.* 2024; 10. https://doi.org/10.7717/peerj-cs.2253
+ 
+`7.` Duan, Y., Chen, N., Chang, L., Ni, Y., Kumar, S., & Zhang, P. CAPSO: Chaos Adaptive Particle Swarm Optimization Algorithm. *IEEE Access.* 2022; 10. https://doi.org/10.1109/access.2022.3158666
+ 
+`8.` Melin, P., Olivas, F., Castillo, O., Valdez, F., Soria, J., & Valdez, J. Optimal design of fuzzy classification systems using PSO with dynamic parameter adaptation through fuzzy logic. *Expert Syst. Appl..* 2013; 40. https://doi.org/10.1016/j.eswa.2012.12.033
+ 
+`9.` Olivas, F., Valdez, F., Castillo, O., & Melin, P. Dynamic parameter adaptation in particle swarm optimization using interval type-2 fuzzy logic. *Soft Computing.* 2014; 20. https://doi.org/10.1007/s00500-014-1567-3
+ 
+`10.` Gaxiola, F., Melin, P., Valdez, F., Castro, J., & Manzo-Martinez, A. PSO with Dynamic Adaptation of Parameters for Optimization in Neural Networks with Interval Type-2 Fuzzy Numbers Weights. *Axioms.* 2019; 8. https://doi.org/10.3390/axioms8010014
+ 
+`11.` Roy, N., Beauthier, C., & Mayer, A. Hyperparameter Control Using Fuzzy Logic: Evolving Policies for Adaptive Fuzzy Particle Swarm Optimization Algorithm. *Evolutionary computation.* 2024 https://doi.org/10.1162/evco_a_00353
+ 
+`12.` Merchaoui, M., Hamouda, M., Sakly, A., & Mimouni, M. Fuzzy logic adaptive particle swarm optimisation based MPPT controller for photovoltaic systems. *IET Renewable Power Generation.* 2020 https://doi.org/10.1049/iet-rpg.2019.1207
+ 
+`13.` Sánchez, D., Melin, P., & Castillo, O. Comparison of particle swarm optimization variants with fuzzy dynamic parameter adaptation for modular granular neural networks for human recognition. *Journal of Intelligent & Fuzzy Systems.* 2020; 38. https://doi.org/10.3233/jifs-191198
+ 
+`14.` Mehiar, D., Elsimary, H., Azizul, Z., Abuhammad, H., Alnajjar, F., & Alhawarat, M. Adaptive Parameter Tuning in QRDPSO Using Fuzzy Logic for Enhanced Swarm Robot Navigation. *2025 1st International Conference on Computational Intelligence Approaches and Applications (ICCIAA).* 2025 https://doi.org/10.1109/icciaa65327.2025.11012942
+ 
+`15.` Shahouni, R., Bahraini, M., Abrofarakh, M., & Abbasi, M. Adaptive tuning of fractional order PID controllers for nonlinear processes using hybrid PSO DQN reinforcement learning. *Scientific Reports.* 2025; 15. https://doi.org/10.1038/s41598-025-22509-x
+ 
+`16.` Hashim, H., El-Ferik, S., & Abido, M. A fuzzy logic feedback filter design tuned with PSO for L1 adaptive controller. *Expert Syst. Appl..* 2015; 42. https://doi.org/10.1016/j.eswa.2015.08.026
+ 
+`17.` Gao, H., Li, J., Xiong, L., Zhang, H., & , S. Fuzzy adaptive tuning control of power system based on moth-flame optimization algorithm. *Transactions of the Institute of Measurement and Control.* 2023; 46. https://doi.org/10.1177/01423312231174545
+ 
+`18.` Nickabadi, A., Ebadzadeh, M., & Safabakhsh, R. A novel particle swarm optimization algorithm with adaptive inertia weight. *Appl. Soft Comput..* 2011; 11. https://doi.org/10.1016/j.asoc.2011.01.037
+ 
+`19.` Wang, J., Wang, X., Li, X., & Yi, J. A Hybrid Particle Swarm Optimization Algorithm with Dynamic Adjustment of Inertia Weight Based on a New Feature Selection Method to Optimize SVM Parameters. *Entropy.* 2023; 25. https://doi.org/10.3390/e25030531
+ 

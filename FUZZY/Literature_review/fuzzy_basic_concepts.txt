@@ -1,0 +1,194 @@
+# **Comprehensive Overview of Fuzzy Logic and Fuzzy Control Systems: Concepts, Foundations, and Taxonomies**
+
+## 1. Introduction
+
+Fuzzy logic and fuzzy control systems have evolved into a robust framework for modeling, reasoning, and controlling complex, uncertain, and nonlinear systems. Rooted in Zadeh’s foundational work on fuzzy sets and linguistic variables, fuzzy control has expanded from the early Mamdani model-free controllers to sophisticated model-based approaches such as Takagi–Sugeno and Tsukamoto systems, as well as adaptive and evolving fuzzy controllers [1] [2] [3] [4] [5] [6] [7] [8] [9] [10]. The field encompasses mathematical foundations (fuzzy sets, membership functions, fuzzy partitions), linguistic modeling, granular computing, and interpretability, with a growing emphasis on semantic modeling and adaptation at multiple levels (parameter, rule, partition, semantic, and meta-level) [1] [11] [3] [4] [6] [7] [12] [13] [14]. This review synthesizes the theoretical underpinnings, taxonomies, and open challenges in fuzzy logic and control, with a special focus on semantic adaptation and dynamic control.
+
+
+**Figure 1:** Consensus meter: Are the main concepts and taxonomies of fuzzy logic and fuzzy control systems well-established?
+
+## 2. Methods
+
+A comprehensive search was conducted across over 170 million research papers in Consensus, including Semantic Scholar, PubMed, and other databases. The search identified 1,043 potentially relevant papers, screened 846, found 734 eligible, and included the top 50 most relevant and high-quality papers for this review.
+
+| Identification | Screening | Eligibility | Included |
+|------------|----------|----------|----------|
+| 1043 | 846 | 734 | 50 | 
+
+**Figure 2:** Flow diagram of the literature search and selection process.
+
+Eight unique search groups were used, targeting mathematical foundations, taxonomies, fuzzy inference systems, semantic modeling, adaptation levels, and open problems.
+
+## 3. Results
+
+### 3.1 Mathematical Foundations and Core Concepts
+
+Fuzzy logic is built on fuzzy set theory, where elements have degrees of membership defined by membership functions (e.g., triangular, trapezoidal, Gaussian) [1] [11] [4] [10] [15]. Linguistic variables and labels enable the translation of expert knowledge into rule-based systems, supporting approximate reasoning and human-like decision-making [11] [4] [9] [10] [16]. Fuzzy partitions divide the input space into overlapping fuzzy sets, forming the basis for inference [11] [4] [9] [10].
+
+### 3.2 Fuzzy Inference Systems and Taxonomies
+
+Three principal fuzzy inference systems dominate the field:
+- **Mamdani**: Uses linguistic rules with fuzzy sets in both antecedent and consequent, emphasizing interpretability [1] [2] [4] [17] [9] [18] [19].
+- **Takagi–Sugeno (T–S)**: Employs fuzzy antecedents and functional (often linear) consequents, enabling systematic stability analysis and model-based control [1] [3] [5] [20] [21].
+- **Tsukamoto**: Features monotonic membership functions in the consequent, producing crisp outputs via weighted averages [1] [17] [9].
+
+Taxonomies distinguish between model-free (Mamdani) and model-based (T–S, singleton) approaches, as well as between type-1, type-2, and emerging type-3 fuzzy systems, each offering increasing capacity to handle uncertainty [1] [22] [17] [12] [13] [23] [14].
+
+### 3.3 Semantic Modeling, Granularity, and Interpretability
+
+Semantic modeling addresses the meaning of linguistic terms, modular fuzzy semantics, and the granularity of partitions [11] [4] [12] [14]. Granular computing divides complex problems into manageable subproblems, enhancing interpretability and scalability [11] [4] [12] [14]. Interpretability and semantic consistency are critical for practical deployment, especially in safety-critical and human-in-the-loop systems [11] [4] [12] [14].
+
+### 3.4 Adaptive and Evolving Fuzzy Control Systems
+
+Adaptation in fuzzy systems occurs at multiple levels:
+- **Parameter-level**: Tuning membership function parameters [1] [24] [25] [26] [27] [13].
+- **Rule-level**: Modifying or generating new rules [1] [24] [12] [13] [28].
+- **Partition-level**: Adjusting the structure of fuzzy partitions [11] [4] [12] [14] [28].
+- **Semantic-level**: Adapting the meaning of linguistic terms and the structure of the fuzzy language [11] [4] [12] [14] [28].
+- **Meta-level (supervisory)**: Higher-level adaptation, often involving learning or optimization algorithms [11] [4] [12] [14] [28].
+
+Evolving fuzzy systems can autonomously update their structure and parameters in response to environmental changes, supporting lifelong learning and robust control [7] [12] [13] [23] [28].
+
+#### Results Timeline
+
+results_timeline
+
+**Figure 3:** Timeline of key developments in fuzzy logic and fuzzy control systems. Larger markers indicate more citations.
+
+#### Top Contributors
+
+| Type | Name | Papers |
+|------|------|--------|
+| Author | M. Sugeno | [1] [29] [8] [6] [3] [30]|
+| Author | Chuen-Chien Lee | [4] [9] [31]|
+| Author | T. Takagi | [3] [30]|
+| Journal | *IEEE Transactions on Fuzzy Systems* | [29] [24] [25] [26] [32] [5] [33] [27] [20] [34]|
+| Journal | *Inf. Sci.* | [8] [32] [13] [14]|
+| Journal | *Energies* | [35] [19]|
+
+
+**Figure 4:** Authors & journals that appeared most frequently in the included papers.
+
+## 4. Discussion
+
+The literature demonstrates that fuzzy logic and fuzzy control systems are mature fields with well-established mathematical foundations, taxonomies, and practical methodologies [1] [2] [4] [3] [5] [6] [7] [8] [9] [10]. The transition from model-free to model-based and adaptive/evolving systems reflects the need for systematic stability analysis, robustness, and real-time adaptation [1] [3] [5] [7] [12] [13]. Semantic modeling and interpretability remain active research areas, especially as systems become more complex and are integrated with AI and machine learning [11] [4] [12] [14] [28].
+
+Despite significant progress, open problems persist, particularly in dynamic semantic adaptation, interpretability, and the integration of fuzzy systems with deep learning and optimization algorithms [11] [4] [12] [13] [23] [14] [28]. The field is moving toward more granular, modular, and self-adaptive architectures, but challenges in scalability, computational complexity, and human interpretability remain.
+
+### Claims and Evidence Table
+
+| Claim                                                                 | Evidence Strength                | Reasoning                                                                                                   | Papers                        |
+|-----------------------------------------------------------------------|----------------------------------|-------------------------------------------------------------------------------------------------------------|-------------------------------|
+| Fuzzy logic provides a robust framework for modeling and control of complex, uncertain systems | Evidence strength: Strong (10/10) | Supported by foundational theory, widespread industrial adoption, and extensive empirical validation         | [1] [2] [4] [3] [5] [6] [7] [8] [9] [10]|
+| Mamdani, Takagi–Sugeno, and Tsukamoto systems form the core taxonomy of fuzzy inference systems | Evidence strength: Strong (10/10) | These systems are universally referenced in surveys, textbooks, and applications                             | [1] [2] [4] [3] [17] [9] [5] [20] [21]|
+| Adaptive and evolving fuzzy controllers enable real-time learning and robustness | Evidence strength: Strong (8/10) | Strong evidence from recent surveys and applications, but practical challenges in stability and complexity remain | [24] [7] [12] [13] [23] [28]|
+| Semantic modeling and interpretability are critical but underdeveloped areas | Evidence strength: Moderate (6/10) | Multiple reviews highlight the need for better semantic adaptation and human interpretability                | [11] [4] [12] [14] [28]|
+| Dynamic semantic adaptation in fuzzy systems is an open research problem | Evidence strength: Moderate (4/10) | Identified as a gap in recent surveys and theoretical papers, with few comprehensive solutions               | [11] [4] [12] [13] [23] [14] [28]|
+| Integration of fuzzy logic with deep learning and optimization is promising but not fully realized | Evidence strength: Weak (3/10) | Early-stage research; some hybrid systems exist, but general frameworks and best practices are lacking       | [12] [13] [23] [35] [28]|
+
+**Figure 5:** Key claims and support evidence identified in these papers.
+
+## 5. Conclusion
+
+Fuzzy logic and fuzzy control systems are grounded in rigorous mathematical theory and have evolved into a diverse set of methodologies for handling uncertainty, nonlinearity, and linguistic reasoning. The field is characterized by a rich taxonomy of inference systems, adaptive and evolving architectures, and a growing focus on semantic modeling and interpretability. However, dynamic semantic adaptation and integration with modern AI remain open challenges.
+
+### 5.1 Research Gaps
+
+| Topic/Outcome                | Parameter-level adaptation | Rule-level adaptation | Partition-level adaptation | Semantic-level adaptation | Meta-level/supervisory adaptation |
+|------------------------------|---------------------------|----------------------|---------------------------|--------------------------|-------------------------------|
+| Stability analysis           | **12** | **8** | **5** | **2** | **1** |
+| Interpretability/semantic modeling | **3** | **2** | **2** | **7** | **1** |
+| Adaptive/evolving control    | **7** | **6** | **4** | **3** | **2** |
+| Granular computing           | **2** | **1** | **3** | **2** | **GAP** |
+| Integration with deep learning/AI | **1** | **1** | **1** | **1** | **2** |
+
+**Figure 6:** Matrix showing research coverage and gaps across adaptation levels and key topics.
+
+### 5.2 Open Research Questions
+
+Future research should focus on bridging the gap between theoretical advances and practical deployment, especially in semantic adaptation and integration with AI.
+
+| Question                                                                                      | Why                                                                                                    |
+|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| **How can dynamic semantic adaptation be systematically achieved in fuzzy control systems?** | Addressing this would enable more robust, interpretable, and context-aware fuzzy controllers in real-world applications. |
+| **What frameworks best integrate fuzzy logic with deep learning for interpretable AI?** | Such integration could combine the strengths of fuzzy reasoning and data-driven learning for complex systems. |
+| **How can interpretability and semantic consistency be ensured in evolving fuzzy systems?** | Ensuring human-understandable reasoning is critical for safety, trust, and regulatory compliance.         |
+
+**Figure 7:** Open research questions and their significance for future work.
+
+In summary, while the foundations and taxonomies of fuzzy logic and fuzzy control are well-established, advancing semantic adaptation and interpretability remains a key frontier for research and application.
+ 
+_These search results were found and analyzed using Consensus, an AI-powered search engine for research. Try it at https://consensus.app. © 2026 Consensus NLP, Inc. Personal, non-commercial use only; redistribution requires copyright holders’ consent._
+ 
+## References
+ 
+`1.` Nguyen, A., Taniguchi, T., Eciolaza, L., Campos, V., Palhares, R., & Sugeno, M. Fuzzy Control Systems: Past, Present and Future. *IEEE Computational Intelligence Magazine.* 2019; 14. https://doi.org/10.1109/mci.2018.2881644
+ 
+`2.` Mamdani, E. Applications of fuzzy algorithms for control of a simple dynamic plant. *Proceedings of the IEEE.* 1974 https://doi.org/10.1049/piee.1974.0328
+ 
+`3.` Takagi, T., & Sugeno, M. Fuzzy identification of systems and its applications to modeling and control. *IEEE Transactions on Systems, Man, and Cybernetics.* 1985; SMC-15. https://doi.org/10.1109/tsmc.1985.6313399
+ 
+`4.` Lee, C. FUZZY LOGIC CONTROL SYSTEMS: FUZZY LOGIC CONTROLLER - PART I. *IEEE Transactions on Systems, Man, and Cybernetics.* 1990; 20. 
+ 
+`5.` Feng, G. A Survey on Analysis and Design of Model-Based Fuzzy Control Systems. *IEEE Transactions on Fuzzy Systems.* 2006; 14. https://doi.org/10.1109/tfuzz.2006.883415
+ 
+`6.` Nguyen, H., & Sugeno, M. Fuzzy Systems: Modeling and Control. *.* 1998 
+ 
+`7.` Precup, R., Nguyen, A., & Blažič, S. A survey on fuzzy control for mechatronics applications. *International Journal of Systems Science.* 2023; 55. https://doi.org/10.1080/00207721.2023.2293486
+ 
+`8.` Sugeno, M. An introductory survey of fuzzy control. *Inf. Sci..* 1985; 36. https://doi.org/10.1016/0020-0255(85)90026-x
+ 
+`9.` Lee, C. Fuzzy logic in control systems: fuzzy logic controller. I. *IEEE Trans. Syst. Man Cybern..* 1990; 20. https://doi.org/10.1109/21.52551
+ 
+`10.` Chen, G., Pham, T., & Boustany, N. Introduction to Fuzzy Sets, Fuzzy Logic, and Fuzzy Control Systems. *.* 2000 https://doi.org/10.1115/1.1421114
+ 
+`11.` Dumitrescu, C., Ciotirnae, P., & Vizitiu, C. Fuzzy Logic for Intelligent Control System Using Soft Computing Applications. *Sensors (Basel, Switzerland).* 2021; 21. https://doi.org/10.3390/s21082617
+ 
+`12.` Al-Mahturi, A., Santoso, F., Garratt, M., & Anavatti, S. A Novel Evolving Type-2 Fuzzy System for Controlling a Mobile Robot under Large Uncertainties. *Robotics.* 2023; 12. https://doi.org/10.3390/robotics12020040
+ 
+`13.` Castillo, O., & Amador-Angulo, L. A generalized type-2 fuzzy logic approach for dynamic parameter adaptation in bee colony optimization applied to fuzzy controller design. *Inf. Sci..* 2017; 460-461. https://doi.org/10.1016/j.ins.2017.10.032
+ 
+`14.` Castillo, O., Cervantes, L., Soria, J., Sanchez, M., & Castro, J. A generalized type-2 fuzzy granular approach with applications to aerospace. *Inf. Sci..* 2016; 354. https://doi.org/10.1016/j.ins.2016.03.001
+ 
+`15.` Kamalasadan, S., & Al-Olimat, K. Fuzzy Logic Control Systems. *.* 2009 https://doi.org/10.1002/9780470050118.ecse166
+ 
+`16.` Singh, B., & Mishra, A. Fuzzy Logic Control System and its Applications. *.* 2020 
+ 
+`17.` Vidal-Martínez, R., García-Martínez, J., Rojas-Galván, R., Álvarez-Alvarado, J., Gozález-Lee, M., & Rodríguez-Reséndíz, J. A Review of Mamdani, Takagi–Sugeno, and Type-2 Fuzzy Controllers for MPPT and Power Management in Photovoltaic Systems. *Technologies.* 2025 https://doi.org/10.3390/technologies13090422
+ 
+`18.` Belman-Flores, J., Rodríguez-Valderrama, D., Ledesma, S., García-Pabón, J., Hernández, D., & Pardo-Cely, D. A Review on Applications of Fuzzy Logic Control for Refrigeration Systems. *Applied Sciences.* 2022 https://doi.org/10.3390/app12031302
+ 
+`19.` Singh, A., Tariq, T., Ahmer, M., Sharma, G., Bokoro, P., & Shongwe, T. Intelligent Control of Irrigation Systems Using Fuzzy Logic Controller. *Energies.* 2022 https://doi.org/10.3390/en15197199
+ 
+`20.` Chiu, C. Nonlinear System Control Based on an Output Recurrent TS Fuzzy Controller. *IEEE Access.* 2025; 13. https://doi.org/10.1109/access.2025.3603228
+ 
+`21.` Dombi, J., & Hussain, A. A new approach to fuzzy control using the distending function. *Journal of Process Control.* 2020 https://doi.org/10.1016/j.jprocont.2019.12.005
+ 
+`22.` Ochoa, P., Peraza, C., Melin, P., Castillo, O., Park, S., & Geem, Z. Enhancing Control Systems through Type-3 Fuzzy Logic Optimization. *Mathematics.* 2024 https://doi.org/10.3390/math12121792
+ 
+`23.` Abdalla, T., Abdalla, A., & Chyaid, A. Type-3 Fuzzy System-Based Intelligent Control Approaches and Applications. *Adv. Fuzzy Syst..* 2025; 2025. https://doi.org/10.1155/adfs/6661495
+ 
+`24.` Wu, C., Liu, J., Jing, X., Li, H., & Wu, L. Adaptive Fuzzy Control for Nonlinear Networked Control Systems. *IEEE Transactions on Systems, Man, and Cybernetics: Systems.* 2017; 47. https://doi.org/10.1109/tsmc.2017.2678760
+ 
+`25.` Zhou, Q., Li, H., Wu, C., Wang, L., & Ahn, C. Adaptive Fuzzy Control of Nonlinear Systems With Unmodeled Dynamics and Input Saturation Using Small-Gain Approach. *IEEE Transactions on Systems, Man, and Cybernetics: Systems.* 2017; 47. https://doi.org/10.1109/tsmc.2016.2586108
+ 
+`26.` Wu, J., Wu, Z., Li, J., Wang, G., Zhao, H., & Chen, W. Practical Adaptive Fuzzy Control of Nonlinear Pure-Feedback Systems With Quantized Nonlinearity Input. *IEEE Transactions on Systems, Man, and Cybernetics: Systems.* 2019; 49. https://doi.org/10.1109/tsmc.2018.2800783
+ 
+`27.` Lu, K., Liu, Z., Wang, Y., & Chen, C. Fixed-Time Adaptive Fuzzy Control for Uncertain Nonlinear Systems. *IEEE Transactions on Fuzzy Systems.* 2021; 29. https://doi.org/10.1109/tfuzz.2020.3028458
+ 
+`28.` Siddikov, I., Izmaylova, R., & Siddikov, A. Structural-parametric adaptation of fuzzy-logical control system. *PROCEEDINGS OF THE 10TH WORKSHOP ON METALLIZATION AND INTERCONNECTION FOR CRYSTALLINE SILICON SOLAR CELLS.* 2022 https://doi.org/10.1063/5.0105470
+ 
+`29.` Tanaka, K., & Sugeno, M. Stability analysis and design of fuzzy control systems. *Fuzzy Sets and Systems.* 1992; 45. https://doi.org/10.1016/0165-0114(92)90113-i
+ 
+`30.` Takagi, T., & Sugeno, M. Derivation of Fuzzy Control Rules from Human Operator's Control Actions. *IFAC Proceedings Volumes.* 1983; 16. https://doi.org/10.1016/s1474-6670(17)62005-6
+ 
+`31.` Lee, C. Fuzzy logic in control systems: fuzzy logic controller. II. *IEEE Trans. Syst. Man Cybern..* 1990; 20. https://doi.org/10.1109/21.52552
+ 
+`32.` Zhao, N., Tian, Y., Zhang, H., & Herrera-Viedma, E. Fuzzy-based adaptive event-triggered control for nonlinear cyber-physical systems against deception attacks via a single parameter learning method. *Inf. Sci..* 2024; 657. https://doi.org/10.1016/j.ins.2023.119948
+ 
+`33.` Liu, Y., Zhang, H., Wang, Y., & Sun, S. Adaptive Fuzzy Control for Nonstrict-Feedback Systems Under Asymmetric Time-Varying Full State Constraints Without Feasibility Condition. *IEEE Transactions on Fuzzy Systems.* 2021; 29. https://doi.org/10.1109/tfuzz.2020.2965908
+ 
+`34.` Tong, S., Li, K., & Li, Y. Robust Fuzzy Adaptive Finite-Time Control for High-Order Nonlinear Systems With Unmodeled Dynamics. *IEEE Transactions on Fuzzy Systems.* 2021; 29. https://doi.org/10.1109/tfuzz.2020.2981917
+ 
+`35.` Cavus, M., Dissanayake, D., & Bell, M. Deep-Fuzzy Logic Control for Optimal Energy Management: A Predictive and Adaptive Framework for Grid-Connected Microgrids. *Energies.* 2025 https://doi.org/10.3390/en18040995
+ 
