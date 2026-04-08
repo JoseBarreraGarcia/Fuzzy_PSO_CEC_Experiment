@@ -36,8 +36,8 @@
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 31},
-        "SCP": {"iteraciones": 500, "poblacion": 20, "num_experimentos": 31},
+        "BEN": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 3},
+        "SCP": {},
         "USCP": {},
         "KP": {}
     },
@@ -48,7 +48,7 @@
 
     "instancias": {
         "BEN": ["F1","F5","F11", "F21","F22", "F23"],
-        "SCP": ["41"],
+        "SCP": [],
         "USCP": [],
         "KP": []
     },
@@ -57,14 +57,10 @@
         "PSO_FCS": [
 
             {"w_set": "A", "num_labels": 3, "input_set": "I1"},
-            {"w_set": "A", "num_labels": 3, "input_set": "I2"},
-            {"w_set": "A", "num_labels": 3, "input_set": "I3"},
-            {"w_set": "A", "num_labels": 3, "input_set": "I4"},
 
-            {"w_set": "A", "num_labels": 5, "input_set": "I1"},
-            {"w_set": "A", "num_labels": 5, "input_set": "I2"},
-            {"w_set": "A", "num_labels": 5, "input_set": "I3"},
-            {"w_set": "A", "num_labels": 5, "input_set": "I4"}
+
+            {"w_set": "A", "num_labels": 5, "input_set": "I1"}
+
 
         ]
     }

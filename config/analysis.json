@@ -6,12 +6,12 @@
 
 "mhs": ["PSO", "PSO_FCS"],
     
-"DS_actions": ["S4-STD", "S4-ELIT"],
+"DS_actions": ["S4-ELIT"],
 
 "instancias":
 {
-    "BEN": ["F1", "F21","F22", "F23"],
-    "SCP": ["41"],
+    "BEN": ["F1","F5","F21","F22", "F23"],
+    "SCP": [],
     "USCP": []
 }
 

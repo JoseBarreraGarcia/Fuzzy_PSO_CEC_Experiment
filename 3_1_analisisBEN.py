@@ -23,14 +23,9 @@ CONFIG, EXPERIMENTS = cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE)
 # === Definición de directorios ===
 DIRS = CONFIG["dirs"]
 
-DIR_FITNESS      = DIRS["fitness"]
 DIR_RESUMEN      = DIRS["resumen"]
 DIR_RESULTADO    = DIRS["base"]
 DIR_TRANSITORIO  = DIRS["transitorio"]
-DIR_GRAFICOS     = DIRS["graficos"]
-DIR_BEST         = DIRS["best"]
-DIR_BOXPLOT      = DIRS["boxplot"]
-DIR_VIOLIN       = DIRS["violinplot"]
 
 # Crear directorios específicos para BEN
 DIR_BEN          = os.path.join(DIR_RESUMEN, "BEN")

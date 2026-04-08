@@ -33,12 +33,12 @@ All experiments defined in `config/experiments.json`:
 }
 ```
 
-**Flow**: Config → `1_poblarDB.py` populates database → `2_main.py` executes experiments → `3_analisis.py` generates reports.
+**Flow**: Config → `1_0_poblarDB.py` populates database → `2_main.py` executes experiments → `3_0_analisis.py` generates reports.
 
 **When adding features**: 
 1. Update JSON config first
 2. Modify database schema if needed (in `BD/sqlite.py.construirTablas()`)
-3. Update `1_poblarDB.py` to load new fields
+3. Update `1_0_poblarDB.py` to load new fields
 4. Update solver callers in `2_main.py` if needed
 
 ### 2. **Three Problem Types with Different Dimensionality Handling**
@@ -60,7 +60,7 @@ Located in `FUZZY/fuzzy_controller_w.py`:
 **Adding fuzzy set E**: 
 1. Add to `W_SETS` dict in `fuzzy_controller_w.py` with triangular membership functions
 2. Add to JSON config: `{"w_set": "E"}`
-3. Run pipeline: `python 0_1_reiniciarDB.py && python 1_poblarDB.py && python 2_main.py && python 3_analisis.py`
+3. Run pipeline: `python 0_1_reiniciarDB.py && python 1_0_poblarDB.py && python 2_main.py && python 3_0_analisis.py`
 4. No solver code changes needed—configuration-driven
 
 ### 4. **Database Schema (SQLite)**
@@ -75,7 +75,7 @@ Four main tables created in `BD/sqlite.py.construirTablas()`:
 - **iteraciones**: Per-iteration CSV files (w, diversity, fitness data)
   - Columns: id_archivo, nombre, archivo (BLOB), fk_id_experimento
 
-**Critical**: Experiments are stateful. Always run `0_1_reiniciarDB.py` before `1_poblarDB.py` to reset state.
+**Critical**: Experiments are stateful. Always run `0_1_reiniciarDB.py` before `1_0_poblarDB.py` to reset state.
 
 ---
 
@@ -84,16 +84,16 @@ Four main tables created in `BD/sqlite.py.construirTablas()`:
 ### Full Experiment Pipeline
 ```bash
 # 0. Full reset (DB + results) — or run 0_1 and 0_2 separately
-python 0_reiniciar.py
+python 0_0_reiniciar.py
 
 # 1. Populate with new experiments from config
-python 1_poblarDB.py
+python 1_0_poblarDB.py
 
 # 2. Run all pending experiments
 python 2_main.py
 
 # 3. Generate 3-level hierarchical analysis
-python 3_analisis.py
+python 3_0_analisis.py
 ```
 
 ### 3-Level Hierarchical Analysis Framework
@@ -134,8 +134,8 @@ The system automatically generates 8 publication-quality PNG plots:
 **Features**:
 - LNCS format (Times New Roman, 300 DPI)
 - PNG format suitable for papers, presentations
-- Automatic generation as part of `python analisis.py`
-- Can be generated standalone: `python generate_fuzzy_plots.py`
+- Automatic generation as part of `python 3_0_analisis.py`
+- Can be generated standalone: `python FUZZY/1_generate_fuzzy_plots.py`
 
 ### Quick Analysis Scripts
 
@@ -205,7 +205,7 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
 
 | Task | Primary Files |
 |------|----------------|
-| Add experiment variant | `config/experiments.json`, `1_poblarDB.py` |
+| Add experiment variant | `config/experiments.json`, `1_0_poblarDB.py` |
 | Modify fuzzy logic rules | `FUZZY/fuzzy_controller_w.py` (rules dict + W_SETS dict) |
 | Add new MH algorithm | `Metaheuristics/Codes/*.py`, `Solver/solverBEN.py` (add executor) |
 | Fix bug in results storage | `Solver/solverBEN.py` / `solverSCP.py`, `Util/csv_writer.py` |
@@ -223,7 +223,7 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
 - Run `python check_db.py` to query database state
 
 **Missing results in analysis**: 
-- Ensure `analisis.py` executed and `generate_w_timeseries=True`
+- Ensure `3_0_analisis.py` executed and `generate_w_timeseries=True`
 - CSV files must exist in `Resultados/resumen/SCP/` before plotting
 - Check `Resultados/Transitorio/` for raw output
 

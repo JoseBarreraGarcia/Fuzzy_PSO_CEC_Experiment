@@ -23,14 +23,17 @@ CONFIG, EXPERIMENTS = cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE)
 # === Definición de directorios ===
 DIRS = CONFIG["dirs"]
 
-DIR_FITNESS      = DIRS["fitness"]
 DIR_RESUMEN      = DIRS["resumen"]
 DIR_RESULTADO    = DIRS["base"]
 DIR_TRANSITORIO  = DIRS["transitorio"]
-DIR_GRAFICOS     = DIRS["graficos"]
-DIR_BEST         = DIRS["best"]
-DIR_BOXPLOT      = DIRS["boxplot"]
-DIR_VIOLIN       = DIRS["violinplot"]
+
+# Crear directorios específicos para SCP (bajo resumen/)
+DIR_SCP          = os.path.join(DIR_RESUMEN, "SCP")
+DIR_SCP_FITNESS  = os.path.join(DIR_SCP, "fitness")
+DIR_SCP_GRAFICOS = os.path.join(DIR_SCP, "graficos")
+DIR_SCP_BEST     = os.path.join(DIR_SCP, "best")
+DIR_SCP_BOXPLOT  = os.path.join(DIR_SCP, "boxplot")
+DIR_SCP_VIOLIN   = os.path.join(DIR_SCP, "violinplot")
 
 # === Parámetros generales ===
 GRAFICOS = False
@@ -116,7 +119,7 @@ def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida,
     Guarda los resultados en archivos PDF dentro del directorio configurado.
     """
     # Directorio base para los gráficos de esta corrida
-    output_dir = os.path.join(DIR_GRAFICOS, 'SCP', str(binarizacion))
+    output_dir = os.path.join(DIR_SCP_GRAFICOS, str(binarizacion))
     os.makedirs(output_dir, exist_ok=True)
 
     # --- Gráfico de convergencia ---
@@ -166,7 +169,7 @@ def graficar_boxplot_violin(instancia, binarizacion):
     """
 
     # Ruta al archivo de datos
-    direccion_datos = os.path.join(DIR_FITNESS, f'SCP/fitness_SCP_{instancia}_{binarizacion}.csv')
+    direccion_datos = os.path.join(DIR_SCP_FITNESS, f'fitness_SCP_{instancia}_{binarizacion}.csv')
 
     # Cargar y validar los datos
     try:
@@ -192,7 +195,7 @@ def graficar_boxplot_violin(instancia, binarizacion):
         return
 
     # --- Boxplot ---
-    output_dir_box = os.path.join(DIR_BOXPLOT, 'SCP')
+    output_dir_box = DIR_SCP_BOXPLOT
     os.makedirs(output_dir_box, exist_ok=True)
     file_path_box = os.path.join(output_dir_box, f'boxplot_fitness_SCP_{instancia}_{binarizacion}.pdf')
 
@@ -209,7 +212,7 @@ def graficar_boxplot_violin(instancia, binarizacion):
         print(f"        [ERROR] Fallo al generar boxplot: {e}")
 
     # --- Violinplot ---
-    output_dir_violin = os.path.join(DIR_VIOLIN, 'SCP')
+    output_dir_violin = DIR_SCP_VIOLIN
     os.makedirs(output_dir_violin, exist_ok=True)
     file_path_violin = os.path.join(output_dir_violin, f'violinplot_fitness_SCP_{instancia}_{binarizacion}.pdf')
 
@@ -332,7 +335,7 @@ def graficar_mejores_resultados(instancia, mhs_instances, binarizacion):
             mh_mejor_tiempo = name
 
     # Crear carpeta de salida si no existe
-    output_dir = os.path.join(DIR_BEST, 'SCP')
+    output_dir = DIR_SCP_BEST
     os.makedirs(output_dir, exist_ok=True)
 
     # Paleta de colores para diferentes variantes
@@ -472,7 +475,7 @@ def analizar_instancias():
             
             # Preparar carpetas de salida
             output_dir_resumen = os.path.join(DIR_RESUMEN, 'SCP')
-            output_dir_fitness = os.path.join(DIR_FITNESS, 'SCP')
+            output_dir_fitness = DIR_SCP_FITNESS
             os.makedirs(output_dir_resumen, exist_ok=True)
             os.makedirs(output_dir_fitness, exist_ok=True)
             

@@ -81,6 +81,25 @@ def verificar_y_crear_carpetas():
     """
     Verifica que las carpetas y subcarpetas dentro de 'Resultados' estén creadas.
     Si no existen, las crea automáticamente.
+    
+    Estructura:
+        Resultados/
+        ├── transitorio/
+        └── resumen/
+            ├── BEN/
+            │   ├── boxplot/
+            │   └── violinplot/
+            ├── SCP/
+            │   ├── fitness/
+            │   ├── graficos/
+            │   ├── best/
+            │   ├── boxplot/
+            │   └── violinplot/
+            ├── level1_raw/
+            ├── level1_raw_cec/
+            ├── level2_aggregated/
+            ├── level2_aggregated_cec/
+            └── level3_disaggregated/
     """
     
     base_dir = "./Resultados"
@@ -88,12 +107,19 @@ def verificar_y_crear_carpetas():
     # Definir las subcarpetas necesarias
     subcarpetas = [
         "transitorio",
-        "graficos",
-        "best",
-        "boxplot",
-        "violinplot",
         "resumen",
-        "fitness"
+        os.path.join("resumen", "BEN", "boxplot"),
+        os.path.join("resumen", "BEN", "violinplot"),
+        os.path.join("resumen", "SCP", "fitness"),
+        os.path.join("resumen", "SCP", "graficos"),
+        os.path.join("resumen", "SCP", "best"),
+        os.path.join("resumen", "SCP", "boxplot"),
+        os.path.join("resumen", "SCP", "violinplot"),
+        os.path.join("resumen", "level1_raw"),
+        os.path.join("resumen", "level1_raw_cec"),
+        os.path.join("resumen", "level2_aggregated"),
+        os.path.join("resumen", "level2_aggregated_cec"),
+        os.path.join("resumen", "level3_disaggregated"),
     ]
 
     # Crear las carpetas si no existen
