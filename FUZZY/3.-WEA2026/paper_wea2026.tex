@@ -1,0 +1,291 @@
+% WEA 2026 Paper - Rule Base Sensitivity Analysis for Fuzzy PSO
+% CCIS/LNCS format - Springer
+%
+\documentclass[runningheads]{llncs}
+%
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{subcaption}
+%
+% URLs in blue roman font (Springer eBook style)
+\usepackage{color}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
+\urlstyle{rm}
+%
+\begin{document}
+%
+\title{Sensitivity Analysis of Fuzzy Rule Base Structure\\for Adaptive Inertia Weight Control in PSO}
+%
+%\titlerunning{Rule Base Sensitivity in Fuzzy PSO}
+%
+\author{First Author\inst{1}\orcidID{0000-0000-0000-0000} \and
+Second Author\inst{1}\orcidID{0000-0000-0000-0000}}
+%
+\authorrunning{F. Author et al.}
+%
+\institute{Pontificia Universidad Cat\'olica de Valpara\'iso, Valpara\'iso, Chile\\
+\email{\{first.author, second.author\}@pucv.cl}}
+%
+\maketitle
+%
+\begin{abstract}
+Particle Swarm Optimization (PSO) performance is highly sensitive to the inertia weight parameter~$w$, which controls the balance between exploration and exploitation. Fuzzy logic controllers offer a promising approach for adaptive~$w$ adjustment based on population diversity and search progress. However, most studies focus on tuning membership functions while treating the rule base as fixed. In this work, we systematically analyze the impact of fuzzy rule base structure on PSO performance. Using a Mamdani fuzzy inference system with two inputs (diversity ratio, iteration progress) and one output (inertia weight), we define six semantically distinct rule base variants: baseline, exploitation-dominant, exploration-dominant, diversity-reactive, progress-dominant, and inverse. All variants share identical input and output membership functions, isolating the rule base as the sole variable. We evaluate all configurations at two granularity levels (3 and 5 linguistic labels) on a representative subset of the CEC~2017 benchmark suite with 31~independent runs per configuration. Statistical analysis using Wilcoxon tests and Friedman-Nemenyi post-hoc ranking reveals [PLACEHOLDER: key finding]. Our results provide practical guidelines for fuzzy rule base design in metaheuristic parameter control.
+
+\keywords{Particle Swarm Optimization \and Fuzzy Logic \and Mamdani FIS \and Inertia Weight \and Rule Base \and Sensitivity Analysis \and CEC~2017}
+\end{abstract}
+%
+% ============================================================
+\section{Introduction}\label{sec:intro}
+% ============================================================
+
+% Paragraph 1: PSO and the inertia weight problem
+% TODO: Write about PSO basics, importance of w, existing strategies (constant, linear, chaotic, etc.)
+
+% Paragraph 2: Fuzzy logic for adaptive parameter control  
+% TODO: Mamdani FIS as a natural way to encode expert knowledge for w adaptation
+
+% Paragraph 3: Research gap - rule base rarely studied in isolation
+% TODO: Most fuzzy-PSO papers: (a) design one rule base and evaluate it, or (b) optimize MFs via meta-optimization.
+% The rule base itself---the mapping from input linguistic terms to output terms---is rarely the subject of systematic study.
+
+% Paragraph 4: Our contribution
+% TODO: Three-paper series context (OLA: output MFs, CLEI: input MFs, WEA: rule base)
+% Three specific contributions:
+% 1. First systematic isolation of rule base effects on fuzzy PSO
+% 2. Six semantically grounded rule variants at two granularity levels (3L, 5L)
+% 3. Consistent CEC 2017 evaluation (same functions/params as companion papers)
+
+% ============================================================
+\section{Related Work}\label{sec:related}
+% ============================================================
+
+\subsection{Adaptive Inertia Weight Strategies}
+% TODO: Linear decreasing [Shi & Eberhart 1998], chaotic [Feng et al.], 
+% random [Eberhart & Shi 2001], nonlinear [Chatterjee & Siarry 2006]
+
+\subsection{Fuzzy Logic in Metaheuristic Control}
+% TODO: Fuzzy PSO surveys, Mamdani vs Sugeno, typical input/output choices
+% Key refs: [Olivas et al. 2017], [Melin et al. 2013], [Valdez et al. 2011]
+
+\subsection{Sensitivity Analysis of FIS Components}
+% TODO: Studies that analyze MF shape/granularity effects
+% Gap: no systematic study of rule base structure in isolation
+
+% ============================================================
+\section{Fuzzy PSO Framework}\label{sec:framework}
+% ============================================================
+
+\subsection{Standard PSO Formulation}
+
+The velocity and position update equations for PSO are:
+\begin{equation}\label{eq:velocity}
+v_i^{t+1} = w \cdot v_i^t + c_1 r_1 (p_i^t - x_i^t) + c_2 r_2 (g^t - x_i^t)
+\end{equation}
+\begin{equation}\label{eq:position}
+x_i^{t+1} = x_i^t + v_i^{t+1}
+\end{equation}
+
+where $w$ is the inertia weight, $c_1$ and $c_2$ are acceleration coefficients, $r_1$ and $r_2$ are uniform random numbers in $[0,1]$, $p_i$ is the personal best, and $g$ is the global best.
+
+\subsection{Mamdani FIS for Inertia Weight}
+
+% TODO: Describe the FIS architecture
+% - Two inputs: diversity_ratio d ∈ [0,1], iteration_progress t ∈ [0,1]
+% - One output: inertia weight w ∈ [wMin, wMax]
+% - Fuzzification → Inference (min-firing) → Aggregation (max) → Defuzzification (COG)
+
+\subsection{Input and Output Membership Functions (Fixed)}
+
+% TODO: Describe I1 (standard triangular)
+% For 3 labels: low/medium/high
+% For 5 labels: very_low/low/medium/high/very_high
+% Table with MF parameters for both granularities
+% Describe Set A for output (both 3L and 5L versions)
+
+% FIGURE: Input and output MFs for 3L and 5L (reuse from OLA/CLEI)
+
+\subsection{Two Granularity Levels}
+
+% TODO: Explain why we test both 3 and 5 labels:
+% - 3 labels: 9 rules (3^9 = 19,683 possible rule bases)
+% - 5 labels: 25 rules (5^25 ≈ 2.98 × 10^17 possible rule bases)  
+% - Consistent with CLEI 2026 which also tested both granularities
+% - Allows assessing whether finer granularity amplifies or attenuates rule effects
+
+\subsection{Rule Base as the Variable Under Study}
+
+% We select 6 semantically meaningful variants based on optimization intuition
+% Tables showing all 6 rule bases for both 3L and 5L
+
+\begin{table}[t]
+\caption{Three-label rule base variants (9 rules each). Each cell shows the output label (L=Low, M=Medium, H=High) for the corresponding input combination.}\label{tab:rules3L}
+\centering
+\begin{tabular}{ll|ccc|ccc|ccc|ccc|ccc|ccc}
+\toprule
+& & \multicolumn{3}{c|}{R1} & \multicolumn{3}{c|}{R2} & \multicolumn{3}{c|}{R3} & \multicolumn{3}{c|}{R4} & \multicolumn{3}{c|}{R5} & \multicolumn{3}{c}{R6} \\
+& & E & M & L & E & M & L & E & M & L & E & M & L & E & M & L & E & M & L \\
+\midrule
+\multirow{3}{*}{\rotatebox{90}{Div.}}
+& low    & H & L & L & M & L & L & H & H & M & L & L & L & H & M & L & L & H & H \\
+& med    & H & M & L & M & L & L & H & H & H & M & M & M & H & M & L & L & M & H \\
+& high   & H & H & M & H & M & L & H & H & H & H & H & H & H & M & L & L & L & M \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% TODO: Add Table for 5-label rule base variants (25 rules each)
+% \begin{table}[t]
+% \caption{Five-label rule base variants (25 rules each). Abbreviated labels: 
+%   vl=very\_low, l=low, m=medium, h=high, vh=very\_high.}\label{tab:rules5L}
+% ... (6 sub-tables or compact format)
+% \end{table}
+
+% ============================================================
+\section{Experimental Design}\label{sec:experiments}
+% ============================================================
+
+\subsection{Rule Base Variants: Semantic Justification}
+
+% TODO: For each Ri, explain the "philosophy":
+% R1 (Baseline): Explore early, exploit late, diversity-reactive — standard literature approach
+% R2 (Exploitation-Dominant): Aggressive convergence, low w bias
+% R3 (Exploration-Dominant): Resist premature convergence, high w bias  
+% R4 (Diversity-Reactive): w = f(diversity) only, ignores progress
+% R5 (Progress-Dominant): w = f(progress) only, mimics linear decrease
+% R6 (Inverse): Opposite of R1 — exploit early, explore late (sanity check)
+
+\subsection{CEC 2017 Benchmark Functions}
+
+% Same representative subset as CLEI 2026 to enable cross-paper comparison
+
+\begin{table}[t]
+\caption{CEC 2017 benchmark functions used in this study.}\label{tab:cec}
+\centering
+\begin{tabular}{llll}
+\toprule
+Function & Category & Dimension & Characteristics \\
+\midrule
+F1  & Unimodal    & 100 & Shifted and Rotated \\
+F5  & Multimodal  & 100 & Shifted and Rotated \\
+F11 & Hybrid      & 100 & Shifted and Rotated \\
+F21 & Composition & 4   & Composition Function \\
+F22 & Composition & 4   & Composition Function \\
+F23 & Composition & 4   & Composition Function \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{PSO Configuration and Baselines}
+
+\begin{table}[t]
+\caption{PSO parameter configuration (same as CLEI~2026).}\label{tab:pso_config}
+\centering
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+Population size & 50 \\
+Max. iterations & 500 \\
+Acceleration coefficients $c_1, c_2$ & 2.0 \\
+Dimensions & Per function (see Table~\ref{tab:cec}) \\
+Independent runs & 31 \\
+Seed & 42 (reproducible) \\
+\midrule
+\multicolumn{2}{l}{\textit{Fuzzy PSO (fixed across all rule variants)}} \\
+Input MFs & I1 (Standard triangular) \\
+Output MFs & Set A (Symmetric triangular) \\
+Granularity & 3 labels and 5 labels \\
+Inference & Mamdani (min/max) \\
+Defuzzification & Centroid of Gravity \\
+$w_{\min}, w_{\max}$ & 0.0, 1.0 \\
+\midrule
+\multicolumn{2}{l}{\textit{Configurations}} \\
+Rule variants & R1--R6 $\times$ \{3L, 5L\} = 12 fuzzy configs \\
+Baseline & PSO-STD (linear $w$: $0.9 \to 0.4$) \\
+\textbf{Total} & \textbf{13 configs $\times$ 6 functions $\times$ 31 runs = 2,418} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Statistical Methodology}
+
+% TODO: Describe:
+% - Wilcoxon rank-sum (pairwise, per function)
+% - Friedman test (global ranking)
+% - Nemenyi post-hoc (Critical Difference diagram)
+% - Holm-Bonferroni correction
+% - Effect size: Cohen's d / Cliff's delta
+% - Significance level: α = 0.05
+
+% ============================================================
+\section{Results and Discussion}\label{sec:results}
+% ============================================================
+
+\subsection{Overall Ranking Across All Functions}
+
+% TODO: Friedman ranking table + CD diagram
+% FIGURE: Critical Difference diagram
+
+\subsection{Performance by Function Category}
+
+% TODO: Separate analysis for Unimodal / Multimodal / Hybrid / Composition  
+% TABLE: Mean rank per Ri per category
+% FIGURE: Boxplots grouped by category
+
+\subsection{Statistical Significance Analysis}
+
+% TODO: Pairwise Wilcoxon p-values table (with Holm correction)
+% Win/Tie/Loss counts for R1 vs each Ri
+
+\subsection{Inertia Weight Behavior Analysis}
+
+% TODO: w trajectory plots for selected functions
+% FIGURE: w over iterations for R1-R6 on representative functions
+% Analyze how different rules produce different w profiles
+
+\subsection{Granularity Effect: 3 Labels vs 5 Labels}
+
+% TODO: Compare Ri-3L vs Ri-5L for each rule strategy
+% Does finer granularity amplify or attenuate rule base effects?
+% Paired analysis: same Ri at different granularities
+
+% ============================================================
+\section{Conclusions and Future Work}\label{sec:conclusions}
+% ============================================================
+
+% TODO: Key findings:
+% 1. [Which rule base variant performs best overall?]
+% 2. [Is rule base structure as influential as MF shape?]
+% 3. [Does granularity (3L vs 5L) amplify the effect of rule structure?]
+% 4. [Problem-dependent recommendations?]
+% 5. Future: combine best rule base (WEA) + best input MFs (CLEI) + best output MFs (OLA) 
+%    → a fully optimized FIS for PSO inertia weight control
+
+\begin{credits}
+\subsubsection{\ackname}
+% TODO: Funding acknowledgment
+
+\subsubsection{\discintname}
+The authors have no competing interests to declare that are relevant to the content of this article.
+\end{credits}
+%
+\bibliographystyle{splncs04}
+% \bibliography{references}
+%
+\begin{thebibliography}{99}
+
+\bibitem{shi1998}
+Shi, Y., Eberhart, R.: A modified particle swarm optimizer. In: IEEE International Conference on Evolutionary Computation, pp. 69--73. IEEE (1998)
+
+\bibitem{kennedy1995}
+Kennedy, J., Eberhart, R.: Particle swarm optimization. In: IEEE International Conference on Neural Networks, vol. 4, pp. 1942--1948. IEEE (1995)
+
+% TODO: Add remaining references (~15-20 total)
+% Key areas: fuzzy PSO, sensitivity analysis, CEC 2017, Mamdani FIS
+
+\end{thebibliography}
+\end{document}

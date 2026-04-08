@@ -21,12 +21,16 @@ class FuzzyInertiaController:
     Mamdani FIS:
       Inputs: diversity_ratio d in [0,1], progress t in [0,1]
       Output: w in [wMin, wMax]
+    
+    CLEI2026: input_set controla las MFs de entrada (diversity, progress).
+    w_set controla las MFs de salida (inertia weight).
     """
 
-    def __init__(self, w_set, wMin=0.0, wMax=1.0, n_grid=501):
+    def __init__(self, w_set, input_set="I1", wMin=0.0, wMax=1.0, n_grid=501):
         self.wMin = float(wMin)
         self.wMax = float(wMax)
         self.w_set = str(w_set).upper()
+        self.input_set = str(input_set).upper()
         self.n_grid = int(n_grid)
         self.w_history = [self.wMax]  # Valor inicial: exploración máxima en iter=0
 
@@ -34,17 +38,8 @@ class FuzzyInertiaController:
         # Universo de salida normalizado [0,1]
         self.y = np.linspace(0.0, 1.0, self.n_grid)
 
-        # Entradas: triangulares estrictas (sin hombros)
-        self.div_mf = {
-            "low":    (0.0, 0.2, 0.4),
-            "medium": (0.3, 0.5, 0.7),
-            "high":   (0.6, 0.8, 1.0),
-        }
-        self.it_mf = {
-            "early":  (0.0, 0.2, 0.4),
-            "mid":    (0.3, 0.5, 0.7),
-            "late":   (0.6, 0.8, 1.0),
-        }
+        # Entradas: configurables via input_set (CLEI2026)
+        self.div_mf, self.it_mf = self._build_input_mfs(self.input_set)
 
         # Salida w (set A estricta; set B con hombro)
         self.w_mf = self._build_w_mfs(self.w_set)
@@ -65,6 +60,75 @@ class FuzzyInertiaController:
             ("high",   "late"):  "medium",
         }
 
+    def _build_input_mfs(self, input_set):
+        """
+        CLEI2026: Define diferentes configuraciones de MFs para las variables de entrada.
+        Todas usan 3 etiquetas (low/medium/high para diversity, early/mid/late para progress).
+        
+        I1 - Standard:  Distribución uniforme, solapamiento moderado (baseline OLA2026)
+        I2 - Narrow:    Menor solapamiento, transiciones más abruptas
+        I3 - Wide:      Mayor solapamiento, transiciones más suaves
+        I4 - Shoulder:  Funciones hombro en extremos (trapezoidal), mayor certeza en bordes
+        """
+        INPUT_SETS = {
+            # I1: Standard/Simétrico - baseline (distribución actual OLA2026)
+            "I1": {
+                "div": {
+                    "low":    (0.0, 0.2, 0.4),
+                    "medium": (0.3, 0.5, 0.7),
+                    "high":   (0.6, 0.8, 1.0),
+                },
+                "it": {
+                    "early":  (0.0, 0.2, 0.4),
+                    "mid":    (0.3, 0.5, 0.7),
+                    "late":   (0.6, 0.8, 1.0),
+                },
+            },
+            # I2: Narrow/Separado - menor solapamiento, zonas de transición más estrechas
+            "I2": {
+                "div": {
+                    "low":    (0.0, 0.16, 0.33),
+                    "medium": (0.33, 0.5, 0.66),
+                    "high":   (0.66, 0.84, 1.0),
+                },
+                "it": {
+                    "early":  (0.0, 0.16, 0.33),
+                    "mid":    (0.33, 0.5, 0.66),
+                    "late":   (0.66, 0.84, 1.0),
+                },
+            },
+            # I3: Wide/Amplio - máximo solapamiento, mezcla más gradual
+            "I3": {
+                "div": {
+                    "low":    (0.0, 0.25, 0.5),
+                    "medium": (0.25, 0.5, 0.75),
+                    "high":   (0.5, 0.75, 1.0),
+                },
+                "it": {
+                    "early":  (0.0, 0.25, 0.5),
+                    "mid":    (0.25, 0.5, 0.75),
+                    "late":   (0.5, 0.75, 1.0),
+                },
+            },
+            # I4: Shoulder/Hombro - funciones trapezoidales en los extremos
+            "I4": {
+                "div": {
+                    "low":    (0.0, 0.0, 0.35),    # hombro izquierdo
+                    "medium": (0.2, 0.5, 0.8),
+                    "high":   (0.65, 1.0, 1.0),    # hombro derecho
+                },
+                "it": {
+                    "early":  (0.0, 0.0, 0.35),    # hombro izquierdo
+                    "mid":    (0.2, 0.5, 0.8),
+                    "late":   (0.65, 1.0, 1.0),    # hombro derecho
+                },
+            },
+        }
+        if input_set not in INPUT_SETS:
+            raise ValueError(f"input_set='{input_set}' no definido. Sets disponibles: {list(INPUT_SETS.keys())}")
+        
+        return INPUT_SETS[input_set]["div"], INPUT_SETS[input_set]["it"]
+
     def _build_w_mfs(self, w_set):
         W_SETS ={
             "A": {
@@ -72,11 +136,11 @@ class FuzzyInertiaController:
                 "medium": (0.25, 0.5, 0.75),  # 
                 "low":    (0.00, 0.25, 0.50),  #  
             },
-            "B": {
-                "high":   (0.50, 0.75, 0.75),  # 
-                "medium": (0.25, 0.5, 0.75),  # 
-                "low":    (0.25, 0.25, 0.50),  # 
-            },
+            #"B": {
+            #    "high":   (0.50, 0.75, 0.75),  # 
+            #    "medium": (0.25, 0.5, 0.75),  # 
+            #    "low":    (0.25, 0.25, 0.50),  # 
+            #},
             #"C": {
             #    "high":   (0.60, 0.75, 0.90),  # 
             #    "medium": (0.35, 0.5, 0.65),  # 
@@ -131,21 +195,22 @@ class FuzzyInertiaController:
         return w
 
 
-def get_fuzzy_controller(w_set, num_labels=3):
+def get_fuzzy_controller(w_set, num_labels=3, input_set="I1"):
     """
     Factory function para obtener el controller fuzzy apropiado.
     
     Args:
-        w_set: 'A', 'B', 'C', o 'D'
+        w_set: 'A', 'B' (configuración de MFs de salida)
         num_labels: 3 o 5 (etiquetas lingüísticas)
+        input_set: 'I1', 'I2', 'I3', 'I4' (configuración de MFs de entrada, CLEI2026)
     
     Returns:
         FuzzyInertiaController (3 labels) o FuzzyInertiaController_5labels (5 labels)
     """
     if num_labels == 3:
-        return FuzzyInertiaController(w_set)
+        return FuzzyInertiaController(w_set, input_set=input_set)
     elif num_labels == 5:
         from FUZZY.fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
-        return FuzzyInertiaController_5labels(w_set)
+        return FuzzyInertiaController_5labels(w_set, input_set=input_set)
     else:
         raise ValueError(f"num_labels={num_labels} no soportado. Usa 3 o 5.")

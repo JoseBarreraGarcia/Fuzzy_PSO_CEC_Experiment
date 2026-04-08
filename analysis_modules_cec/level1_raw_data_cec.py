@@ -46,9 +46,9 @@ OPTIMOS_CEC2017 = {
     'F18': 3.0,          # Goldstein-Price
     'F19': -3.86,        # Hartman 3
     'F20': -3.32,        # Hartman 6
-    'F21': -10.1532,     # Shekel 5
-    'F22': -10.4028,     # Shekel 7
-    'F23': -10.5363      # Shekel 10
+    'F21': -10.153199679058229,  # Shekel 5
+    'F22': -10.402940566818662,  # Shekel 7
+    'F23': -10.536409816692046   # Shekel 10
 }
 
 
@@ -237,9 +237,23 @@ def extract_diversity_metrics(output_dir):
             if result:
                 mh, funcion = result
                 
+                # Normalize column names: BLOB uses best_fitness/DIV
+                col_remap = {}
+                for c in df_iter.columns:
+                    cl = c.strip().lower()
+                    if cl == 'best_fitness':
+                        col_remap[c] = 'fitness'
+                    elif cl == 'div':
+                        col_remap[c] = 'diversity'
+                df_iter = df_iter.rename(columns=col_remap)
+                
                 # Extraer w, diversidad, XPL, XPT si existen
-                if all(col in df_iter.columns for col in ['fitness', 'diversity']):
-                    df_div = df_iter[['fitness', 'diversity']].copy()
+                if 'diversity' in df_iter.columns:
+                    keep_cols = []
+                    if 'fitness' in df_iter.columns:
+                        keep_cols.append('fitness')
+                    keep_cols.append('diversity')
+                    df_div = df_iter[keep_cols].copy()
                     
                     # Agregar w si existe
                     if 'w' in df_iter.columns:

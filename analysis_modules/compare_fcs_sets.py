@@ -18,10 +18,10 @@ df_target = df_merged[
     (df_merged['binarizacion'] == binariz)
 ]
 
-print(f"\n=== Comparación de W entre PSO_FCS:A/B/C/D para {inst} {binariz} ===\n")
+print(f"\n=== Comparison of W among PSO_FCS:A/B/C/D for {inst} {binariz} ===\n")
 
 output = []
-output.append("Iteración | PSO_FCS:A | PSO_FCS:B | PSO_FCS:C | PSO_FCS:D | Diferencia(max-min)")
+output.append("Iteration | PSO_FCS:A | PSO_FCS:B | PSO_FCS:C | PSO_FCS:D | Difference(max-min)")
 output.append("----------|-----------|-----------|-----------|-----------|--------------------")
 
 for iter_val in [0, 5, 10, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]:

@@ -1,0 +1,16 @@
+\section{Conclusions}
+\label{sec:conclusions}
+
+This work investigated the sensitivity of fuzzy-controlled PSO to the geometric design of input membership functions, a factor that has been consistently overlooked in prior research. By crossing four input set geometries (I1--I4) with two granularity levels (3 and 5~labels) under a constant output set and rule base, a total of 1,674 experiments were conducted across six benchmark functions with distinct landscape characteristics.
+
+Three main findings emerge from the experimental analysis. First, the input membership function configuration has a measurable effect on controller performance. On the multimodal Shekel functions, the best fuzzy-controlled variant improved mean fitness by up to 22.9\% and reduced standard deviation by up to 63\% relative to the PSO baseline, while on unimodal functions the baseline PSO consistently dominated all fuzzy variants. This dichotomy confirms that diversity-driven inertia adaptation is beneficial only when the landscape contains deceptive local optima that require active exploration management.
+
+Second, the geometric properties of the input partition determine the quality of the control signal. Configurations with moderate overlap (I1) achieved the best average rank (2.83 in the three-label case), while excessive overlap (I3) consistently produced the worst performance at both granularity levels. This result indicates that overly smooth partitions dilute the discrimination between distinct search states, leading to inertia adaptation that fails to react meaningfully to changes in diversity or progress.
+
+Third, three-label partitions outperformed five-label partitions for three of the four input sets, with an average Gap\% of 23.7\% versus 24.1\%. The coarser granularity produces more robust rule activation patterns on the two normalized inputs used in this controller, while five labels over-segment the input space without providing additional useful discrimination.
+
+These findings have practical implications for the design of fuzzy-controlled metaheuristics. Input membership function geometry should be treated as an explicit design variable rather than a default choice, particularly when the controller operates on low-resolution signals such as normalized diversity and iteration progress. For practitioners, the recommendation emerging from this study is to favor moderate-overlap triangular partitions with three linguistic labels as a starting point for fuzzy inertia weight controllers.
+
+Several limitations should be acknowledged. The study is restricted to triangular membership functions; other shapes (Gaussian, trapezoidal) may exhibit different sensitivity patterns. The benchmark suite, while structurally diverse, comprises only six functions and does not include high-dimensional multimodal problems where the interaction between geometry and granularity could differ. Additionally, the output set and rule base were held constant; their interaction with the input partition remains an open question.
+
+Future work will extend this analysis in two directions: evaluating the interaction between input and output partition designs in a full factorial framework, and applying the methodology to combinatorial optimization problems where diversity dynamics differ substantially from continuous benchmarks.

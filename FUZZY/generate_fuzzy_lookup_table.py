@@ -91,7 +91,7 @@ def get_activated_rules(controller, diversity, progress):
     return " | ".join(activated) if activated else "none"
 
 
-def generate_lookup_table(output_dir="./FUZZY", step=0.02):
+def generate_lookup_table(output_dir="./FUZZY", step=0.02, input_set="I1"):
     """
     Genera tabla de búsqueda del controlador fuzzy.
     
@@ -99,6 +99,7 @@ def generate_lookup_table(output_dir="./FUZZY", step=0.02):
         output_dir: Directorio donde guardar el CSV
         step: Incremento entre valores (default 0.02 = cada 2 centésimas)
               Ejemplos: 0.01=cada 1%, 0.02=cada 2%, 0.05=cada 5%, 0.1=cada 10%
+        input_set: 'I1', 'I2', 'I3', or 'I4' (CLEI2026 input MF configuration)
     """
     
     # Crear directorio si no existe
@@ -114,7 +115,7 @@ def generate_lookup_table(output_dir="./FUZZY", step=0.02):
     controllers = {}
     for w_set in w_sets:
         try:
-            controllers[w_set] = FuzzyInertiaController(w_set)
+            controllers[w_set] = FuzzyInertiaController(w_set, input_set=input_set)
         except ValueError as e:
             print(f"[WARN] No se pudo crear controlador para {w_set}: {e}")
     

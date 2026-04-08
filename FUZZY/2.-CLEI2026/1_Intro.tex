@@ -1,0 +1,17 @@
+\section{Introduction}
+% Contextualizar el balance entre exploración y explotación en PSO.
+% Definir la necesidad de mecanismos adaptativos para el peso de inercia (w).
+% Establecer la problemática central: ¿Cómo afecta la "percepción" del estado de búsqueda (fuzzificación de entrada) al rendimiento?
+% Diferenciar de OLA 2026: Mientras que el estudio anterior evaluó el impacto de la variable de salida, este trabajo aísla el efecto de la configuración de los conjuntos de entrada (I1-I4).
+% Declarar el objetivo: Evaluar la sensibilidad del algoritmo ante variaciones en el diseño de los conjuntos difusos de entrada.
+
+
+Particle Swarm Optimization (PSO) is a population-based metaheuristic whose performance is strongly influenced by the balance between global exploration and local exploitation \cite{kennedy1995particle}. The inertia weight plays a key role in regulating this balance, motivating numerous adaptive strategies aimed at improving convergence behavior and robustness \cite{shi1998modified}.
+
+Fuzzy control systems have been widely employed to adapt PSO parameters online using qualitative descriptions of the search state, providing a flexible alternative to deterministic or iteration-based schedules \cite{shi2001fuzzy}. However, most fuzzy-controlled PSO variants rely on fixed linguistic partitions and predefined membership functions selected a priori, typically without explicit analysis of their semantic design.
+
+As a result, the impact of linguistic granularity and membership function configuration remains insufficiently explored. In particular, it is unclear to what extent different fuzzy linguistic schemes, even when sharing identical control logic, influence optimization behavior across problems with different landscape characteristics.
+
+This paper presents an experimental analysis of fuzzy-controlled PSO variants that differ exclusively in linguistic granularity and membership function design. Rather than proposing a new optimization algorithm, the study isolates and evaluates the effect of alternative fuzzy semantic configurations under identical control logic, assessing their impact on performance and robustness across representative benchmark functions. The results position fuzzy scheme design as a relevant, yet often overlooked, experimental dimension in adaptive metaheuristic optimization.
+
+The remainder of this paper is organized as follows. Section~\ref{sec:related_work} reviews relevant work on fuzzy-adaptive parameter control in PSO and related optimization frameworks. Section~\ref{sec:framework} describes the fuzzy-controlled PSO framework and the linguistic configurations evaluated in this study. Section~\ref{sec:experimental_setup} details the benchmark functions, parameter settings, and experimental protocol. The experimental results and their discussion are presented in Section~\ref{sec:results}. Finally, Section~\ref{sec:conclusions} summarizes the main findings and outlines directions for future research.

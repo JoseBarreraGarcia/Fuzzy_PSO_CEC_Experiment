@@ -1,0 +1,73 @@
+\section{Experimental Setup}
+\label{sec:experimental_setup}
+
+\subsection{Benchmark Functions}
+\label{subsec:benchmarks}
+
+The experimental evaluation uses six classical benchmark functions representing two structurally distinct groups: high-dimensional problems with regular landscapes and low-dimensional problems with rugged, deceptive landscapes.
+
+The first group includes three functions evaluated in $d = 100$ dimensions. The Sphere function~(F1) serves as a unimodal baseline with a smooth, convex landscape. Rosenbrock's function~(F5) provides a unimodal challenge characterized by a narrow, curved valley where convergence is highly sensitive to search direction. Griewank's function~(F11) introduces regular multimodality through oscillatory components superimposed on a quadratic base.
+
+The second group comprises three variants of the Shekel function in a four-dimensional space ($d = 4$), differing in the number of components~$m$: F21~($m{=}5$), F22~($m{=}7$), and F23~($m{=}10$). The Shekel family is characterized by closely spaced deep optima, making it particularly challenging for population-based methods prone to premature convergence.
+
+All functions were implemented using the \texttt{Opfunu} library~\cite{Van_Thieu_2024_Opfunu}, ensuring reproducibility. Table~\ref{tab:benchmark_functions} summarizes the selected benchmarks.
+
+\begin{table*}[!ht]
+    \caption{Benchmark functions used in the experimental evaluation.}
+    \label{tab:benchmark_functions}
+    \centering
+    \begin{tabular}{lcccc}
+    \toprule
+    Function & Type & Dim. & Bounds & Global Opt. \\
+    \midrule
+    F1 (Sphere)            & Unimodal   & $100$ & $[-100, 100]^d$ & $0.0$ \\
+    F5 (Rosenbrock)        & Unimodal   & $100$ & $[-30, 30]^d$   & $0.0$ \\
+    F11 (Griewank)         & Multimodal & $100$ & $[-600, 600]^d$ & $0.0$ \\
+    F21 (Shekel, $m{=}5$)  & Multimodal & $4$   & $[0, 10]^d$     & $-10.1532$ \\
+    F22 (Shekel, $m{=}7$)  & Multimodal & $4$   & $[0, 10]^d$     & $-10.4029$ \\
+    F23 (Shekel, $m{=}10$) & Multimodal & $4$   & $[0, 10]^d$     & $-10.5363$ \\
+    \bottomrule
+    \end{tabular}
+\end{table*}
+
+\subsection{Parameter Settings and Evaluation Protocol}
+\label{subsec:protocol}
+
+All algorithmic variants were evaluated under identical conditions. The population size was fixed at $50$~particles and the maximum number of iterations was set to $500$. No additional stopping criteria were applied.
+
+Each algorithm--function combination was executed over $31$ independent runs. A shared seeding strategy was adopted: all algorithms used the same random seed for the $k$-th run, with the initial seed set to $42$ and incremented by one for each subsequent run, yielding seeds $\{42, 43, \ldots, 72\}$.
+
+The baseline PSO with linearly decreasing inertia weight was evaluated alongside eight fuzzy-controlled variants (PSO--FCS). These variants result from the full factorial combination of the four input set configurations described in Section~\ref{subsec:input_mf_configs} (I1--I4) and two granularity levels (3 and 5~labels), with the output fuzzy set~(A) and rule base held constant. Table~\ref{tab:algorithm_configs} summarizes the nine configurations, totaling $9 \times 6 \times 31 = 1{,}674$ independent experiments.
+
+\begin{table*}[!ht]
+    \caption{Algorithm configurations evaluated. All PSO--FCS variants share the same rule base and output set; only input membership functions and granularity vary.}
+    \label{tab:algorithm_configs}
+    \centering
+    \begin{tabular}{lcccc}
+    \toprule
+    Algorithm & $w$ Control & Output Set & Labels & Input Set \\
+    \midrule
+    PSO (baseline)   & Linear decrease & --- & --- & --- \\
+    PSO--FCS--I1--3L & Fuzzy (FCS) & A & 3 & I1 (Standard) \\
+    PSO--FCS--I2--3L & Fuzzy (FCS) & A & 3 & I2 (Narrow) \\
+    PSO--FCS--I3--3L & Fuzzy (FCS) & A & 3 & I3 (Wide) \\
+    PSO--FCS--I4--3L & Fuzzy (FCS) & A & 3 & I4 (Shoulder) \\
+    PSO--FCS--I1--5L & Fuzzy (FCS) & A & 5 & I1 (Standard) \\
+    PSO--FCS--I2--5L & Fuzzy (FCS) & A & 5 & I2 (Narrow) \\
+    PSO--FCS--I3--5L & Fuzzy (FCS) & A & 5 & I3 (Wide) \\
+    PSO--FCS--I4--5L & Fuzzy (FCS) & A & 5 & I4 (Shoulder) \\
+    \bottomrule
+    \end{tabular}
+\end{table*}
+
+Performance was assessed using the final best fitness value and the relative gap to the known global optimum, defined as
+\begin{equation}
+    \text{Gap}(\%) =
+    \frac{\left| f_{\text{best}} - f_{\text{opt}} \right|}
+    {\left| f_{\text{opt}} \right|} \times 100.
+    \label{eq:gap_metric}
+\end{equation}
+
+Robustness was evaluated via the mean and standard deviation of final fitness values across the 31~runs. Statistical significance was assessed using the Wilcoxon rank-sum test at $\alpha = 0.05$, complemented by the Mann--Whitney~U test as a non-paired confirmation. Computational cost was measured using wall-clock execution time.
+
+All experiments were conducted on a 64-bit system with an Intel Core~i7 CPU (2.8~GHz) and 16~GB of RAM. The algorithms were implemented in Python~3.11.9 and executed sequentially.

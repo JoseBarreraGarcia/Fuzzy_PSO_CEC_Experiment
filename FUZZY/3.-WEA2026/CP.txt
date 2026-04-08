@@ -1,0 +1,85 @@
+Call for Papers
+Workshop on Engineering Applications – WEA 2026
+WEA 2026 has two main categories for submissions: PAPER and ABSTRACT. Please keep in mind that accepted papers will be considered to be included into WEA 2026 CCIS volume (approved !!!) while accepted abstracts will be included into a Book of Abstracts with ISBN.
+
+Information about SUBMISSION DEADLINES is available in our webpage
+
+WEA 2026 author deadlines 
+
+WEA 2026 Call for Papers
+The Engineering Faculties of the Universidad Distrital Francisco José de Caldas, Fundación Universitaria del Área Andina and Universidad Externado de Colombia are glad to invite researchers, students, and practitioners from any engineering field to participate into one of its tracks of the conference which will be held in Pereira– Colombia
+
+The goal of WEA 2026 is to bring together researchers, students and practitioners from academia and industry focused in applied computer science on any engineering field. Original research papers and posters are invited for publication in all areas of applied computer science on engineering.
+
+Topics covering industrial applications and academic research of computer science on engineering are desirable on any of the following tracks:
+
+Track 1: Artificial Intelligence and XAI
+Artificial Intelligence: Theory and applications
+Computational Intelligence:
+Interval-Fuzzy-Rough sets
+Genetic/Evolutionary algorithms
+Neural Networks
+Explainable AI (XAI)
+Metaheuristics and search methods
+Control (theory and applications)
+Intelligent Computing
+Machine Learning
+Data Science and Analysis
+Applications and methodologies
+Real-world implementations
+Uncertainty theory/analysis
+Industry X (4.0 and beyond)
+
+Track 2: Optimization
+Mathematical/formal methods
+Computational methods/algorithms
+Real/combinatorial optimization
+Optimization under uncertainty
+Computational implementations
+Metaheuristics and algorithms
+Operations Research
+Optimization and AI
+Modeling and applications:
+Logistics/Production/Health
+planning,
+Inventory, TSP/VRP,
+Food safety
+Supply chain networks, methods and models
+Optimization and health/medicine
+
+Track 3: Simulation Systems
+Simulation methods/models
+Analysis Methodologies
+Agents-based models/simulation
+Transdisciplinary methodologies
+Uncertainty Modeling
+Simulation and health/medicine
+Discrete events simulation
+Continuous simulation
+System Dynamics
+Hybrid Simulation
+Simulation Optimization
+
+Paper and Abstract submission deadlines:
+Please visit our webpage:
+
+WEA 2026 author deadlines 
+
+Paper submission instructions
+WEA 2026 submission instructions (FULL papers only)
+
+CCIS Springer (indexed by Scopus and SCIELO) templates are available at:
+
+https://www.springer.com/gp/computer-science/lncs/conference-proceedings-guidelines
+
+CCIS in SCOPUS:
+
+https://www.scopus.com/sourceid/17700155007?
+
+Paper submission will be handled through Microsoft CMT, so all authors are encouraged to use our system
+
+https://cmt3.research.microsoft.com/WEA2026/
+
+Only  accepted  papers  will  be  considered  for  possible  inclusion  into  the  conference  proceedings.
+
+Acknowledgement: The Microsoft CMT service was used for managing the peer-reviewing process for this conference. This service was provided for free by Microsoft and they bore all expenses, including costs for Azure cloud services as well as for software development and support.

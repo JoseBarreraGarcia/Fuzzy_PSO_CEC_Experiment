@@ -1,0 +1,93 @@
+\section{Results and Discussion}
+\label{sec:results}
+
+This section presents the experimental results organized in three parts: the overall comparison between the baseline PSO and the fuzzy-controlled variants, the effect of input set geometry on controller performance, and the influence of linguistic granularity.
+
+\subsection{Overall Performance: PSO vs PSO--FCS}
+\label{subsec:overall_results}
+
+Table~\ref{tab:pso_vs_fcs} summarizes the comparison between the baseline PSO and the best-performing PSO--FCS variant for each benchmark function. The best fuzzy configuration per function was selected by lowest mean fitness (for minimization problems F1, F5, F11) or highest mean fitness (for maximization problems F21--F23) across 31~runs.
+
+\begin{table}[h]
+    \caption{PSO vs best PSO--FCS variant per function. Fitness improvement, standard deviation reduction, Wilcoxon signed-rank $p$-value, and computational overhead are reported over 31 independent runs.}
+    \label{tab:pso_vs_fcs}
+    \centering
+    \footnotesize
+    \begin{tabular}{@{}lclrrrr@{}}
+    \toprule
+    Func. & Win & Best FCS & Impr.\% & $\sigma$\,Red.\% & $p$ & OH\% \\
+    \midrule
+    F1  & PSO & I1:3L & --- & --- & $<$0.001\rlap{***} & 20.1 \\
+    F5  & PSO & I1:5L & --- & --- & $<$0.001\rlap{***} & 27.6 \\
+    F11 & PSO & I1:3L & --- & --- & $<$0.001\rlap{***} & 20.2 \\
+    F21 & FCS & I2:5L & $+$22.9 & $-$63.0 & 0.041\rlap{*} & 3.6 \\
+    F22 & FCS & I1:3L & $+$6.5  & $-$58.7 & 0.824\,ns & 5.3 \\
+    F23 & FCS & I2:3L & $+$9.9  & $-$57.3 & 0.504\,ns & 1.0 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+A stark dichotomy emerges between unimodal and multimodal landscapes. On F1, F5, and F11 the baseline PSO achieves fitness values that are orders of magnitude better than any fuzzy variant ($p < 0.001$, Wilcoxon signed-rank test), while incurring 20--28\% less computation time. This result is expected: unimodal landscapes with a single basin of attraction do not benefit from diversity-driven inertia adaptation. The fuzzy controller interprets the natural convergence of the swarm as a signal to increase exploration, which is counterproductive in a landscape where convergence is desirable from the outset.
+
+On the Shekel functions (F21--F23), the pattern reverses. The best PSO--FCS variant improves mean fitness by 6.5--22.9\% relative to the baseline, while reducing standard deviation by 57--63\%. The computational overhead is marginal (1.0--5.3\%). These results indicate that the fuzzy controller successfully detects premature convergence toward local optima and reactivates exploration through increased inertia. The substantial reduction in variability suggests that the controller stabilizes the search process, yielding more consistent outcomes across independent runs.
+
+However, the statistical significance of the multimodal results is limited. Only F21 achieves $p < 0.05$ with the Wilcoxon test ($p = 0.041$), while F22 and F23 do not reach significance at the 5\% level. This is attributable to the inherent variance of the Shekel family: with closely spaced deep optima, even small perturbations in initial conditions lead to different attractors, inflating within-group variance and reducing statistical power.
+
+Fig.~\ref{fig:pso_vs_fcs_boxplot} visualizes the fitness distributions for all six functions, confirming the dichotomy between function groups. For the Shekel functions, the fuzzy variants exhibit tighter interquartile ranges and fewer extreme outliers compared to the baseline.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/08_pso_vs_fcs_boxplot.png}
+    \caption{Fitness distributions (31~runs) for PSO and the best PSO--FCS variant per function. On unimodal functions (F1, F5, F11), PSO dominates. On multimodal functions (F21--F23), the fuzzy-controlled variant achieves better medians and reduced dispersion.}
+    \label{fig:pso_vs_fcs_boxplot}
+\end{figure*}
+
+The fitness--robustness tradeoff is further illustrated in Fig.~\ref{fig:scatter_fitness_std}, which plots mean fitness against standard deviation for all nine algorithm configurations on each benchmark function. On the Shekel functions, the PSO baseline (star marker) occupies the high-variance region of the scatter, while the FCS variants cluster toward lower standard deviations. On unimodal functions, all FCS configurations collapse into a distant cluster far from the PSO baseline, visually confirming their inability to compete on these landscapes.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/04_scatter_fitness_std.png}
+    \caption{Mean fitness vs.\ standard deviation for all configurations on each benchmark function. Colors encode input sets (I1--I4), markers distinguish granularity ($\circ$\,=\,3L, $\square$\,=\,5L), and the star denotes the PSO baseline. On multimodal functions, FCS variants achieve lower dispersion; on unimodal functions, all FCS variants are orders of magnitude worse than PSO.}
+    \label{fig:scatter_fitness_std}
+\end{figure*}
+
+\subsection{Effect of Input Set Geometry}
+\label{subsec:input_geometry}
+
+The central question of this work is whether the geometric configuration of the input membership functions affects the performance of the fuzzy controller. Table~\ref{tab:input_ranking} reports the mean rank of each input set across all six benchmark functions, computed separately for each granularity level. A rank of~1 indicates the best-performing configuration on a given function; lower average rank implies more robust performance across the benchmark suite.
+
+\begin{table}[htbp]
+    \caption{Mean rank of each input set configuration across six benchmark functions ($1 =$ best). Ranks computed independently per granularity level.}
+    \label{tab:input_ranking}
+    \centering
+    \begin{tabular}{lcc}
+    \toprule
+    Input Set & 3-Label Rank & 5-Label Rank \\
+    \midrule
+    I1 (Standard) & \textbf{2.83} & 4.50 \\
+    I2 (Narrow)   & 3.67 & 5.17 \\
+    I4 (Shoulder) & 4.50 & 4.00 \\
+    I3 (Wide)     & 5.50 & 5.83 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+I1~(Standard), with uniformly spaced triangular functions and moderate overlap, achieves the best average rank (2.83) in the three-label configuration. I2~(Narrow) ranks second, suggesting that sharper transitions between linguistic labels can be beneficial, particularly on the Shekel functions where rapid reaction to diversity changes is advantageous. I3~(Wide) is consistently the worst-performing configuration at both granularity levels, indicating that excessive overlap dilutes the control signal and produces an overly smooth inertia adaptation that fails to distinguish between meaningfully different input states.
+
+Fig.~\ref{fig:heatmap_multimodal} presents the fitness heatmap for the multimodal functions, where the effect of input set geometry is most pronounced. I1 and I2 consistently achieve the darkest (best) cells, while I3 and I4 show lighter (worse) values, particularly on F21 and F22.
+
+\begin{figure*}[!ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/01b_heatmap_multimodal.png}
+    \caption{Mean fitness heatmap for multimodal functions (F21--F23) across input sets and granularity levels. Darker cells indicate better fitness. I1 and I2 configurations consistently outperform I3 and I4.}
+    \label{fig:heatmap_multimodal}
+\end{figure*}
+
+\subsection{Effect of Linguistic Granularity}
+\label{subsec:granularity}
+
+The comparison between three-label and five-label partitions reveals a consistent advantage for the coarser granularity. As shown in Table~\ref{tab:input_ranking}, the three-label configuration achieves a better mean rank than the five-label counterpart for three of the four input sets (I1, I2, I3), with the sole exception being I4~(Shoulder), where the five-label version slightly outperforms.
+
+The mean Gap\% across all functions reinforces this finding: three-label configurations achieve an average gap of 23.7\%, compared to 24.1\% for five-label configurations. While the absolute difference is small, the direction is consistent, suggesting that five labels over-segment the input space without providing additional useful discrimination.
+
+This result has a practical interpretation. The fuzzy controller operates on two normalized inputs (diversity and progress), each bounded in $[0, 1]$. With three labels, each linguistic term captures a broad region of the input space, leading to robust activation patterns where multiple rules contribute to the output. With five labels, the input space is partitioned more finely, but the underlying signals (population diversity and iteration count) do not exhibit the resolution needed to exploit this granularity. The result is a controller that responds to noise in the input measurements rather than to meaningful changes in search state.

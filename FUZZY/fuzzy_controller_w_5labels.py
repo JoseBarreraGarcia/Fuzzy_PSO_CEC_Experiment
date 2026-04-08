@@ -24,39 +24,115 @@ class FuzzyInertiaController_5labels:
       
     5 etiquetas: very_low, low, medium, high, very_high
     Reglas: 5×5 = 25
+    
+    CLEI2026: input_set controla las MFs de entrada (diversity, progress).
+    w_set controla las MFs de salida (inertia weight).
     """
 
-    def __init__(self, w_set, n_grid=501):
+    def __init__(self, w_set, input_set="I1", n_grid=501):
         self.wMin = 0.0
         self.wMax = 1.0
         self.w_set = str(w_set).upper()
+        self.input_set = str(input_set).upper()
         self.n_grid = int(n_grid)
         self.w_history = [self.wMax]  # Valor inicial: exploración máxima en iter=0
 
         # Universo de salida normalizado [0,1]
         self.y = np.linspace(0.0, 1.0, self.n_grid)
 
-        # Entradas: 5 etiquetas triangulares distribuidas uniformemente
-        self.div_mf = {
-            "very_low": (0.0, 0.15, 0.30),
-            "low":      (0.2, 0.35, 0.5),
-            "medium":   (0.35, 0.5, 0.65),
-            "high":     (0.5, 0.65, 0.80),
-            "very_high":(0.7, 0.85, 1.0),
-        }
-        self.it_mf = {
-            "very_early": (0.0, 0.15, 0.30),
-            "early":      (0.2, 0.35, 0.5),
-            "mid":        (0.35, 0.5, 0.65),
-            "late":       (0.5, 0.65, 0.80),
-            "very_late":  (0.7, 0.85, 1.0),
-        }
+        # Entradas: configurables via input_set (CLEI2026)
+        self.div_mf, self.it_mf = self._build_input_mfs(self.input_set)
 
-        # Salida w (sets A, B, C, D con 5 etiquetas)
+        # Salida w (sets A, B con 5 etiquetas)
         self.w_mf = self._build_w_mfs(self.w_set)
 
         # Reglas 5x5 (25 reglas). Lógica: más diversidad/temprano → más exploración
         self.rules = self._build_rules_5x5()
+
+    def _build_input_mfs(self, input_set):
+        """
+        CLEI2026: Define diferentes configuraciones de MFs para las variables de entrada.
+        Todas usan 5 etiquetas para diversity y progress.
+        
+        I1 - Standard:  Distribución uniforme, solapamiento moderado (baseline OLA2026)
+        I2 - Narrow:    Menor solapamiento, transiciones más abruptas
+        I3 - Wide:      Mayor solapamiento, transiciones más suaves
+        I4 - Shoulder:  Funciones hombro en extremos, mayor certeza en bordes
+        """
+        INPUT_SETS = {
+            # I1: Standard - baseline (distribución actual OLA2026)
+            "I1": {
+                "div": {
+                    "very_low": (0.0, 0.15, 0.30),
+                    "low":      (0.2, 0.35, 0.5),
+                    "medium":   (0.35, 0.5, 0.65),
+                    "high":     (0.5, 0.65, 0.80),
+                    "very_high":(0.7, 0.85, 1.0),
+                },
+                "it": {
+                    "very_early": (0.0, 0.15, 0.30),
+                    "early":      (0.2, 0.35, 0.5),
+                    "mid":        (0.35, 0.5, 0.65),
+                    "late":       (0.5, 0.65, 0.80),
+                    "very_late":  (0.7, 0.85, 1.0),
+                },
+            },
+            # I2: Narrow/Separado - menor solapamiento, transiciones más estrechas
+            "I2": {
+                "div": {
+                    "very_low": (0.0, 0.1, 0.2),
+                    "low":      (0.2, 0.3, 0.4),
+                    "medium":   (0.4, 0.5, 0.6),
+                    "high":     (0.6, 0.7, 0.8),
+                    "very_high":(0.8, 0.9, 1.0),
+                },
+                "it": {
+                    "very_early": (0.0, 0.1, 0.2),
+                    "early":      (0.2, 0.3, 0.4),
+                    "mid":        (0.4, 0.5, 0.6),
+                    "late":       (0.6, 0.7, 0.8),
+                    "very_late":  (0.8, 0.9, 1.0),
+                },
+            },
+            # I3: Wide/Amplio - máximo solapamiento, mezcla más gradual
+            "I3": {
+                "div": {
+                    "very_low": (0.0, 0.15, 0.35),
+                    "low":      (0.15, 0.3, 0.5),
+                    "medium":   (0.3, 0.5, 0.7),
+                    "high":     (0.5, 0.7, 0.85),
+                    "very_high":(0.65, 0.85, 1.0),
+                },
+                "it": {
+                    "very_early": (0.0, 0.15, 0.35),
+                    "early":      (0.15, 0.3, 0.5),
+                    "mid":        (0.3, 0.5, 0.7),
+                    "late":       (0.5, 0.7, 0.85),
+                    "very_late":  (0.65, 0.85, 1.0),
+                },
+            },
+            # I4: Shoulder/Hombro - funciones trapezoidales en los extremos
+            "I4": {
+                "div": {
+                    "very_low": (0.0, 0.0, 0.25),      # hombro izquierdo
+                    "low":      (0.15, 0.3, 0.45),
+                    "medium":   (0.35, 0.5, 0.65),
+                    "high":     (0.55, 0.7, 0.85),
+                    "very_high":(0.75, 1.0, 1.0),      # hombro derecho
+                },
+                "it": {
+                    "very_early": (0.0, 0.0, 0.25),    # hombro izquierdo
+                    "early":      (0.15, 0.3, 0.45),
+                    "mid":        (0.35, 0.5, 0.65),
+                    "late":       (0.55, 0.7, 0.85),
+                    "very_late":  (0.75, 1.0, 1.0),    # hombro derecho
+                },
+            },
+        }
+        if input_set not in INPUT_SETS:
+            raise ValueError(f"input_set='{input_set}' no definido. Sets disponibles: {list(INPUT_SETS.keys())}")
+        
+        return INPUT_SETS[input_set]["div"], INPUT_SETS[input_set]["it"]
 
     def _build_w_mfs(self, w_set):
         """

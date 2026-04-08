@@ -3,6 +3,13 @@ from Util.util import cargar_configuracion
 import analisisSCP
 import analisisBEN
 
+from analysis_modules_cec import (
+    level1_raw_data_cec,
+    level2_aggregated_cec,
+    convergence_curves_cec,
+    w_relationships_cec,
+)
+
 import time
 
 CONFIG_PATH = './util/json/analysis.json'  # Ruta al archivo JSON
@@ -25,6 +32,31 @@ def main():
         analisisBEN.analizar_instancias()
         t1 = time.time()
         tiempos["BEN"] = round(t1 - t0, 2)
+
+        # CEC analysis pipeline: Level 1 (raw extraction) + Level 2 (comparative plots)
+        print("[INFO] Ejecutando análisis CEC (Level 1 + Level 2)...")
+        print("-" * 50)
+        t0 = time.time()
+        level1_raw_data_cec.main()
+        level2_aggregated_cec.main()
+        t1 = time.time()
+        tiempos["CEC_Pipeline"] = round(t1 - t0, 2)
+
+        # Convergence curves analysis (adaptive to MH configurations)
+        print("[INFO] Ejecutando análisis de curvas de convergencia...")
+        print("-" * 50)
+        t0 = time.time()
+        convergence_curves_cec.main()
+        t1 = time.time()
+        tiempos["Convergence_Curves"] = round(t1 - t0, 2)
+
+        # W-metric relationship analysis (w vs diversity, progress, fitness)
+        print("[INFO] Ejecutando análisis de relaciones w-métricas...")
+        print("-" * 50)
+        t0 = time.time()
+        w_relationships_cec.main()
+        t1 = time.time()
+        tiempos["W_Relationships"] = round(t1 - t0, 2)
 
     if config.get("scp", False):
         print("[INFO] Ejecutando análisis SCP...")

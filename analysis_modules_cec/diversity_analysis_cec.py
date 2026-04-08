@@ -110,22 +110,54 @@ def load_experiment_data():
         return None
 
 
+def load_real_diversity_data():
+    """
+    Load real per-iteration diversity data from Level 1 CSV.
+    Returns DataFrame with columns: iter, diversity, MH, funcion, etc.
+    Returns None if the file does not exist.
+    """
+    path = 'Resultados/resumen/level1_raw_cec/ben_diversity_metrics.csv'
+    if os.path.exists(path):
+        df = pd.read_csv(path)
+        if 'diversity' in df.columns and 'iter' in df.columns:
+            print(f"[OK] Real diversity data loaded: {len(df)} rows")
+            return df
+    
+    # Fallback: try the convergence_curves aggregated CSV
+    path2 = 'Resultados/resumen/level2_aggregated_cec/convergence_curves/diversity_aggregated.csv'
+    if os.path.exists(path2):
+        df = pd.read_csv(path2)
+        if 'DIV_mean' in df.columns:
+            print(f"[OK] Aggregated diversity data loaded: {len(df)} rows")
+            # Reshape to match expected format
+            df = df.rename(columns={'DIV_mean': 'diversity'})
+            return df
+    
+    return None
+
+
 def extract_or_generate_diversity_data(df_experiments):
     """
-    Generate diversity data from available fitness.
-    Uses coefficient of variation as diversity proxy.
+    Try to load real per-iteration diversity from Level 1.
+    Falls back to coefficient of variation as diversity proxy.
     """
     
-    print("[INFO] Generating diversity from fitness variability...")
+    real_div = load_real_diversity_data()
+    if real_div is not None:
+        # Rename 'iter' to 'iteracion' for compatibility with plot functions
+        if 'iter' in real_div.columns and 'iteracion' not in real_div.columns:
+            real_div = real_div.rename(columns={'iter': 'iteracion'})
+        return real_div
     
-    # Generate diversity based on fitness variability between runs
+    print("[WARN] No real diversity data found. Using fitness CV as proxy.")
+    
+    # Fallback: coefficient of variation (absolute value to handle negative means)
     if 'fitness' in df_experiments.columns:
-        # Coefficient of variation by MH and function
         df_experiments['diversity'] = df_experiments.groupby(['MH', 'funcion'])['fitness'].transform(
-            lambda x: x.std() / (x.mean() + 1e-10) if x.mean() != 0 else 0
+            lambda x: abs(x.std() / (x.mean() + 1e-10)) if x.mean() != 0 else 0
         )
     
-    # Add pseudo-iteration based on fitness improvement
+    # Add pseudo-iteration based on row order
     df_experiments['iteracion'] = df_experiments.groupby(['MH', 'funcion']).cumcount() + 1
     
     return df_experiments
@@ -184,8 +216,6 @@ def plot_diversity_evolution_by_function(output_dir, df_experiments):
         ax.set_title(f'Diversity CEC2017 - Function {funcion}', fontsize=11, fontweight='bold')
         ax.legend(loc='best', fontsize=8, framealpha=0.95)
         ax.grid(True, alpha=0.4, linestyle='--')
-        ax.set_ylim([0, None])
-        
         plt.tight_layout()
         filepath = os.path.join(output_dir, f'diversity_evolution_{funcion}.png')
         plt.savefig(filepath, dpi=DPI_OUTPUT, bbox_inches='tight')

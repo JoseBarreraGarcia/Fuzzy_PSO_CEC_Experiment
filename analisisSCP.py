@@ -127,7 +127,7 @@ def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida,
     ax.set_ylabel("Fitness")
     ax.set_xlabel("Iteration")
     plt.tight_layout()
-    plt.savefig(path_convergencia)
+    plt.savefig(path_convergencia, dpi=300, bbox_inches='tight')
     plt.close()
 
     # --- Gráfico XPL vs XPT ---
@@ -140,7 +140,7 @@ def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida,
     axPER.set_xlabel("Iteration")
     axPER.legend(loc='upper right')
     plt.tight_layout()
-    plt.savefig(path_porcentaje)
+    plt.savefig(path_porcentaje, dpi=300, bbox_inches='tight')
     plt.close()
 
     # --- Gráfico de tiempo por iteración ---
@@ -152,7 +152,7 @@ def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida,
     axTime.set_xlabel("Iteration")
     axTime.legend(loc='upper right')
     plt.tight_layout()
-    plt.savefig(path_tiempo)
+    plt.savefig(path_tiempo, dpi=300, bbox_inches='tight')
     plt.close()
 
 def graficar_boxplot_violin(instancia, binarizacion):
@@ -199,11 +199,11 @@ def graficar_boxplot_violin(instancia, binarizacion):
     try:
         sns.boxplot(x='MH', y='FITNESS', data=datos, hue='MH', palette='Set2', legend=False)
         plt.title(f'Boxplot Fitness\nscp{instancia} - {binarizacion}')
-        plt.xlabel('Metaheurística')
+        plt.xlabel('Metaheuristic')
         plt.ylabel('Fitness')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-        plt.savefig(file_path_box)
+        plt.savefig(file_path_box, dpi=300, bbox_inches='tight')
         plt.close()
     except Exception as e:
         print(f"        [ERROR] Fallo al generar boxplot: {e}")
@@ -216,11 +216,11 @@ def graficar_boxplot_violin(instancia, binarizacion):
     try:
         sns.violinplot(x='MH', y='FITNESS', data=datos, hue='MH', palette='Set3', legend=False)
         plt.title(f'Violinplot Fitness\nscp{instancia} - {binarizacion}')
-        plt.xlabel('Metaheurística')
+        plt.xlabel('Metaheuristic')
         plt.ylabel('Fitness')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-        plt.savefig(file_path_violin)
+        plt.savefig(file_path_violin, dpi=300, bbox_inches='tight')
         plt.close()
     except Exception as e:
         print(f"        [ERROR] Fallo al generar violinplot: {e}")
@@ -347,13 +347,13 @@ def graficar_mejores_resultados(instancia, mhs_instances, binarizacion):
                 color = colores[idx % len(colores)]
                 ax.plot(range(len(mh.bestFitness)), mh.bestFitness, label=name, marker='o', color=color, linewidth=2)
         
-        ax.set_title(f'Best Fitness per MH\nscp{instancia} - {binarizacion}\nMejor: {mh_mejor_fitness} ({mejor_fitness})', fontsize=12)
+        ax.set_title(f'Best Fitness per MH\nscp{instancia} - {binarizacion}\nBest: {mh_mejor_fitness} ({mejor_fitness})', fontsize=12)
         ax.set_ylabel("Fitness", fontsize=11)
         ax.set_xlabel("Run Number", fontsize=11)
         ax.legend(loc='best', fontsize=10)
         ax.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig(os.path.join(output_dir, f'fitness_SCP_{instancia}_{binarizacion}.pdf'), dpi=150)
+        plt.savefig(os.path.join(output_dir, f'fitness_SCP_{instancia}_{binarizacion}.pdf'), dpi=300)
         plt.close()
     except Exception as e:
         print(f"        [ERROR] Fallo al generar gráfico de fitness: {e}")
@@ -367,13 +367,13 @@ def graficar_mejores_resultados(instancia, mhs_instances, binarizacion):
                 color = colores[idx % len(colores)]
                 ax.plot(range(len(mh.bestTime)), mh.bestTime, label=name, marker='s', color=color, linewidth=2)
         
-        ax.set_title(f'Best Time per MH\nscp{instancia} - {binarizacion}\nMejor: {mh_mejor_tiempo} ({mejor_tiempo:.2f} s)', fontsize=12)
+        ax.set_title(f'Best Time per MH\nscp{instancia} - {binarizacion}\nBest: {mh_mejor_tiempo} ({mejor_tiempo:.2f} s)', fontsize=12)
         ax.set_ylabel("Time (s)", fontsize=11)
         ax.set_xlabel("Run Number", fontsize=11)
         ax.legend(loc='best', fontsize=10)
         ax.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig(os.path.join(output_dir, f'time_SCP_{instancia}_{binarizacion}.pdf'), dpi=150)
+        plt.savefig(os.path.join(output_dir, f'time_SCP_{instancia}_{binarizacion}.pdf'), dpi=300)
         plt.close()
     except Exception as e:
         print(f"        [ERROR] Fallo al generar gráfico de tiempo: {e}")

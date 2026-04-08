@@ -15,7 +15,7 @@ sys.path.insert(0, os.getcwd())
 from fuzzy_controller_w import FuzzyInertiaController
 from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
 
-def plot_3d_comparison():
+def plot_3d_comparison(input_set="I1"):
     """Create 3D surface comparison between 3-label and 5-label controllers."""
     
     os.makedirs('FUZZY/plots', exist_ok=True)
@@ -26,8 +26,8 @@ def plot_3d_comparison():
     prog_range = np.linspace(0.01, 0.99, 50)
     DIV, PROG = np.meshgrid(div_range, prog_range)
     
-    ctrl3 = FuzzyInertiaController(w_set='A')
-    ctrl5 = FuzzyInertiaController_5labels(w_set='A')
+    ctrl3 = FuzzyInertiaController(w_set='A', input_set=input_set)
+    ctrl5 = FuzzyInertiaController_5labels(w_set='A', input_set=input_set)
     
     W3 = np.zeros_like(DIV)
     W5 = np.zeros_like(DIV)

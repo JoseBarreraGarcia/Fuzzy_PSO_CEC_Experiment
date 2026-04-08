@@ -69,9 +69,9 @@ def create_evolution_plots(df, output_dir='Resultados/resumen/w_evolution_plots'
                 ax.fill_between(iters, w_mean - w_std, w_mean + w_std, 
                                alpha=0.2, color=COLORS.get(mh, 'black'))
             
-            ax.set_xlabel('Iteración', fontsize=12)
+            ax.set_xlabel('Iteration', fontsize=12)
             ax.set_ylabel('Inertia Weight (w)', fontsize=12)
-            ax.set_title(f'Evolución de w - Instancia {instancia} ({binari})', fontsize=14, fontweight='bold')
+            ax.set_title(f'Evolution of w - Instance {instancia} ({binari})', fontsize=14, fontweight='bold')
             ax.legend(loc='best', fontsize=10)
             ax.grid(True, alpha=0.3)
             ax.set_ylim([0, 0.8])
@@ -112,14 +112,14 @@ def create_comparison_plot(df, output_dir='Resultados/resumen/w_evolution_plots'
             ax.plot(df_avg['iter'], df_avg['w_mean'], 
                    label=f'SCP-{instancia}', linewidth=2, marker='o', markersize=3, alpha=0.7)
         
-        ax.set_xlabel('Iteración', fontsize=11)
-        ax.set_ylabel('w (media)', fontsize=11)
+        ax.set_xlabel('Iteration', fontsize=11)
+        ax.set_ylabel('w (mean)', fontsize=11)
         ax.set_title(f'{mh}', fontsize=12, fontweight='bold', color=COLORS.get(mh, 'black'))
         ax.legend(loc='best', fontsize=9)
         ax.grid(True, alpha=0.3)
         ax.set_ylim([0.15, 0.75])
     
-    fig.suptitle('Comparación de Evolución de w por Fuzzy Set', fontsize=14, fontweight='bold', y=1.00)
+    fig.suptitle('Comparison of w Evolution by Fuzzy Set', fontsize=14, fontweight='bold', y=1.00)
     plt.tight_layout()
     
     filename = f'{output_dir}/w_evolution_comparison_all_sets.png'
@@ -150,14 +150,14 @@ def create_statistical_summary(df, output_dir='Resultados/resumen/w_evolution_pl
         
         summary_data.append({
             'Fuzzy Set': mh,
-            'General (media)': f"{all_iters.mean():.4f}",
+            'General (mean)': f"{all_iters.mean():.4f}",
             'General (std)': f"{all_iters.std():.4f}",
-            'Temprana 1-100 (media)': f"{early.mean():.4f}",
-            'Temprana (std)': f"{early.std():.4f}",
-            'Media 101-300 (media)': f"{mid.mean():.4f}",
-            'Media (std)': f"{mid.std():.4f}",
-            'Tardía 301-500 (media)': f"{late.mean():.4f}",
-            'Tardía (std)': f"{late.std():.4f}",
+            'Early 1-100 (mean)': f"{early.mean():.4f}",
+            'Early (std)': f"{early.std():.4f}",
+            'Mid 101-300 (mean)': f"{mid.mean():.4f}",
+            'Mid (std)': f"{mid.std():.4f}",
+            'Late 301-500 (mean)': f"{late.mean():.4f}",
+            'Late (std)': f"{late.std():.4f}",
         })
     
     df_summary = pd.DataFrame(summary_data)
@@ -169,7 +169,7 @@ def create_statistical_summary(df, output_dir='Resultados/resumen/w_evolution_pl
     
     # También mostrar en pantalla
     print("\n" + "=" * 100)
-    print("TABLA RESUMEN: ESTADÍSTICAS DE W POR FASE")
+    print("SUMMARY TABLE: W STATISTICS BY PHASE")
     print("=" * 100)
     print(df_summary.to_string(index=False))
     print("=" * 100 + "\n")
@@ -182,9 +182,9 @@ def create_phase_comparison_plot(df, output_dir='Resultados/resumen/w_evolution_
     fcs_mhs = sorted([mh for mh in df['MH'].unique() if 'FCS' in mh])
     
     phases = {
-        'Temprana (1-100)': df[df['iter'] <= 100],
-        'Media (101-300)': df[(df['iter'] > 100) & (df['iter'] <= 300)],
-        'Tardía (301-500)': df[df['iter'] > 300],
+        'Early (1-100)': df[df['iter'] <= 100],
+        'Mid (101-300)': df[(df['iter'] > 100) & (df['iter'] <= 300)],
+        'Late (301-500)': df[df['iter'] > 300],
     }
     
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -212,7 +212,7 @@ def create_phase_comparison_plot(df, output_dir='Resultados/resumen/w_evolution_
         ax.set_title(phase_name, fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3, axis='y')
     
-    fig.suptitle('Distribución de w por Fase de Optimización', fontsize=14, fontweight='bold')
+    fig.suptitle('Distribution of w by Optimization Phase', fontsize=14, fontweight='bold')
     plt.tight_layout()
     
     filename = f'{output_dir}/w_phase_comparison_boxplot.png'

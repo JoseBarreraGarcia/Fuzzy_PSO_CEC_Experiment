@@ -54,10 +54,11 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost, e
     fcs = None
     w_set = "B"  # Default
     num_labels = 3  # Default
+    input_set = "I1"  # Default CLEI2026
     if mh == 'PSO_FCS' or (mh.startswith('PSO_FCS') and ':' in mh):
         # Extraer w_set del nombre si viene en formato PSO_FCS:A
         if ':' in mh:
-            mh_base, w_set = mh.split(':')
+            mh_base, w_set = mh.split(':')[:2]
             w_set = w_set.upper()
         elif isinstance(param, dict) and 'w_set' in param:
             # Obtener w_set desde param si está disponible
@@ -67,7 +68,11 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost, e
         if extra_params and 'num_labels' in extra_params:
             num_labels = int(extra_params['num_labels'])
         
-        fcs = get_fuzzy_controller(w_set, num_labels=num_labels)
+        # CLEI2026: Obtener input_set (configuración de MFs de entrada)
+        if extra_params and 'input_set' in extra_params:
+            input_set = str(extra_params['input_set']).upper()
+        
+        fcs = get_fuzzy_controller(w_set, num_labels=num_labels, input_set=input_set)
 
 
     # Evaluación inicial

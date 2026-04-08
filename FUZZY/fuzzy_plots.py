@@ -48,10 +48,14 @@ def ensure_plots_directory():
     return plots_dir
 
 
-def plot_fuzzy_input_diversity():
+def plot_fuzzy_input_diversity(input_set="I1"):
     """
     Plot fuzzy sets for Diversity input (both 3 and 5 labels).
     Gets membership functions dynamically from FuzzyInertiaController.
+    
+    Args:
+        input_set: 'I1', 'I2', 'I3', or 'I4' (CLEI2026 input MF configuration)
+    
     Returns: dict with '3labels' and '5labels' paths
     """
     plots_dir = ensure_plots_directory()
@@ -59,7 +63,7 @@ def plot_fuzzy_input_diversity():
     
     # ===== 3-LABEL VERSION =====
     try:
-        controller3 = FuzzyInertiaController(w_set='A')
+        controller3 = FuzzyInertiaController(w_set='A', input_set=input_set)
         div_mf = controller3.div_mf
         
         diversity = np.linspace(0, 1, 200)
@@ -69,20 +73,20 @@ def plot_fuzzy_input_diversity():
         
         for label, (a, b, c) in div_mf.items():
             mu = [tri(d, a, b, c) for d in diversity]
-            ax.plot(diversity, mu, label=f'{label} ({a:.1f}, {b:.1f}, {c:.1f})', 
+            ax.plot(diversity, mu, label=f'{label} ({a:.2f}, {b:.2f}, {c:.2f})', 
                     linewidth=2.5, color=colors[label])
             ax.fill_between(diversity, mu, alpha=0.2, color=colors[label])
         
         ax.set_xlabel('Diversity Ratio (0=convergence, 1=exploration)', fontsize=11)
         ax.set_ylabel('Membership Degree', fontsize=11)
-        ax.set_title('Fuzzy Input Sets: Diversity (3 Labels)', fontsize=12, fontweight='bold')
+        ax.set_title(f'Fuzzy Input Sets: Diversity (3 Labels, {input_set})', fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
         ax.legend(loc='upper right', fontsize=10)
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1.05])
         
         plt.tight_layout()
-        output_path_3 = os.path.join(plots_dir, '01_fuzzy_input_diversity_3labels.png')
+        output_path_3 = os.path.join(plots_dir, f'01_fuzzy_input_diversity_3labels_{input_set}.png')
         plt.savefig(output_path_3, dpi=300, bbox_inches='tight', format='png')
         plt.close(fig)
         results['3labels'] = output_path_3
@@ -93,7 +97,7 @@ def plot_fuzzy_input_diversity():
     # ===== 5-LABEL VERSION =====
     try:
         from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
-        controller5 = FuzzyInertiaController_5labels(w_set='A')
+        controller5 = FuzzyInertiaController_5labels(w_set='A', input_set=input_set)
         div_mf = controller5.div_mf
         
         diversity = np.linspace(0, 1, 200)
@@ -104,20 +108,20 @@ def plot_fuzzy_input_diversity():
         
         for label, (a, b, c) in div_mf.items():
             mu = [tri(d, a, b, c) for d in diversity]
-            ax.plot(diversity, mu, label=f'{label} ({a:.1f}, {b:.1f}, {c:.1f})', 
+            ax.plot(diversity, mu, label=f'{label} ({a:.2f}, {b:.2f}, {c:.2f})', 
                     linewidth=2.5, color=colors_5[label])
             ax.fill_between(diversity, mu, alpha=0.2, color=colors_5[label])
         
         ax.set_xlabel('Diversity Ratio (0=convergence, 1=exploration)', fontsize=11)
         ax.set_ylabel('Membership Degree', fontsize=11)
-        ax.set_title('Fuzzy Input Sets: Diversity (5 Labels)', fontsize=12, fontweight='bold')
+        ax.set_title(f'Fuzzy Input Sets: Diversity (5 Labels, {input_set})', fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
         ax.legend(loc='upper right', fontsize=10)
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1.05])
         
         plt.tight_layout()
-        output_path_5 = os.path.join(plots_dir, '01_fuzzy_input_diversity_5labels.png')
+        output_path_5 = os.path.join(plots_dir, f'01_fuzzy_input_diversity_5labels_{input_set}.png')
         plt.savefig(output_path_5, dpi=300, bbox_inches='tight', format='png')
         plt.close(fig)
         results['5labels'] = output_path_5
@@ -128,10 +132,14 @@ def plot_fuzzy_input_diversity():
     return results
 
 
-def plot_fuzzy_input_progress():
+def plot_fuzzy_input_progress(input_set="I1"):
     """
     Plot fuzzy sets for Iteration Progress input (both 3 and 5 labels).
     Gets membership functions dynamically from FuzzyInertiaController.
+    
+    Args:
+        input_set: 'I1', 'I2', 'I3', or 'I4' (CLEI2026 input MF configuration)
+    
     Returns: dict with '3labels' and '5labels' paths
     """
     plots_dir = ensure_plots_directory()
@@ -139,7 +147,7 @@ def plot_fuzzy_input_progress():
     
     # ===== 3-LABEL VERSION =====
     try:
-        controller3 = FuzzyInertiaController(w_set='A')
+        controller3 = FuzzyInertiaController(w_set='A', input_set=input_set)
         it_mf = controller3.it_mf
         
         progress = np.linspace(0, 1, 200)
@@ -149,20 +157,20 @@ def plot_fuzzy_input_progress():
         
         for label, (a, b, c) in it_mf.items():
             mu = [tri(p, a, b, c) for p in progress]
-            ax.plot(progress, mu, label=f'{label} ({a:.1f}, {b:.1f}, {c:.1f})', 
+            ax.plot(progress, mu, label=f'{label} ({a:.2f}, {b:.2f}, {c:.2f})', 
                     linewidth=2.5, color=colors[label])
             ax.fill_between(progress, mu, alpha=0.2, color=colors[label])
         
         ax.set_xlabel('Iteration Progress (0=start, 1=end)', fontsize=11)
         ax.set_ylabel('Membership Degree', fontsize=11)
-        ax.set_title('Fuzzy Input Sets: Progress (3 Labels)', fontsize=12, fontweight='bold')
+        ax.set_title(f'Fuzzy Input Sets: Progress (3 Labels, {input_set})', fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
         ax.legend(loc='upper right', fontsize=10)
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1.05])
         
         plt.tight_layout()
-        output_path_3 = os.path.join(plots_dir, '02_fuzzy_input_progress_3labels.png')
+        output_path_3 = os.path.join(plots_dir, f'02_fuzzy_input_progress_3labels_{input_set}.png')
         plt.savefig(output_path_3, dpi=300, bbox_inches='tight', format='png')
         plt.close(fig)
         results['3labels'] = output_path_3
@@ -173,7 +181,7 @@ def plot_fuzzy_input_progress():
     # ===== 5-LABEL VERSION =====
     try:
         from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
-        controller5 = FuzzyInertiaController_5labels(w_set='A')
+        controller5 = FuzzyInertiaController_5labels(w_set='A', input_set=input_set)
         it_mf = controller5.it_mf
         
         progress = np.linspace(0, 1, 200)
@@ -184,20 +192,20 @@ def plot_fuzzy_input_progress():
         
         for label, (a, b, c) in it_mf.items():
             mu = [tri(p, a, b, c) for p in progress]
-            ax.plot(progress, mu, label=f'{label} ({a:.1f}, {b:.1f}, {c:.1f})', 
+            ax.plot(progress, mu, label=f'{label} ({a:.2f}, {b:.2f}, {c:.2f})', 
                     linewidth=2.5, color=colors_5[label])
             ax.fill_between(progress, mu, alpha=0.2, color=colors_5[label])
         
         ax.set_xlabel('Iteration Progress (0=start, 1=end)', fontsize=11)
         ax.set_ylabel('Membership Degree', fontsize=11)
-        ax.set_title('Fuzzy Input Sets: Progress (5 Labels)', fontsize=12, fontweight='bold')
+        ax.set_title(f'Fuzzy Input Sets: Progress (5 Labels, {input_set})', fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
         ax.legend(loc='upper right', fontsize=10)
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1.05])
         
         plt.tight_layout()
-        output_path_5 = os.path.join(plots_dir, '02_fuzzy_input_progress_5labels.png')
+        output_path_5 = os.path.join(plots_dir, f'02_fuzzy_input_progress_5labels_{input_set}.png')
         plt.savefig(output_path_5, dpi=300, bbox_inches='tight', format='png')
         plt.close(fig)
         results['5labels'] = output_path_5
@@ -738,10 +746,14 @@ def plot_output_w_comparison_membership_functions():
     return output_path
 
 
-def plot_input_diversity_comparison_membership_functions():
+def plot_input_diversity_comparison_membership_functions(input_set="I1"):
     """
     Generate comparison of INPUT (Diversity) membership functions for 3 and 5 labels.
     Single figure showing 3-label vs 5-label comparison (NOT multiple fuzzy sets).
+    
+    Args:
+        input_set: 'I1', 'I2', 'I3', or 'I4' (CLEI2026 input MF configuration)
+    
     Returns path to the comparison plot.
     """
     plots_dir = ensure_plots_directory()
@@ -754,7 +766,7 @@ def plot_input_diversity_comparison_membership_functions():
     
     # ===== TOP: 3-LABEL VERSION =====
     ax = axes[0]
-    ctrl3 = FuzzyInertiaController(w_set='A')  # Use set A (input MFs are the same for all sets)
+    ctrl3 = FuzzyInertiaController(w_set='A', input_set=input_set)
     
     x = np.linspace(0, 1, 500)
     colors_3 = ['#349E84', '#3F719B', '#042EAD']
@@ -777,7 +789,7 @@ def plot_input_diversity_comparison_membership_functions():
     
     # ===== BOTTOM: 5-LABEL VERSION =====
     ax = axes[1]
-    ctrl5 = FuzzyInertiaController_5labels(w_set='A')  # Use set A (input MFs are the same for all sets)
+    ctrl5 = FuzzyInertiaController_5labels(w_set='A', input_set=input_set)
     
     x = np.linspace(0, 1, 500)
     colors_5 = ["#349E84", "#4C8496", "#3F719B", "#253E57", "#042EAD"]
@@ -800,17 +812,21 @@ def plot_input_diversity_comparison_membership_functions():
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5, fontsize=15, framealpha=0.95, edgecolor='black')
     
     plt.tight_layout(pad=0.1, w_pad=0.05, h_pad=0.4)
-    output_path = os.path.join(plots_dir, '06_input_diversity_comparison_membership_functions.png')
+    output_path = os.path.join(plots_dir, f'06_input_diversity_comparison_membership_functions_{input_set}.png')
     plt.savefig(output_path, dpi=300)
     plt.close(fig)
     
     return output_path
 
 
-def plot_input_progress_comparison_membership_functions():
+def plot_input_progress_comparison_membership_functions(input_set="I1"):
     """
     Generate comparison of INPUT (Progress) membership functions for 3 and 5 labels.
     Single figure showing 3-label vs 5-label comparison (NOT multiple fuzzy sets).
+    
+    Args:
+        input_set: 'I1', 'I2', 'I3', or 'I4' (CLEI2026 input MF configuration)
+    
     Returns path to the comparison plot.
     """
     plots_dir = ensure_plots_directory()
@@ -823,7 +839,7 @@ def plot_input_progress_comparison_membership_functions():
     
     # ===== TOP: 3-LABEL VERSION =====
     ax = axes[0]
-    ctrl3 = FuzzyInertiaController(w_set='A')  # Use set A (input MFs are the same for all sets)
+    ctrl3 = FuzzyInertiaController(w_set='A', input_set=input_set)
     
     x = np.linspace(0, 1, 500)
     colors_3 = ['#4E4A45', '#BDA262', '#B87509']
@@ -846,7 +862,7 @@ def plot_input_progress_comparison_membership_functions():
     
     # ===== BOTTOM: 5-LABEL VERSION =====
     ax = axes[1]
-    ctrl5 = FuzzyInertiaController_5labels(w_set='A')  # Use set A (input MFs are the same for all sets)
+    ctrl5 = FuzzyInertiaController_5labels(w_set='A', input_set=input_set)
     
     x = np.linspace(0, 1, 500)
     colors_5 = ["#4E4A45", "#8E7F5F", "#BDA262", "#B18A2F", "#B87509"]
@@ -869,16 +885,20 @@ def plot_input_progress_comparison_membership_functions():
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=5, fontsize=16, framealpha=0.95, edgecolor='black')
     
     plt.tight_layout(pad=0.1, w_pad=0.05, h_pad=0.4)
-    output_path = os.path.join(plots_dir, '06_input_progress_comparison_membership_functions.png')
+    output_path = os.path.join(plots_dir, f'06_input_progress_comparison_membership_functions_{input_set}.png')
     plt.savefig(output_path, dpi=300)
     plt.close(fig)
     
     return output_path
 
 
-def plot_comparison_critical_points():
+def plot_comparison_critical_points(input_set="I1"):
     """
     Create bar charts comparing inertia weights at critical points (3 vs 5 labels).
+    
+    Args:
+        input_set: 'I1', 'I2', 'I3', or 'I4' (CLEI2026 input MF configuration)
+    
     Returns path to the comparison plot.
     """
     plots_dir = ensure_plots_directory()
@@ -908,8 +928,8 @@ def plot_comparison_critical_points():
         w5_values = []
         
         for w_set in sets:
-            ctrl3 = FuzzyInertiaController(w_set=w_set)
-            ctrl5 = FuzzyInertiaController_5labels(w_set=w_set)
+            ctrl3 = FuzzyInertiaController(w_set=w_set, input_set=input_set)
+            ctrl5 = FuzzyInertiaController_5labels(w_set=w_set, input_set=input_set)
             w3_values.append(ctrl3.compute_w(diversity, progress))
             w5_values.append(ctrl5.compute_w(diversity, progress))
         
@@ -929,18 +949,22 @@ def plot_comparison_critical_points():
         ax.legend(fontsize=9, loc='upper right', framealpha=0.95)
     
     plt.tight_layout(rect=[0, 0, 1, 0.96])
-    output_path = os.path.join(plots_dir, '07_comparison_critical_points.png')
+    output_path = os.path.join(plots_dir, f'07_comparison_critical_points_{input_set}.png')
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
     
     return output_path
 
 
-def plot_3d_comparison():
+def plot_3d_comparison(input_set="I1"):
     """
     Create 3D surface comparison between 3-label and 5-label controllers for all available sets.
     Generates one plot per set.
     Each plot includes: 3D 3-labels, 3D 5-labels, and difference contour.
+    
+    Args:
+        input_set: 'I1', 'I2', 'I3', or 'I4' (CLEI2026 input MF configuration)
+    
     Returns list of paths to the 3D comparison plots.
     """
     plots_dir = ensure_plots_directory()
@@ -959,8 +983,8 @@ def plot_3d_comparison():
     output_paths = []
     
     for w_set in sets:
-        ctrl3 = FuzzyInertiaController(w_set=w_set)
-        ctrl5 = FuzzyInertiaController_5labels(w_set=w_set)
+        ctrl3 = FuzzyInertiaController(w_set=w_set, input_set=input_set)
+        ctrl5 = FuzzyInertiaController_5labels(w_set=w_set, input_set=input_set)
         
         W3 = np.zeros_like(DIV)
         W5 = np.zeros_like(DIV)
@@ -1006,13 +1030,206 @@ def plot_3d_comparison():
         cbar.ax.tick_params(labelsize=9)
         
         plt.tight_layout(rect=[0, 0, 1, 0.97])
-        output_path = os.path.join(plots_dir, f'08_3d_surface_comparison_set_{w_set}.png')
+        output_path = os.path.join(plots_dir, f'08_3d_surface_comparison_set_{w_set}_{input_set}.png')
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
         plt.close(fig)
         
         output_paths.append(output_path)
     
     return output_paths
+
+
+# ==================================================================================
+# CLEI2026: Input Set Comparison Plots (I1 vs I2 vs I3 vs I4)
+# ==================================================================================
+
+INPUT_SETS_LIST = ['I1', 'I2', 'I3', 'I4']
+INPUT_SET_NAMES = {
+    'I1': 'Standard',
+    'I2': 'Narrow',
+    'I3': 'Wide',
+    'I4': 'Shoulder',
+}
+
+
+def plot_all_input_sets_diversity_comparison():
+    """
+    CLEI2026 key plot: Compare all 4 input sets (I1-I4) for the Diversity variable.
+    Generates a 2×4 grid: top row = 3-label, bottom row = 5-label, columns = I1..I4.
+    Returns path to the comparison plot.
+    """
+    plots_dir = ensure_plots_directory()
+
+    from fuzzy_controller_w import FuzzyInertiaController, tri
+    from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
+
+    fig = plt.figure(figsize=(16, 8))
+    fig.suptitle('Input MF Comparison: Diversity Variable (I1-I4)', fontsize=14, fontweight='bold', y=0.98)
+
+    x = np.linspace(0, 1, 300)
+    colors_3 = ['#1f77b4', '#ff7f0e', '#2ca02c']
+    labels_3 = ['low', 'medium', 'high']
+    colors_5 = ['#0072B2', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+    labels_5 = ['very_low', 'low', 'medium', 'high', 'very_high']
+    labels_5_display = ['very low', 'low', 'medium', 'high', 'very high']
+
+    for col, iset in enumerate(INPUT_SETS_LIST):
+        # Top row: 3-label
+        ax = fig.add_subplot(2, 4, col + 1)
+        ctrl3 = FuzzyInertiaController(w_set='A', input_set=iset)
+        for label, color in zip(labels_3, colors_3):
+            a, b, c = ctrl3.div_mf[label]
+            y = [tri(d, a, b, c) for d in x]
+            ax.plot(x, y, label=label, linewidth=2, color=color)
+            ax.fill_between(x, y, alpha=0.15, color=color)
+        ax.set_title(f'{iset} - {INPUT_SET_NAMES[iset]}', fontsize=11, fontweight='bold')
+        ax.set_xlim([-0.02, 1.02])
+        ax.set_ylim([0, 1.1])
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.tick_params(labelsize=9)
+        if col == 0:
+            ax.set_ylabel('3-Label\nMembership', fontsize=10, fontweight='bold')
+
+        # Bottom row: 5-label
+        ax = fig.add_subplot(2, 4, col + 5)
+        ctrl5 = FuzzyInertiaController_5labels(w_set='A', input_set=iset)
+        for lk, ld, color in zip(labels_5, labels_5_display, colors_5):
+            a, b, c = ctrl5.div_mf[lk]
+            y = [tri(d, a, b, c) for d in x]
+            ax.plot(x, y, label=ld, linewidth=2, color=color)
+            ax.fill_between(x, y, alpha=0.15, color=color)
+        ax.set_xlabel('Diversity Ratio', fontsize=10)
+        ax.set_xlim([-0.02, 1.02])
+        ax.set_ylim([0, 1.1])
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.tick_params(labelsize=9)
+        if col == 0:
+            ax.set_ylabel('5-Label\nMembership', fontsize=10, fontweight='bold')
+
+    # Add shared legends
+    handles_3 = [plt.Line2D([0], [0], color=c, lw=2) for c in colors_3]
+    handles_5 = [plt.Line2D([0], [0], color=c, lw=2) for c in colors_5]
+    fig.legend(handles_3, labels_3, loc='lower left', ncol=3, fontsize=9,
+               bbox_to_anchor=(0.02, 0.01), framealpha=0.9, title='3-Label')
+    fig.legend(handles_5, labels_5_display, loc='lower right', ncol=5, fontsize=9,
+               bbox_to_anchor=(0.98, 0.01), framealpha=0.9, title='5-Label')
+
+    plt.tight_layout(rect=[0, 0.05, 1, 0.96])
+    output_path = os.path.join(plots_dir, '09_input_sets_diversity_comparison.png')
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+    return output_path
+
+
+def plot_all_input_sets_progress_comparison():
+    """
+    CLEI2026 key plot: Compare all 4 input sets (I1-I4) for the Progress variable.
+    Generates a 2×4 grid: top row = 3-label, bottom row = 5-label, columns = I1..I4.
+    Returns path to the comparison plot.
+    """
+    plots_dir = ensure_plots_directory()
+
+    from fuzzy_controller_w import FuzzyInertiaController, tri
+    from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
+
+    fig = plt.figure(figsize=(16, 8))
+    fig.suptitle('Input MF Comparison: Progress Variable (I1-I4)', fontsize=14, fontweight='bold', y=0.98)
+
+    x = np.linspace(0, 1, 300)
+    colors_3 = ['#d62728', '#9467bd', '#17becf']
+    labels_3 = ['early', 'mid', 'late']
+    colors_5 = ['#8B0000', '#d62728', '#9467bd', '#17becf', '#1f77b4']
+    labels_5 = ['very_early', 'early', 'mid', 'late', 'very_late']
+    labels_5_display = ['very early', 'early', 'mid', 'late', 'very late']
+
+    for col, iset in enumerate(INPUT_SETS_LIST):
+        # Top row: 3-label
+        ax = fig.add_subplot(2, 4, col + 1)
+        ctrl3 = FuzzyInertiaController(w_set='A', input_set=iset)
+        for label, color in zip(labels_3, colors_3):
+            a, b, c = ctrl3.it_mf[label]
+            y = [tri(d, a, b, c) for d in x]
+            ax.plot(x, y, label=label, linewidth=2, color=color)
+            ax.fill_between(x, y, alpha=0.15, color=color)
+        ax.set_title(f'{iset} - {INPUT_SET_NAMES[iset]}', fontsize=11, fontweight='bold')
+        ax.set_xlim([-0.02, 1.02])
+        ax.set_ylim([0, 1.1])
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.tick_params(labelsize=9)
+        if col == 0:
+            ax.set_ylabel('3-Label\nMembership', fontsize=10, fontweight='bold')
+
+        # Bottom row: 5-label
+        ax = fig.add_subplot(2, 4, col + 5)
+        ctrl5 = FuzzyInertiaController_5labels(w_set='A', input_set=iset)
+        for lk, ld, color in zip(labels_5, labels_5_display, colors_5):
+            a, b, c = ctrl5.it_mf[lk]
+            y = [tri(d, a, b, c) for d in x]
+            ax.plot(x, y, label=ld, linewidth=2, color=color)
+            ax.fill_between(x, y, alpha=0.15, color=color)
+        ax.set_xlabel('Iteration Progress', fontsize=10)
+        ax.set_xlim([-0.02, 1.02])
+        ax.set_ylim([0, 1.1])
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.tick_params(labelsize=9)
+        if col == 0:
+            ax.set_ylabel('5-Label\nMembership', fontsize=10, fontweight='bold')
+
+    # Add shared legends
+    handles_3 = [plt.Line2D([0], [0], color=c, lw=2) for c in colors_3]
+    handles_5 = [plt.Line2D([0], [0], color=c, lw=2) for c in colors_5]
+    fig.legend(handles_3, labels_3, loc='lower left', ncol=3, fontsize=9,
+               bbox_to_anchor=(0.02, 0.01), framealpha=0.9, title='3-Label')
+    fig.legend(handles_5, labels_5_display, loc='lower right', ncol=5, fontsize=9,
+               bbox_to_anchor=(0.98, 0.01), framealpha=0.9, title='5-Label')
+
+    plt.tight_layout(rect=[0, 0.05, 1, 0.96])
+    output_path = os.path.join(plots_dir, '09_input_sets_progress_comparison.png')
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+    return output_path
+
+
+def plot_all_input_sets_3d_surface():
+    """
+    CLEI2026 key plot: 3D w surfaces for all 4 input sets (I1-I4) with fixed w_set='A'.
+    Shows how different input MF shapes affect the output w surface.
+    Generates a 1×4 grid of 3D surfaces (3-label controller only for clarity).
+    Returns path to the comparison plot.
+    """
+    plots_dir = ensure_plots_directory()
+
+    from fuzzy_controller_w import FuzzyInertiaController
+
+    fig = plt.figure(figsize=(18, 5))
+    fig.suptitle('Inertia Weight Surface: Input Set Comparison (w_set=A, 3-Label)',
+                 fontsize=13, fontweight='bold', y=1.02)
+
+    div_range = np.linspace(0.01, 0.99, 35)
+    prog_range = np.linspace(0.01, 0.99, 35)
+    DIV, PROG = np.meshgrid(div_range, prog_range)
+
+    for col, iset in enumerate(INPUT_SETS_LIST):
+        ctrl = FuzzyInertiaController(w_set='A', input_set=iset)
+        W = np.zeros_like(DIV)
+        for i in range(DIV.shape[0]):
+            for j in range(DIV.shape[1]):
+                W[i, j] = ctrl.compute_w(DIV[i, j], PROG[i, j])
+
+        ax = fig.add_subplot(1, 4, col + 1, projection='3d')
+        ax.plot_surface(DIV, PROG, W, cmap='viridis', alpha=0.85, edgecolor='none')
+        ax.set_xlabel('Diversity', fontsize=9)
+        ax.set_ylabel('Progress', fontsize=9)
+        ax.set_zlabel('w', fontsize=9)
+        ax.set_title(f'{iset} - {INPUT_SET_NAMES[iset]}', fontsize=11, fontweight='bold')
+        ax.set_zlim([0, 1])
+        ax.tick_params(labelsize=8)
+
+    plt.tight_layout()
+    output_path = os.path.join(plots_dir, '10_input_sets_3d_surface_comparison.png')
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+    return output_path
 
 
 def generate_all_fuzzy_plots(verbose=False):
@@ -1188,6 +1405,100 @@ def generate_all_fuzzy_plots(verbose=False):
     except Exception as e:
         if verbose:
             print(f"[ERROR] 3D Surface comparison failed: {e}")
+    
+    # ===== CLEI2026: Input Set Comparison Plots (I1 vs I2 vs I3 vs I4) =====
+    # Diversity: all input sets side-by-side
+    try:
+        path = plot_all_input_sets_diversity_comparison()
+        outputs.append(path)
+        if verbose:
+            print(f"[OK] Input sets diversity comparison (I1-I4): {path}")
+    except Exception as e:
+        if verbose:
+            print(f"[ERROR] Input sets diversity comparison failed: {e}")
+    
+    # Progress: all input sets side-by-side
+    try:
+        path = plot_all_input_sets_progress_comparison()
+        outputs.append(path)
+        if verbose:
+            print(f"[OK] Input sets progress comparison (I1-I4): {path}")
+    except Exception as e:
+        if verbose:
+            print(f"[ERROR] Input sets progress comparison failed: {e}")
+    
+    # 3D surface: all input sets side-by-side
+    try:
+        path = plot_all_input_sets_3d_surface()
+        outputs.append(path)
+        if verbose:
+            print(f"[OK] Input sets 3D surface comparison (I1-I4): {path}")
+    except Exception as e:
+        if verbose:
+            print(f"[ERROR] Input sets 3D surface comparison failed: {e}")
+    
+    # Per-input-set plots for I2, I3, I4 (I1 already generated above as default)
+    for iset in ['I2', 'I3', 'I4']:
+        try:
+            result = plot_fuzzy_input_diversity(input_set=iset)
+            if isinstance(result, dict):
+                for key in ['3labels', '5labels']:
+                    if result.get(key):
+                        outputs.append(result[key])
+                        if verbose:
+                            print(f"[OK] Diversity input ({key}, {iset}): {result[key]}")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] Diversity plot {iset} failed: {e}")
+        
+        try:
+            result = plot_fuzzy_input_progress(input_set=iset)
+            if isinstance(result, dict):
+                for key in ['3labels', '5labels']:
+                    if result.get(key):
+                        outputs.append(result[key])
+                        if verbose:
+                            print(f"[OK] Progress input ({key}, {iset}): {result[key]}")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] Progress plot {iset} failed: {e}")
+        
+        try:
+            path = plot_input_diversity_comparison_membership_functions(input_set=iset)
+            outputs.append(path)
+            if verbose:
+                print(f"[OK] Diversity comparison MFs ({iset}): {path}")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] Diversity comparison MFs {iset} failed: {e}")
+        
+        try:
+            path = plot_input_progress_comparison_membership_functions(input_set=iset)
+            outputs.append(path)
+            if verbose:
+                print(f"[OK] Progress comparison MFs ({iset}): {path}")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] Progress comparison MFs {iset} failed: {e}")
+        
+        try:
+            path = plot_comparison_critical_points(input_set=iset)
+            outputs.append(path)
+            if verbose:
+                print(f"[OK] Comparison critical points ({iset}): {path}")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] Comparison critical points {iset} failed: {e}")
+        
+        try:
+            paths_list = plot_3d_comparison(input_set=iset)
+            for path in paths_list:
+                outputs.append(path)
+                if verbose:
+                    print(f"[OK] 3D Surface comparison ({iset}): {path}")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] 3D Surface comparison {iset} failed: {e}")
     
     if verbose:
         print("=" * 70)

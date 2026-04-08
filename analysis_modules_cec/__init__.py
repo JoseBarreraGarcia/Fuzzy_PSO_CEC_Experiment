@@ -11,11 +11,15 @@ Structured analysis framework with 3-level hierarchy:
 from . import level1_raw_data_cec
 from . import level2_aggregated_cec
 from . import convergence_analysis_cec
+from . import convergence_curves_cec
 from . import diversity_analysis_cec
+from . import w_relationships_cec
 
 __all__ = [
     'level1_raw_data_cec', 
     'level2_aggregated_cec',
     'convergence_analysis_cec',
-    'diversity_analysis_cec'
+    'convergence_curves_cec',
+    'diversity_analysis_cec',
+    'w_relationships_cec'
 ]

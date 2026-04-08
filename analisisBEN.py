@@ -231,7 +231,6 @@ def generar_graficos_funcion(funcion, mhs_instances):
         return
     
     # Gráfico de BoxPlot (Fitness)
-    fig, ax = plt.subplots(figsize=(10, 6))
     fitness_vals = [data['Fitness'] for data in fitness_data]
     mh_labels = [data['MH'] for data in fitness_data]
     
@@ -239,23 +238,42 @@ def generar_graficos_funcion(funcion, mhs_instances):
     num_mh = len(fitness_vals)
     colores_para_usar = COLORS * ((num_mh // len(COLORS)) + 1)  # Repetir si es necesario
     
+    # Detectar si la escala es muy dispar entre MH (e.g. PSO vs PSO_FCS)
+    all_flat = [v for lst in fitness_vals for v in lst]
+    global_min = min(all_flat)
+    global_max = max(all_flat)
+    use_log = False
+    if global_min > 0 and global_max / global_min > 100:
+        use_log = True
+    elif global_min <= 0:
+        abs_vals = [abs(v) for v in all_flat if v != 0]
+        if abs_vals and max(abs_vals) / min(abs_vals) > 100:
+            use_log = True
+    
+    fig_width = max(10, num_mh * 1.2)
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
+    
     bp = ax.boxplot(fitness_vals, labels=mh_labels, patch_artist=True)
     for patch, color in zip(bp['boxes'], colores_para_usar[:num_mh]):
         patch.set_facecolor(color)
     
-    ax.set_xlabel('Metaheurística', fontsize=12)
-    ax.set_ylabel('Fitness', fontsize=12)
-    ax.set_title(f'Distribución de Fitness - Función {funcion}', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Metaheuristic', fontsize=12)
+    ylabel = 'Fitness (symlog scale)' if use_log else 'Fitness'
+    ax.set_ylabel(ylabel, fontsize=12)
+    ax.set_title(f'Fitness Distribution - Function {funcion}', fontsize=14, fontweight='bold')
     ax.grid(True, alpha=0.3)
+    if use_log:
+        ax.set_yscale('symlog')
+    plt.xticks(rotation=45, ha='right', fontsize=9)
     
     boxplot_path = os.path.join(DIR_BEN_BOXPLOT, f"boxplot_{funcion}.png")
     plt.tight_layout()
-    plt.savefig(boxplot_path, dpi=150, bbox_inches='tight')
+    plt.savefig(boxplot_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"    * BoxPlot guardado en {boxplot_path}")
     
     # Gráfico de Violín (Fitness)
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
     
     df_violin = pd.DataFrame([
         {'MH': mh_label, 'Fitness': f}
@@ -264,14 +282,17 @@ def generar_graficos_funcion(funcion, mhs_instances):
     ])
     
     sns.violinplot(data=df_violin, x='MH', y='Fitness', palette='Set2', ax=ax)
-    ax.set_xlabel('Metaheurística', fontsize=12)
-    ax.set_ylabel('Fitness', fontsize=12)
-    ax.set_title(f'Distribución de Fitness (Violín) - Función {funcion}', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Metaheuristic', fontsize=12)
+    ax.set_ylabel(ylabel, fontsize=12)
+    ax.set_title(f'Fitness Distribution (Violin) - Function {funcion}', fontsize=14, fontweight='bold')
     ax.grid(True, alpha=0.3, axis='y')
+    if use_log:
+        ax.set_yscale('symlog')
+    plt.xticks(rotation=45, ha='right', fontsize=9)
     
     violin_path = os.path.join(DIR_BEN_VIOLIN, f"violin_{funcion}.png")
     plt.tight_layout()
-    plt.savefig(violin_path, dpi=150, bbox_inches='tight')
+    plt.savefig(violin_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"    * Violin guardado en {violin_path}")
 
@@ -300,6 +321,39 @@ def generar_resumen_global(df_todos):
     csv_path = os.path.join(DIR_BEN, "resumen_global_funciones.csv")
     resumen_func.to_csv(csv_path)
     print(f"[INFO] Resumen global por Función guardado en {csv_path}")
+    
+    # Resumen detallado: todas las corridas individuales (Función × MH × Run)
+    df_detalle = df_todos[df_todos['fitness'].notna()][['funcion_nombre', 'MH', 'id_experimento', 'fitness', 'tiempoEjecucion']].copy()
+    df_detalle = df_detalle.rename(columns={
+        'funcion_nombre': 'Function',
+        'id_experimento': 'Experiment_ID',
+        'fitness': 'Fitness',
+        'tiempoEjecucion': 'Time_s'
+    })
+    df_detalle['Run'] = df_detalle.groupby(['Function', 'MH']).cumcount() + 1
+    df_detalle = df_detalle[['Function', 'MH', 'Run', 'Fitness', 'Time_s', 'Experiment_ID']]
+    df_detalle = df_detalle.sort_values(['Function', 'MH', 'Run']).reset_index(drop=True)
+    
+    csv_path = os.path.join(DIR_BEN, "all_runs_fitness.csv")
+    df_detalle.to_csv(csv_path, index=False)
+    print(f"[INFO] Detalle de todas las corridas guardado en {csv_path}")
+    
+    # Resumen descriptivo: Función × MH con estadísticas
+    df_resumen_detallado = df_detalle.groupby(['Function', 'MH']).agg(
+        N=('Fitness', 'count'),
+        Mean=('Fitness', 'mean'),
+        Std=('Fitness', 'std'),
+        Min=('Fitness', 'min'),
+        Q25=('Fitness', lambda x: np.percentile(x, 25)),
+        Median=('Fitness', 'median'),
+        Q75=('Fitness', lambda x: np.percentile(x, 75)),
+        Max=('Fitness', 'max'),
+        Mean_Time=('Time_s', 'mean'),
+    ).round(6).reset_index()
+    
+    csv_path = os.path.join(DIR_BEN, "summary_function_mh.csv")
+    df_resumen_detallado.to_csv(csv_path, index=False)
+    print(f"[INFO] Resumen Función × MH guardado en {csv_path}")
 
 if __name__ == '__main__':
     analizar_instancias()

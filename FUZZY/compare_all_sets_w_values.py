@@ -50,7 +50,7 @@ def compute_surface(controller, div_range, prog_range):
     return W
 
 
-def plot_nxn_matrix_3labels():
+def plot_nxn_matrix_3labels(input_set="I1"):
     """
     Create NxN matrix comparing 3-label controllers for available sets.
     Each cell: heatmap of Δw = Set_i(3L) - Set_j(3L)
@@ -74,7 +74,7 @@ def plot_nxn_matrix_3labels():
     surfaces_3L = {}
     for w_set in sets:
         try:
-            ctrl = FuzzyInertiaController(w_set=w_set)
+            ctrl = FuzzyInertiaController(w_set=w_set, input_set=input_set)
             surfaces_3L[w_set] = compute_surface(ctrl, div_range, prog_range)
         except ValueError:
             # Skip if set not available
@@ -133,7 +133,7 @@ def plot_nxn_matrix_3labels():
     return output_path
 
 
-def plot_nxn_matrix_5labels():
+def plot_nxn_matrix_5labels(input_set="I1"):
     """
     Create NxN matrix comparing 5-label controllers for available sets.
     Each cell: heatmap of Δw = Set_i(5L) - Set_j(5L)
@@ -157,7 +157,7 @@ def plot_nxn_matrix_5labels():
     surfaces_5L = {}
     for w_set in sets:
         try:
-            ctrl = FuzzyInertiaController_5labels(w_set=w_set)
+            ctrl = FuzzyInertiaController_5labels(w_set=w_set, input_set=input_set)
             surfaces_5L[w_set] = compute_surface(ctrl, div_range, prog_range)
         except ValueError:
             pass
@@ -215,7 +215,7 @@ def plot_nxn_matrix_5labels():
     return output_path
 
 
-def plot_nxn_matrix_3vs5labels():
+def plot_nxn_matrix_3vs5labels(input_set="I1"):
     """
     Create NxN matrix comparing 3-label vs 5-label for available sets.
     Each cell: heatmap of Δw = Set_j(5L) - Set_i(3L)
@@ -241,8 +241,8 @@ def plot_nxn_matrix_3vs5labels():
     surfaces_5L = {}
     for w_set in sets:
         try:
-            ctrl3 = FuzzyInertiaController(w_set=w_set)
-            ctrl5 = FuzzyInertiaController_5labels(w_set=w_set)
+            ctrl3 = FuzzyInertiaController(w_set=w_set, input_set=input_set)
+            ctrl5 = FuzzyInertiaController_5labels(w_set=w_set, input_set=input_set)
             surfaces_3L[w_set] = compute_surface(ctrl3, div_range, prog_range)
             surfaces_5L[w_set] = compute_surface(ctrl5, div_range, prog_range)
         except ValueError:

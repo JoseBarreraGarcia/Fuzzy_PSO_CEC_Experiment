@@ -248,15 +248,15 @@ class BD:
                    
             if instancia == "F21":
                 param     = f'lb:0,ub:10'
-                optimo = -10.1532
+                optimo = -10.153199679058229
                 
             if instancia == "F22":
                 param     = f'lb:0,ub:10'
-                optimo = -10.4028
+                optimo = -10.402940566818662
                 
             if instancia == "F23":
                 param     = f'lb:0,ub:10'
-                optimo = -10.5363
+                optimo = -10.536409816692046
 
             if param == '':
                 raise ValueError(f"Advertencia: La función '{instancia}' no está definida.")

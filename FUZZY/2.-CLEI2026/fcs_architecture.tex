@@ -1,0 +1,59 @@
+\begin{figure}[ht]
+    \centering
+    \resizebox{0.75\columnwidth}{!}{
+        \begin{tikzpicture}[
+            font=\large,
+            block/.style={
+                draw,
+                rounded corners,
+                align=center,
+                minimum height=25mm,
+                text width=55mm,
+                thick
+            },
+            arrow/.style={-{Latex[length=3mm]}, thick},
+            node distance=12mm
+        ]
+        
+        % Definición de nodos en el eje vertical
+        \node[block] (pso) {
+            \textbf{PSO}\\
+            \vspace{2mm}
+            \emph{Velocity/position update}
+        };
+        
+        \node[block, below=of pso] (metrics) {
+            \textbf{Search Process Metrics}\\
+            \vspace{2mm}
+            $t_{\text{progress}}$ \\
+            $D(t)$
+        };
+        
+        \node[block, below=of metrics] (fis) {
+            \textbf{Mamdani Fuzzy}\\
+            \textbf{Inference System}\\
+            \vspace{2mm}
+            Fuzzification $\rightarrow$ Rules \\
+            $\rightarrow$ Aggregation
+        };
+        
+        \node[block, below=of fis] (wt) {
+            \textbf{Defuzzification}\\
+            \vspace{2mm}
+            $w_t \in [w_{\min}, w_{\max}]$
+        };
+        % Main flow (descending)
+        \draw[arrow] (pso) -- (metrics);
+        \draw[arrow] (metrics) -- (fis);
+        \draw[arrow] (fis) -- (wt);
+        
+        % Feedback loop
+        \draw[arrow] (wt.west) -- ++(-15mm,0) |- 
+            node[pos=0.25, left, align=center] {Apply $w_t$ to\\next update} 
+            (pso.west);
+        
+        \end{tikzpicture}
+    }
+    \caption{Architecture of the Fuzzy-Controlled PSO Framework}
+    \label{fig:fcs_architecture_vertical}
+\end{figure}

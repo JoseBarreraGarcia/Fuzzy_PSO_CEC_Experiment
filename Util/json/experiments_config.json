@@ -56,12 +56,15 @@
     "mh_params": {
         "PSO_FCS": [
 
-            {"w_set": "A", "num_labels": 3},
-            {"w_set": "B", "num_labels": 3},
+            {"w_set": "A", "num_labels": 3, "input_set": "I1"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I2"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I3"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I4"},
 
-
-            {"w_set": "A", "num_labels": 5},
-            {"w_set": "B", "num_labels": 5}
+            {"w_set": "A", "num_labels": 5, "input_set": "I1"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I2"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I3"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I4"}
 
         ]
     }

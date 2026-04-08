@@ -78,9 +78,9 @@ OPTIMOS_GLOBALES = {
     'F18': 3.0,          # Goldstein-Price
     'F19': -3.86,        # Hartman 3
     'F20': -3.32,        # Hartman 6
-    'F21': -10.1532,     # Shekel 5
-    'F22': -10.4028,     # Shekel 7
-    'F23': -10.5363      # Shekel 10
+    'F21': -10.153199679058229,  # Shekel 5
+    'F22': -10.402940566818662,  # Shekel 7
+    'F23': -10.536409816692046   # Shekel 10
 }
 
 def graficar_funcion_benchmark(funcion, resolucion=200):

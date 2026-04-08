@@ -1,0 +1,175 @@
+\section{Fuzzy-Controlled PSO Framework}
+\label{sec:framework}
+
+This section describes the fuzzy-controlled Particle Swarm Optimization (PSO) framework employed in the experimental evaluation. The standard PSO algorithm is extended by incorporating a swarm-level fuzzy control system that dynamically adapts the inertia weight during the optimization process. The central research question addressed in this work is how the geometric configuration of the \emph{input} membership functions affects controller behavior and optimization performance. Accordingly, the output fuzzy set and rule base are held constant across all variants, isolating the input partition as the sole experimental variable.
+
+\subsection{Baseline Particle Swarm Optimization}
+\label{subsec:baseline_pso}
+
+The baseline corresponds to the canonical PSO formulation, where particle motion is governed by inertia, cognitive attraction toward the personal best, and social attraction toward the global best position. Particle dynamics are defined by
+\begin{equation}
+    v_i(t{+}1) = w \cdot v_i(t) + c_1 r_1 \bigl(p_i - x_i(t)\bigr) + c_2 r_2 \bigl(g - x_i(t)\bigr),
+    \label{eq:pso_velocity}
+\end{equation}
+\begin{equation}
+    x_i(t{+}1) = x_i(t) + v_i(t{+}1),
+    \label{eq:pso_position}
+\end{equation}
+where $p_i$ and $g$ denote the personal and global best positions, and $r_1, r_2 \in [0,1]$ are uniformly distributed random variables.
+
+In the baseline configuration, the inertia weight follows a deterministic linear decreasing schedule from $0.9$ to $0.1$ over the optimization horizon~\cite{abualigah2021arithmetic}. This serves as the reference for assessing the effect of fuzzy-controlled inertia adaptation. All remaining PSO parameters are kept identical across configurations.
+
+\subsection{Fuzzy Control System for Inertia Weight Adaptation}
+\label{subsec:fcs}
+
+In the fuzzy-controlled variants, a Mamdani-type fuzzy inference system (FIS) is embedded into the PSO loop and evaluated once per iteration at the swarm level. At iteration~$t$, the controller outputs an inertia weight~$w_t$ based on two normalized indicators: iteration progress and population diversity.
+
+Iteration progress is defined as
+\begin{equation}
+    t_{\text{progress}} = \frac{t}{T_{\max}},
+    \label{eq:iteration_progress}
+\end{equation}
+where $T_{\max}$ is the maximum number of iterations. Population diversity measures the normalized spatial dispersion of the swarm:
+\begin{equation}
+    D(t) = \frac{1}{d} \sum_{k=1}^{d}
+    \frac{\max_i x_{i,k}(t) - \min_i x_{i,k}(t)}{U_k - L_k},
+    \label{eq:diversity_metric}
+\end{equation}
+where $d$ is the problem dimensionality and $[L_k, U_k]$ are the bounds of dimension~$k$.
+
+The fuzzy controller maps these inputs to an inertia weight constrained to $[w_{\min}, w_{\max}]$. Defuzzification is performed using the centroid method:
+\begin{equation}
+    w_t = \frac{\int z \, \mu_{\text{agg}}(z)\, dz}{\int \mu_{\text{agg}}(z)\, dz},
+    \label{eq:defuzzification}
+\end{equation}
+where $\mu_{\text{agg}}(z)$ denotes the aggregated output membership function. Fig.~\ref{fig:fcs_architecture_vertical} illustrates the integration of the fuzzy controller within the PSO iteration loop.
+
+
+\input{fcs_architecture}
+
+\subsection{Input Membership Function Configurations}
+\label{subsec:input_mf_configs}
+
+The central experimental factor is the geometric configuration of the input membership functions that partition the diversity ratio and iteration progress domains. While prior work on fuzzy-controlled PSO has explored diverse rule bases, multi-parameter tuning, and alternative controller architectures~\cite{shi2001fuzzy, nobile2018fuzzy, xia2022particle}, the sensitivity of the controller to input partition geometry has received limited attention. This work addresses that gap by evaluating four input set configurations, each employing triangular membership functions with different overlap and boundary characteristics.
+
+All four configurations use the same linguistic labels---low, medium, and high for diversity; early, mid, and late for iteration progress---and are applied symmetrically to both input variables. This ensures that differences in controller behavior arise exclusively from the geometric properties of the partitions, not from changes in the semantic structure.
+
+\begin{itemize}
+    \item \textbf{I1 (Standard):} Uniformly distributed triangular functions with moderate overlap, providing balanced coverage of the input domain.
+    \item \textbf{I2 (Narrow):} Reduced support width and minimal overlap, producing sharper transitions and a more selective control response.
+    \item \textbf{I3 (Wide):} Increased support width and substantial overlap, yielding smoother interpolation and gentler inertia weight adaptation.
+    \item \textbf{I4 (Shoulder):} Shoulder functions at the extremes with a standard triangular function at the center. Extreme labels maintain full activation ($\mu = 1$) near domain boundaries, assigning maximum confidence to a single rule at extreme input values.
+\end{itemize}
+
+Additionally, two levels of linguistic granularity are evaluated: a three-label partition (low, medium, high) and a five-label partition (very\_low, low, medium, high, very\_high). In the five-label case, each input set extends its geometric principles---overlap degree, boundary treatment---to five uniformly spaced labels. Crossing four input geometries with two granularity levels yields eight fuzzy-controlled PSO variants.
+
+Tables~\ref{tab:input_sets_3L} and~\ref{tab:input_sets_5L} detail the triangular parameters $(a, b, c)$ for each configuration at both granularity levels. The same partition is applied symmetrically to both input variables.
+
+\begin{table*}[htbp]
+    \caption{Three-label triangular MF parameters $(a, b, c)$ for each input set. In I4, extreme labels use shoulder functions where $a{=}b$ or $b{=}c$.}
+    \label{tab:input_sets_3L}
+    \centering
+    \begin{tabular}{lcccc}
+    \toprule
+    Label & I1 (Standard) & I2 (Narrow) & I3 (Wide) & I4 (Shoulder) \\
+    \midrule
+    Low/Early   & $(0.0, 0.2, 0.4)$ & $(0.0, 0.16, 0.33)$ & $(0.0, 0.25, 0.5)$ & $(0.0, 0.0, 0.35)$ \\
+    Medium/Mid  & $(0.3, 0.5, 0.7)$ & $(0.33, 0.5, 0.66)$ & $(0.25, 0.5, 0.75)$ & $(0.2, 0.5, 0.8)$ \\
+    High/Late   & $(0.6, 0.8, 1.0)$ & $(0.66, 0.84, 1.0)$ & $(0.5, 0.75, 1.0)$ & $(0.65, 1.0, 1.)$ \\
+    \bottomrule
+    \end{tabular}
+\end{table*}
+
+\begin{table*}[htbp]
+    \caption{Five-label triangular MF parameters $(a, b, c)$ for each input set. I4 retains shoulder functions at extremes; I2 achieves zero overlap between adjacent labels.}
+    \label{tab:input_sets_5L}
+    \centering
+    \begin{tabular}{lcccc}
+    \toprule
+    Label & I1 (Standard) & I2 (Narrow) & I3 (Wide) & I4 (Shoulder) \\
+    \midrule
+    Very Low/Very Early & $(0.0, 0.15, 0.3)$  & $(0.0, 0.1, 0.2)$  & $(0.0, 0.15, 0.35)$  & $(0.0, 0.0, 0.25)$  \\
+    Low/Early           & $(0.2, 0.35, 0.5)$  & $(0.2, 0.3, 0.4)$  & $(0.15, 0.3, 0.5)$ & $(0.15, 0.3, 0.45)$ \\
+    Medium/Mid          & $(0.35, 0.5, 0.65)$ & $(0.4, 0.5, 0.6)$  & $(0.3, 0.5, 0.7)$  & $(0.35, 0.5, 0.65)$ \\
+    High/Late           & $(0.5, 0.65, 0.8)$  & $(0.6, 0.7, 0.8)$  & $(0.5, 0.7, 0.85)$  & $(0.55, 0.7, 0.85)$ \\
+    Very High/Very Late & $(0.7, 0.85, 1.0)$  & $(0.8, 0.9, 1.0)$  & $(0.65, 0.85, 1.0)$ & $(0.75, 1.0, 1.)$  \\
+    \bottomrule
+    \end{tabular}
+\end{table*}
+
+\subsection{Output Fuzzy Set Configuration}
+\label{subsec:output_set}
+
+The output variable is the inertia weight~$w$, defined over the normalized universe of discourse $[0, 1]$ and subsequently scaled to $[w_{\min}, w_{\max}]$. A single output set configuration (Set~A) is used across all variants, ensuring that the output membership functions do not confound the effect of the input partition under study.
+
+Set~A employs uniformly distributed triangular membership functions with symmetric overlap. For the three-label case, the output labels are low~$(0.00, 0.25, 0.5)$, medium~$(0.25, 0.50, 0.75)$, and high~$(0.50, 0.75, 1.0)$. The five-label extension subdivides the same domain into very\_low, low, medium, high, and very\_high with equal spacing. 
+% Fig.~\ref{fig:output_mf} depicts both granularity levels.
+
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.99\linewidth]{figures/06_output_w_comparison_membership_functions.png}
+%     \caption{Output membership functions (Set~A) for the inertia weight~$w$. Left: 3-label configuration. Right: 5-label configuration. This set remains constant across all input set variants.}
+%     \label{fig:output_mf}
+% \end{figure}
+
+\subsection{Fuzzy Rule Base}
+\label{subsec:rule_base}
+
+The rule base defines the qualitative mapping between iteration progress, population diversity, and inertia weight. The underlying control strategy follows a standard exploration-to-exploitation transition: high inertia is promoted when diversity is low or the search is in early stages, while low inertia is assigned in later stages with sufficient diversity.
+
+The same rule semantics are preserved across all input set configurations and both granularity levels. Tables~\ref{tab:rules3} and~\ref{tab:rules5} present the complete rule bases.
+
+\begin{table}[htbp]
+\caption{Fuzzy rule base for inertia weight adaptation (3~labels, 9~rules).}
+\label{tab:rules3}
+\centering
+\begin{tabular}{@{}cccc@{}}
+\toprule
+Rule & Progress & Diversity & Output $w$ \\ \midrule
+1    & early    & low       & high   \\
+2    & early    & medium    & high   \\
+3    & early    & high      & high   \\ \midrule
+4    & mid      & low       & low    \\
+5    & mid      & medium    & medium \\
+6    & mid      & high      & high   \\ \midrule
+7    & late     & low       & low    \\
+8    & late     & medium    & low    \\
+9    & late     & high      & medium \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Fuzzy rule base for inertia weight adaptation (5~labels, 25~rules).}
+\label{tab:rules5}
+\centering
+\begin{tabular}{@{}cccc@{}}
+\toprule
+Rule & Progress   & Diversity & Output $w$ \\ \midrule
+1  & very early & very low  & very high \\
+2  & very early & low       & very high \\
+3  & very early & medium    & high      \\
+4  & very early & high      & high      \\
+5  & very early & very high & medium    \\ \midrule
+6  & early      & very low  & very high \\
+7  & early      & low       & high      \\
+8  & early      & medium    & high      \\
+9  & early      & high      & medium    \\
+10 & early      & very high & medium    \\ \midrule
+11 & mid        & very low  & high      \\
+12 & mid        & low       & high      \\
+13 & mid        & medium    & medium    \\
+14 & mid        & high      & medium    \\
+15 & mid        & very high & low       \\ \midrule
+16 & late       & very low  & high      \\
+17 & late       & low       & medium    \\
+18 & late       & medium    & low       \\
+19 & late       & high      & low       \\
+20 & late       & very high & very low  \\ \midrule
+21 & very late  & very low  & medium    \\
+22 & very late  & low       & low       \\
+23 & very late  & medium    & very low  \\
+24 & very late  & high      & very low  \\
+25 & very late  & very high & very low  \\ \bottomrule
+\end{tabular}
+\end{table}
+
