@@ -75,8 +75,10 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
         num_labels = int(extra_params.get('num_labels', 3)) if extra_params else 3
         # CLEI2026: Obtener input_set (configuración de MFs de entrada)
         input_set = str(extra_params.get('input_set', 'I1')).upper() if extra_params else 'I1'
+        # WEA2026: Obtener rule_set (base de reglas R1-R6)
+        rule_set = str(extra_params.get('rule_set', 'R1')).upper() if extra_params else 'R1'
         # Crear controller con factory function
-        fcs = get_fuzzy_controller(w_set, num_labels=num_labels, input_set=input_set)
+        fcs = get_fuzzy_controller(w_set, num_labels=num_labels, input_set=input_set, rule_set=rule_set)
     
     # Iteración 0
     meanFitness0 = float(np.mean(fitness))

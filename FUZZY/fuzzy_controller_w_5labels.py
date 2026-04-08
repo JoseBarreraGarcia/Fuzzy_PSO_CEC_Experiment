@@ -29,11 +29,12 @@ class FuzzyInertiaController_5labels:
     w_set controla las MFs de salida (inertia weight).
     """
 
-    def __init__(self, w_set, input_set="I1", n_grid=501):
+    def __init__(self, w_set, input_set="I1", rule_set="R1", n_grid=501):
         self.wMin = 0.0
         self.wMax = 1.0
         self.w_set = str(w_set).upper()
         self.input_set = str(input_set).upper()
+        self.rule_set = str(rule_set).upper()
         self.n_grid = int(n_grid)
         self.w_history = [self.wMax]  # Valor inicial: exploración máxima en iter=0
 
@@ -46,8 +47,8 @@ class FuzzyInertiaController_5labels:
         # Salida w (sets A, B con 5 etiquetas)
         self.w_mf = self._build_w_mfs(self.w_set)
 
-        # Reglas 5x5 (25 reglas). Lógica: más diversidad/temprano → más exploración
-        self.rules = self._build_rules_5x5()
+        # Reglas 5x5: seleccionables via rule_set (WEA2026)
+        self.rules = self._build_rules_5x5(self.rule_set)
 
     def _build_input_mfs(self, input_set):
         """
@@ -186,53 +187,192 @@ class FuzzyInertiaController_5labels:
         
         return W_SETS[w_set]
 
-    def _build_rules_5x5(self):
+    def _build_rules_5x5(self, rule_set):
         """
-        Construye matriz 5×5 de reglas Mamdani.
+        WEA2026: 6 variantes de bases de reglas 5×5 (25 reglas cada una).
+        Rows = diversity (very_low..very_high), Columns = progress (very_early..very_late).
         
-        Lógica:
-        - Diversidad BAJA + iteración TEMPRANA → exploración (very_high)
-        - Diversidad BAJA + iteración TARDÍA → explotación (very_low)
-        - Diversidad ALTA + cualquier iteración → exploración (high/very_high)
-        - Diversidad MEDIA → transición gradual
+        R1: Baseline - explore early, exploit late, diversity-reactive
+        R2: Exploitation-dominant - aggressive low w bias
+        R3: Exploration-dominant - aggressive high w bias
+        R4: Diversity-reactive - w = f(diversity) only, progress-agnostic
+        R5: Progress-dominant - w = f(progress) only, diversity-agnostic
+        R6: Inverse - opposite of R1 (exploit early, explore late)
         """
-        rules = {
-            # Diversidad: very_low (población casi estancada, peligro)
-            ("very_low", "very_early"): "very_high",  # Urgencia: explosión
-            ("very_low", "early"):      "very_high",
-            ("very_low", "mid"):        "high",        # Intentar escape
-            ("very_low", "late"):       "high",      # Tarde para escape
-            ("very_low", "very_late"):  "medium",         # 
-
-            # Diversidad: low (población baja)
-            ("low", "very_early"): "very_high",
-            ("low", "early"):      "high",
-            ("low", "mid"):        "high",
-            ("low", "late"):       "medium",
-            ("low", "very_late"):  "low",
-
-            # Diversidad: medium (balanceado)
-            ("medium", "very_early"): "high",
-            ("medium", "early"):      "high",
-            ("medium", "mid"):        "medium",
-            ("medium", "late"):       "low",
-            ("medium", "very_late"):  "very_low",
-
-            # Diversidad: high (buena exploración)
-            ("high", "very_early"): "high",
-            ("high", "early"):      "medium",
-            ("high", "mid"):        "medium",
-            ("high", "late"):       "low",
-            ("high", "very_late"):  "very_low",
-
-            # Diversidad: very_high (excelente exploración)
-            ("very_high", "very_early"): "medium",
-            ("very_high", "early"):      "medium",
-            ("very_high", "mid"):        "low",
-            ("very_high", "late"):       "very_low",
-            ("very_high", "very_late"):  "very_low",
+        RULE_SETS = {
+            # R1: Baseline (current system)
+            "R1": {
+                ("very_low", "very_early"): "very_high",
+                ("very_low", "early"):      "very_high",
+                ("very_low", "mid"):        "high",
+                ("very_low", "late"):       "high",
+                ("very_low", "very_late"):  "medium",
+                ("low", "very_early"):      "very_high",
+                ("low", "early"):           "high",
+                ("low", "mid"):             "high",
+                ("low", "late"):            "medium",
+                ("low", "very_late"):       "low",
+                ("medium", "very_early"):   "high",
+                ("medium", "early"):        "high",
+                ("medium", "mid"):          "medium",
+                ("medium", "late"):         "low",
+                ("medium", "very_late"):    "very_low",
+                ("high", "very_early"):     "high",
+                ("high", "early"):          "medium",
+                ("high", "mid"):            "medium",
+                ("high", "late"):           "low",
+                ("high", "very_late"):      "very_low",
+                ("very_high", "very_early"):"medium",
+                ("very_high", "early"):     "medium",
+                ("very_high", "mid"):       "low",
+                ("very_high", "late"):      "very_low",
+                ("very_high", "very_late"): "very_low",
+            },
+            # R2: Exploitation-dominant
+            "R2": {
+                ("very_low", "very_early"): "high",
+                ("very_low", "early"):      "medium",
+                ("very_low", "mid"):        "low",
+                ("very_low", "late"):       "very_low",
+                ("very_low", "very_late"):  "very_low",
+                ("low", "very_early"):      "medium",
+                ("low", "early"):           "medium",
+                ("low", "mid"):             "low",
+                ("low", "late"):            "very_low",
+                ("low", "very_late"):       "very_low",
+                ("medium", "very_early"):   "medium",
+                ("medium", "early"):        "low",
+                ("medium", "mid"):          "low",
+                ("medium", "late"):         "very_low",
+                ("medium", "very_late"):    "very_low",
+                ("high", "very_early"):     "medium",
+                ("high", "early"):          "low",
+                ("high", "mid"):            "very_low",
+                ("high", "late"):           "very_low",
+                ("high", "very_late"):      "very_low",
+                ("very_high", "very_early"):"low",
+                ("very_high", "early"):     "low",
+                ("very_high", "mid"):       "very_low",
+                ("very_high", "late"):      "very_low",
+                ("very_high", "very_late"): "very_low",
+            },
+            # R3: Exploration-dominant
+            "R3": {
+                ("very_low", "very_early"): "very_high",
+                ("very_low", "early"):      "very_high",
+                ("very_low", "mid"):        "very_high",
+                ("very_low", "late"):       "high",
+                ("very_low", "very_late"):  "high",
+                ("low", "very_early"):      "very_high",
+                ("low", "early"):           "very_high",
+                ("low", "mid"):             "high",
+                ("low", "late"):            "high",
+                ("low", "very_late"):       "medium",
+                ("medium", "very_early"):   "very_high",
+                ("medium", "early"):        "high",
+                ("medium", "mid"):          "high",
+                ("medium", "late"):         "medium",
+                ("medium", "very_late"):    "medium",
+                ("high", "very_early"):     "very_high",
+                ("high", "early"):          "high",
+                ("high", "mid"):            "high",
+                ("high", "late"):           "medium",
+                ("high", "very_late"):      "low",
+                ("very_high", "very_early"):"high",
+                ("very_high", "early"):     "high",
+                ("very_high", "mid"):       "medium",
+                ("very_high", "late"):      "medium",
+                ("very_high", "very_late"): "low",
+            },
+            # R4: Diversity-reactive (progress-agnostic)
+            "R4": {
+                ("very_low", "very_early"): "very_low",
+                ("very_low", "early"):      "very_low",
+                ("very_low", "mid"):        "very_low",
+                ("very_low", "late"):       "very_low",
+                ("very_low", "very_late"):  "very_low",
+                ("low", "very_early"):      "low",
+                ("low", "early"):           "low",
+                ("low", "mid"):             "low",
+                ("low", "late"):            "low",
+                ("low", "very_late"):       "low",
+                ("medium", "very_early"):   "medium",
+                ("medium", "early"):        "medium",
+                ("medium", "mid"):          "medium",
+                ("medium", "late"):         "medium",
+                ("medium", "very_late"):    "medium",
+                ("high", "very_early"):     "high",
+                ("high", "early"):          "high",
+                ("high", "mid"):            "high",
+                ("high", "late"):           "high",
+                ("high", "very_late"):      "high",
+                ("very_high", "very_early"):"very_high",
+                ("very_high", "early"):     "very_high",
+                ("very_high", "mid"):       "very_high",
+                ("very_high", "late"):      "very_high",
+                ("very_high", "very_late"): "very_high",
+            },
+            # R5: Progress-dominant (diversity-agnostic)
+            "R5": {
+                ("very_low", "very_early"): "very_high",
+                ("very_low", "early"):      "high",
+                ("very_low", "mid"):        "medium",
+                ("very_low", "late"):       "low",
+                ("very_low", "very_late"):  "very_low",
+                ("low", "very_early"):      "very_high",
+                ("low", "early"):           "high",
+                ("low", "mid"):             "medium",
+                ("low", "late"):            "low",
+                ("low", "very_late"):       "very_low",
+                ("medium", "very_early"):   "very_high",
+                ("medium", "early"):        "high",
+                ("medium", "mid"):          "medium",
+                ("medium", "late"):         "low",
+                ("medium", "very_late"):    "very_low",
+                ("high", "very_early"):     "very_high",
+                ("high", "early"):          "high",
+                ("high", "mid"):            "medium",
+                ("high", "late"):           "low",
+                ("high", "very_late"):      "very_low",
+                ("very_high", "very_early"):"very_high",
+                ("very_high", "early"):     "high",
+                ("very_high", "mid"):       "medium",
+                ("very_high", "late"):      "low",
+                ("very_high", "very_late"): "very_low",
+            },
+            # R6: Inverse (opposite of R1)
+            "R6": {
+                ("very_low", "very_early"): "medium",
+                ("very_low", "early"):      "medium",
+                ("very_low", "mid"):        "low",
+                ("very_low", "late"):       "low",
+                ("very_low", "very_late"):  "very_high",
+                ("low", "very_early"):      "very_low",
+                ("low", "early"):           "low",
+                ("low", "mid"):             "low",
+                ("low", "late"):            "medium",
+                ("low", "very_late"):       "high",
+                ("medium", "very_early"):   "low",
+                ("medium", "early"):        "low",
+                ("medium", "mid"):          "medium",
+                ("medium", "late"):         "high",
+                ("medium", "very_late"):    "very_high",
+                ("high", "very_early"):     "low",
+                ("high", "early"):          "medium",
+                ("high", "mid"):            "medium",
+                ("high", "late"):           "high",
+                ("high", "very_late"):      "very_high",
+                ("very_high", "very_early"):"very_low",
+                ("very_high", "early"):     "very_low",
+                ("very_high", "mid"):       "high",
+                ("very_high", "late"):      "very_high",
+                ("very_high", "very_late"): "very_high",
+            },
         }
-        return rules
+        if rule_set not in RULE_SETS:
+            raise ValueError(f"rule_set='{rule_set}' no definido. Sets disponibles: {list(RULE_SETS.keys())}")
+        
+        return RULE_SETS[rule_set]
 
     def compute_w(self, diversity_ratio, progress):
         # Reparación mínima: evitar bordes exactos (0 o 1)

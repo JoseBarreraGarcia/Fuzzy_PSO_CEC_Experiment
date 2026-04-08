@@ -55,13 +55,19 @@
 
     "mh_params": {
         "PSO_FCS": [
+            {"w_set": "A", "num_labels": 3, "input_set": "I1", "rule_set": "R1"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I1", "rule_set": "R2"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I1", "rule_set": "R3"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I1", "rule_set": "R4"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I1", "rule_set": "R5"},
+            {"w_set": "A", "num_labels": 3, "input_set": "I1", "rule_set": "R6"},
 
-            {"w_set": "A", "num_labels": 3, "input_set": "I1"},
-
-
-            {"w_set": "A", "num_labels": 5, "input_set": "I1"}
-
-
+            {"w_set": "A", "num_labels": 5, "input_set": "I1", "rule_set": "R1"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I1", "rule_set": "R2"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I1", "rule_set": "R3"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I1", "rule_set": "R4"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I1", "rule_set": "R5"},
+            {"w_set": "A", "num_labels": 5, "input_set": "I1", "rule_set": "R6"}
         ]
     }
 
