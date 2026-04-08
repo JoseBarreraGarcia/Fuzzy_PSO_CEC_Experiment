@@ -15,8 +15,8 @@ from BD.sqlite import BD
 from Util.log import escribir_resumenes
 
 # === Carga de Configuraciones ===
-CONFIG_FILE = './util/json/dir.json'
-EXPERIMENTS_FILE = './util/json/experiments_config.json'
+CONFIG_FILE = './config/directories.json'
+EXPERIMENTS_FILE = './config/experiments.json'
 
 CONFIG, EXPERIMENTS = cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE)
 

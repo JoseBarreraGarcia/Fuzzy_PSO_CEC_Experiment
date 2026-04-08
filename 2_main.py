@@ -85,7 +85,7 @@ def main():
     import json
     import numpy as np
     import random
-    with open('./Util/json/experiments_config.json', 'r', encoding='utf-8') as f:
+    with open('./config/experiments.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
     use_seed = config.get('use_seed', True)
     base_seed = config.get('seed', 42)

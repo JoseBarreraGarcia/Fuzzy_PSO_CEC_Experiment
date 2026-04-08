@@ -16,7 +16,7 @@
 
 ### 1. **Configuration-Driven Design** (JSON → Database → Solver Pipeline)
 
-All experiments defined in `util/json/experiments_config.json`:
+All experiments defined in `config/experiments.json`:
 ```json
 {
   "ben": true,
@@ -33,13 +33,13 @@ All experiments defined in `util/json/experiments_config.json`:
 }
 ```
 
-**Flow**: Config → `poblarDB.py` populates database → `main.py` executes experiments → `analisis.py` generates reports.
+**Flow**: Config → `1_poblarDB.py` populates database → `2_main.py` executes experiments → `3_analisis.py` generates reports.
 
 **When adding features**: 
 1. Update JSON config first
 2. Modify database schema if needed (in `BD/sqlite.py.construirTablas()`)
-3. Update `poblarDB.py` to load new fields
-4. Update solver callers in `main.py` if needed
+3. Update `1_poblarDB.py` to load new fields
+4. Update solver callers in `2_main.py` if needed
 
 ### 2. **Three Problem Types with Different Dimensionality Handling**
 
@@ -60,7 +60,7 @@ Located in `FUZZY/fuzzy_controller_w.py`:
 **Adding fuzzy set E**: 
 1. Add to `W_SETS` dict in `fuzzy_controller_w.py` with triangular membership functions
 2. Add to JSON config: `{"w_set": "E"}`
-3. Run pipeline: `python reiniciarDB.py && python poblarDB.py && python main.py && python analisis.py`
+3. Run pipeline: `python 0_1_reiniciarDB.py && python 1_poblarDB.py && python 2_main.py && python 3_analisis.py`
 4. No solver code changes needed—configuration-driven
 
 ### 4. **Database Schema (SQLite)**
@@ -75,7 +75,7 @@ Four main tables created in `BD/sqlite.py.construirTablas()`:
 - **iteraciones**: Per-iteration CSV files (w, diversity, fitness data)
   - Columns: id_archivo, nombre, archivo (BLOB), fk_id_experimento
 
-**Critical**: Experiments are stateful. Always run `reiniciarDB.py` before `poblarDB.py` to reset state.
+**Critical**: Experiments are stateful. Always run `0_1_reiniciarDB.py` before `1_poblarDB.py` to reset state.
 
 ---
 
@@ -83,17 +83,17 @@ Four main tables created in `BD/sqlite.py.construirTablas()`:
 
 ### Full Experiment Pipeline
 ```bash
-# 1. Reset database (WARNING: deletes all results)
-python reiniciarDB.py
+# 0. Full reset (DB + results) — or run 0_1 and 0_2 separately
+python 0_reiniciar.py
 
-# 2. Populate with new experiments from config
-python poblarDB.py
+# 1. Populate with new experiments from config
+python 1_poblarDB.py
 
-# 3. Run all pending experiments
-python main.py
+# 2. Run all pending experiments
+python 2_main.py
 
-# 4. Generate 3-level hierarchical analysis
-python analisis.py
+# 3. Generate 3-level hierarchical analysis
+python 3_analisis.py
 ```
 
 ### 3-Level Hierarchical Analysis Framework
@@ -189,7 +189,7 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
 
 | Component | Purpose | Input | Output |
 |-----------|---------|-------|--------|
-| `main.py` | Orchestrator | experiment_id | Calls solver, logs results |
+| `2_main.py` | Orchestrator | experiment_id | Calls solver, logs results |
 | `FUZZY/fuzzy_controller_w.py` | FIS evaluator | (diversity, iteration) | w value |
 | `Metaheuristics/Codes/PSO_FCS.py` | PSO with fuzzy | population, w_set | updated_population |
 | `Problem/Benchmark/` | BEN fitness | x-vector, dim | fitness float |
@@ -197,7 +197,7 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
 | `Diversity/Codes/` | Diversity metrics | population | diversity float (0-1) |
 | `BD/sqlite.py` | State persistence | SQL queries | experiment records |
 
-**Data Flow**: `main.py` → `solverBEN/solverSCP` → `PSO_FCS.iterarPSO_FCS` → `FuzzyInertiaController.compute_w` → `Diversity.calculate_diversity` → CSV logging in `Resultados/Transitorio/`
+**Data Flow**: `2_main.py` → `solverBEN/solverSCP` → `PSO_FCS.iterarPSO_FCS` → `FuzzyInertiaController.compute_w` → `Diversity.calculate_diversity` → CSV logging in `Resultados/Transitorio/`
 
 ---
 
@@ -205,13 +205,13 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
 
 | Task | Primary Files |
 |------|----------------|
-| Add experiment variant | `util/json/experiments_config.json`, `poblarDB.py` |
+| Add experiment variant | `config/experiments.json`, `1_poblarDB.py` |
 | Modify fuzzy logic rules | `FUZZY/fuzzy_controller_w.py` (rules dict + W_SETS dict) |
 | Add new MH algorithm | `Metaheuristics/Codes/*.py`, `Solver/solverBEN.py` (add executor) |
 | Fix bug in results storage | `Solver/solverBEN.py` / `solverSCP.py`, `Util/csv_writer.py` |
 | Change analysis plots | `analysis_modules/compare_fuzzy_sets.py`, `detailed_w_analysis.py` |
 | Debug experiment state | `BD/sqlite.py`, `check_db.py` (query experiment status) |
-| Add problem type | `Problem/*/` new folder, `main.py` add executor, `BD/sqlite.py` add table |
+| Add problem type | `Problem/*/` new folder, `2_main.py` add executor, `BD/sqlite.py` add table |
 
 ---
 
@@ -233,9 +233,9 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
 - Verify `Metaheuristics/Codes/PSO_FCS.py` uses `fcs.compute_w(diversity_ratio, progress)`
 
 **Database corruption**: 
-- Run `python reiniciarDB.py` (destructive), then rebuild from config
+- Run `python 0_1_reiniciarDB.py` (destructive), then rebuild from config
 - Keep backups of `BD/resultados.db` before pipeline runs
-- Use `Scripts/db_scanner.py` to analyze and reconstruct config.json from database
+- Use `python 9_db_scanner.py` to analyze and reconstruct config.json from database
 
 **NFE (Number of Function Evaluations) tracking**: 
 - `Solver/solverBEN.py` tracks with `nfe_counter[0]`

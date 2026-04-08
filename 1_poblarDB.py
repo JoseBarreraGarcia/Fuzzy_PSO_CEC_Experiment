@@ -5,9 +5,11 @@ from BD.sqlite import BD
 from Util.log import resumen_experimentos
 from Util.util import cargar_configuracion
 
-from crearBD import crear_BD
+import importlib
+crearBD_mod = importlib.import_module('1_1_crearBD')
+crear_BD = crearBD_mod.crear_BD
 
-config = cargar_configuracion('util/json/experiments_config.json')
+config = cargar_configuracion('config/experiments.json')
 
 bd = BD()
 dimensiones_cache = {}

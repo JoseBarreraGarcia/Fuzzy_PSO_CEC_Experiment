@@ -1,7 +1,8 @@
 from Util.util import cargar_configuracion
 
-import analisisSCP
-import analisisBEN
+import importlib
+analisisSCP = importlib.import_module('3_2_analisisSCP')
+analisisBEN = importlib.import_module('3_1_analisisBEN')
 
 from analysis_modules_cec import (
     level1_raw_data_cec,
@@ -12,7 +13,7 @@ from analysis_modules_cec import (
 
 import time
 
-CONFIG_PATH = './util/json/analysis.json'  # Ruta al archivo JSON
+CONFIG_PATH = './config/analysis.json'
 
 def main():
     """

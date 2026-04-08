@@ -42,7 +42,7 @@ def cargar_configuracion(ruta_config):
         return json.load(archivo)
     
 def cargar_directorios():
-    ruta_directorios = './util/json/dir.json'
+    ruta_directorios = './config/directories.json'
     
     if not os.path.exists(ruta_directorios):
         raise FileNotFoundError(f"El archivo de directorios '{ruta_directorios}' no existe.")
