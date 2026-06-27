@@ -1,4 +1,4 @@
-from Util.util import cargar_configuracion
+from Util.util import cargar_configuracion, obtener_ruta_config
 
 import importlib
 analisisSCP = importlib.import_module('3_2_analisisSCP')
@@ -9,11 +9,12 @@ from analysis_modules_cec import (
     level2_aggregated_cec,
     convergence_curves_cec,
     w_relationships_cec,
+    w_verification_3d,
 )
 
 import time
 
-CONFIG_PATH = './config/analysis.json'
+CONFIG_PATH = obtener_ruta_config('PSO_ANALYSIS_CONFIG', './config/analysis.json')
 
 def main():
     """
@@ -58,6 +59,14 @@ def main():
         w_relationships_cec.main()
         t1 = time.time()
         tiempos["W_Relationships"] = round(t1 - t0, 2)
+
+        # W verification 3D plots (w vs progress vs diversity per config)
+        print("[INFO] Ejecutando verificación 3D de w...")
+        print("-" * 50)
+        t0 = time.time()
+        w_verification_3d.main()
+        t1 = time.time()
+        tiempos["W_Verification_3D"] = round(t1 - t0, 2)
 
     if config.get("scp", False):
         print("[INFO] Ejecutando análisis SCP...")

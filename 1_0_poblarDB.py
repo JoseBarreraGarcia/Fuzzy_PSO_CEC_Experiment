@@ -3,13 +3,14 @@ import opfunu.cec_based
 
 from BD.sqlite import BD
 from Util.log import resumen_experimentos
-from Util.util import cargar_configuracion
+from Util.util import cargar_configuracion, obtener_ruta_config
 
 import importlib
 crearBD_mod = importlib.import_module('1_1_crearBD')
 crear_BD = crearBD_mod.crear_BD
 
-config = cargar_configuracion('config/experiments.json')
+CONFIG_PATH = obtener_ruta_config('PSO_EXPERIMENTS_CONFIG', 'config/experiments.json')
+config = cargar_configuracion(CONFIG_PATH)
 
 bd = BD()
 dimensiones_cache = {}
@@ -118,9 +119,12 @@ def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iterac
                     mh_label_suffix = ""
                     
                     if mh_param_dict:  # Si hay parámetros específicos
+                        # Parámetros que no forman parte del nombre/identidad del MH
+                        _LABEL_EXCLUDED = {'wMin', 'wMax'}
                         for param_key, param_val in mh_param_dict.items():
                             extended_extra_params += f',{param_key}:{param_val}'
-                            mh_label_suffix += f":{param_val}"
+                            if param_key not in _LABEL_EXCLUDED:
+                                mh_label_suffix += f":{param_val}"
                     
                     # Crear MH name con el sufijo (ej: PSO_FCS:A)
                     mh_name = mh + mh_label_suffix

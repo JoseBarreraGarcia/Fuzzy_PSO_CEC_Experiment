@@ -10,13 +10,13 @@ from io import StringIO
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from Util.util import cargar_configuracion_exp, writeTofile
+from Util.util import cargar_configuracion_exp, obtener_ruta_config, writeTofile
 from BD.sqlite import BD
 from Util.log import escribir_resumenes
 
 # === Carga de Configuraciones ===
 CONFIG_FILE = './config/directories.json'
-EXPERIMENTS_FILE = './config/experiments.json'
+EXPERIMENTS_FILE = obtener_ruta_config('PSO_EXPERIMENTS_CONFIG', './config/experiments.json')
 
 CONFIG, EXPERIMENTS = cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE)
 

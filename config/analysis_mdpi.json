@@ -1,0 +1,18 @@
+{
+    "_profile": "mdpi",
+    "_source": "Snapshot de analysis.json para la rama Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI",
+
+    "ben": true,
+    "scp": false,
+    "uscp": false,
+
+    "mhs": ["PSO", "PSO_FCS"],
+
+    "DS_actions": ["S4-ELIT"],
+
+    "instancias": {
+        "BEN": ["F1", "F5", "F11", "F21", "F22", "F23"],
+        "SCP": [],
+        "USCP": []
+    }
+}

@@ -1,0 +1,83 @@
+{
+    "_profile": "mdpi",
+    "_source": "Snapshot de experiments.json para la rama Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI",
+
+    "_comentarios": {
+        "ben": "Indica si se van a procesar funciones BEN.",
+        "scp": "Indica si se van a procesar instancias SCP.",
+        "uscp": "Indica si se van a procesar instancias USCP.",
+        "kp": "Indica si se van a procesar instancias KP.",
+        "mhs": "Lista de metaheurísticas que se van a procesar.",
+        "DS_actions": "Lista de acciones de binarización de la población.",
+        "dimensiones": "Mapea cada función BEN a las dimensiones que utiliza.",
+        "experimentos": "Parámetros globales de iteraciones y población para cada problema.",
+        "seed": "Semilla para la generación de números aleatorios. Si es TRUE se activara una semilla para cada run que compartiran todas las MH. FALSE, no utiliza semilla fija.",
+        "instancias": "Identificadores de los instancias de los problemas que se van a procesar.",
+        "mh_params": "Parámetros específicos para cada metaheurística. En caso de PSO_FCS, se definen diferentes configuraciones de 'w_set'.",
+        "parallel_workers": "Número de procesos paralelos para ejecutar experimentos. 1 = secuencial (comportamiento original). N > 1 usa multiprocessing con N workers. No exceder el número de CPUs disponibles.",
+        "console_summary_only": "Si es true, la consola solo muestra el resultado final de cada experimento (ID, fitness, tiempo). Si es false, muestra toda la retroalimentación detallada (iteraciones, diversidad, XPL/XPT, etc.)."
+    },
+
+    "ben": true,
+    "scp": false,
+    "uscp": false,
+    "kp": false,
+
+    "mhs": ["PSO", "PSO_FCS"],
+
+    "DS_actions": ["S4-ELIT"],
+
+    "dimensiones": {
+        "BEN": {
+            "F1": [100], "F2": [100], "F3": [100],
+            "F4": [100], "F5": [100], "F6": [100],
+            "F7": [100], "F8": [100], "F9": [100],
+            "F10": [100], "F11": [100], "F12": [100],
+            "F13": [100], "F14": [2], "F15": [4],
+            "F16": [2], "F17": [2], "F18": [2],
+            "F19": [3], "F20": [6], "F21": [4],
+            "F22": [4], "F23": [4]
+        }
+    },
+
+    "experimentos": {
+        "BEN": {"iteraciones": 1000, "poblacion": 20, "num_experimentos": 31},
+        "SCP": {},
+        "USCP": {},
+        "KP": {}
+    },
+
+    "use_seed": true,
+    "seed": 42,
+    "parallel_workers": 6,
+    "console_summary_only": true,
+
+    "instancias": {
+        "BEN": ["F1", "F5", "F11", "F21", "F22", "F23"],
+        "SCP": [],
+        "USCP": [],
+        "KP": []
+    },
+
+    "mh_params": {
+        "PSO_FCS": [
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R2", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R3", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R4", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R5", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R6", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R7", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9},
+
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R2", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R3", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R4", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R5", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R6", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R7", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9}
+        ]
+    }
+}

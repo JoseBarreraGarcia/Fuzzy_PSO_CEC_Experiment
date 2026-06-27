@@ -1,5 +1,7 @@
 import time
 import shutil
+import multiprocessing
+import os
 
 from Solver.solverBEN import solverBEN
 from Solver.solverSCP import solverSCP
@@ -79,37 +81,79 @@ def procesar_experimento(data, bd):
         log_error(id, f"Error general: {str(e)}")
         bd.actualizarExperimento(id, "error")'''
 
+def worker_loop(worker_id, use_seed, base_seed):
+    """Worker que consume experimentos de la cola (BD) hasta que no queden pendientes."""
+    import numpy as np
+    import random
+
+    # Establecer ID de worker para prefijo en consola
+    os.environ['PSO_WORKER_ID'] = str(worker_id)
+
+    bd = BD()
+    experiments_done = 0
+
+    while True:
+        data = bd.obtenerExperimento()
+        if data is None:
+            break
+
+        exp_id = int(data[0][0])
+
+        # Seed determinista basada en ID del experimento (reproducible independientemente del orden de ejecución)
+        if use_seed:
+            exp_seed = base_seed + exp_id
+            np.random.seed(exp_seed)
+            random.seed(exp_seed)
+
+        log_experimento(data)
+        procesar_experimento(data, bd)
+        experiments_done += 1
+
+    print(f"[W{worker_id}] Finalizado. Experimentos ejecutados: {experiments_done}")
+
+
 def main():
     """Función principal que gestiona la ejecución de los experimentos."""
-    # --- Set up seeds and config ---
     import json
     import numpy as np
     import random
-    with open('./config/experiments.json', 'r', encoding='utf-8') as f:
+    config_path = obtener_ruta_config('PSO_EXPERIMENTS_CONFIG', './config/experiments.json')
+    with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
     use_seed = config.get('use_seed', True)
     base_seed = config.get('seed', 42)
-    num_runs = config.get('experimentos', {}).get('SCP', {}).get('num_experimentos', 1)
-    seeds = [base_seed + i for i in range(num_runs)] if use_seed else [None]*num_runs
+    parallel_workers = config.get('parallel_workers', 1)
+    console_summary_only = config.get('console_summary_only', False)
+
+    # Configurar modo de consola como variable de entorno (accesible por subprocesos)
+    if console_summary_only:
+        os.environ['PSO_CONSOLE_SUMMARY'] = '1'
+    else:
+        os.environ.pop('PSO_CONSOLE_SUMMARY', None)
 
     verificar_y_crear_carpetas()
 
-    bd = BD()
-    data = bd.obtenerExperimento()
-
-    start_time = time.time()  # Registrar el tiempo inicial
-
+    start_time = time.time()
     log_fecha_hora("Inicio de la ejecución")
 
-    run_idx = 0
-    while data is not None:
-        if use_seed:
-            np.random.seed(seeds[run_idx % num_runs])
-            random.seed(seeds[run_idx % num_runs])
-        log_experimento(data)
-        procesar_experimento(data, bd)
-        data = bd.obtenerExperimento()
-        run_idx += 1
+    if parallel_workers <= 1:
+        # Modo secuencial (comportamiento original, sin prefijo [W])
+        os.environ.pop('PSO_WORKER_ID', None)
+        worker_loop(0, use_seed, base_seed)
+    else:
+        # Modo paralelo con multiprocessing
+        num_cpus = os.cpu_count() or 1
+        n_workers = min(parallel_workers, num_cpus)
+        print(f"[Parallel] Iniciando {n_workers} workers (CPUs disponibles: {num_cpus})")
+
+        processes = []
+        for i in range(n_workers):
+            p = multiprocessing.Process(target=worker_loop, args=(i, use_seed, base_seed))
+            p.start()
+            processes.append(p)
+
+        for p in processes:
+            p.join()
 
     end_time = time.time()
     total_time = end_time - start_time
