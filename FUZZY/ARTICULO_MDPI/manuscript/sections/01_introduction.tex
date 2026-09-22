@@ -2,4 +2,18 @@
 \section{Introduction}
 \label{sec:introduction}
 
-% TODO: motivation, gap left by static Mamdani FCS, contribution of this paper.
+Particle swarm optimization (PSO) is a population-based metaheuristic whose performance depends on the balance between exploration and exploitation. The inertia weight is one of the main controls used to regulate this balance. A fuzzy control system (FCS) can make the inertia weight responsive to the state of the swarm, but the resulting behavior depends on design choices that are often fixed without systematic comparison.
+
+In a Mamdani FCS, the number of linguistic labels determines the granularity of the input and output partitions, while the rule base determines how diversity and iteration progress are translated into an inertia weight. These choices are coupled: increasing the number of labels changes the resolution of the inference process and also increases the number of rules. Consequently, a configuration that performs well on one landscape may not be reliable on another one.
+
+This paper studies whether a single static configuration of a Mamdani FCS can dominate across the Classical Benchmark Suite F1--F23, or whether the best configuration depends on the problem class. The study is deliberately framed as a sensitivity analysis rather than as a proposal for a new optimizer. It evaluates 32 PSO\_FCS configurations formed by four granularities and eight rule patterns, using classical PSO as a baseline.
+
+The contributions of this work are:
+\begin{enumerate}
+	\item a parametric and reproducible Mamdani FCS whose partitions and rule patterns are generated from declarative configuration;
+	\item a factorial evaluation of linguistic granularity and rule-base structure over the F1--F23 suite, including scalable and fixed-dimensional functions;
+	\item an analysis of performance, convergence, inertia-weight dynamics, and configuration rankings by problem class; and
+	\item empirical evidence addressing whether a globally optimal static FCS configuration exists.
+\end{enumerate}
+
+The remainder of the paper presents the related work, controller design, experimental protocol, planned analyses, and interpretation of the results.

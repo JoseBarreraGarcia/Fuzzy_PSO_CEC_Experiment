@@ -23,7 +23,7 @@
 \hreflink{https://doi.org/}
 
 %=================================================================
-% Title / Authors — update before submission
+% Title / Authors - update before submission
 \Title{Joint Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure: A Factorial Study on F1--F23}
 \TitleCitation{Joint Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure}
 
@@ -40,8 +40,11 @@ $^{1}$ \quad Affiliation 1; e-mail@e-mail.com}
 
 %=================================================================
 % Abstract & keywords
-\abstract{TODO: 200-word structured abstract (Background / Methods / Results / Conclusions).}
+\abstract{Fuzzy control of the inertia weight is a common way to adapt the exploration--exploitation balance in particle swarm optimization (PSO). However, it remains unclear whether one static Mamdani fuzzy-control configuration is reliable across problems with different landscapes. This study establishes a controlled factorial framework to evaluate that question on the classical F1--F23 benchmark suite. The evaluated PSO\_FCS configurations combine four linguistic granularities (3, 5, 7, and 9 labels) with eight rule-base patterns, while a classical PSO implementation provides the baseline. The fuzzy controller uses uniform triangular Ruspini partitions, shoulder membership functions, centroid defuzzification, and a declarative configuration that makes the experiment reproducible. Performance is assessed using final fitness, normalized gap, convergence behavior, and rank-based statistical comparisons over 31 independent runs. The results section will report the effects of granularity, rule structure, their interaction, and the dependence of the best configuration on the problem class. The study is designed to determine whether a globally dominant static configuration exists, and to establish the empirical basis for future mechanisms that adapt the semantics of fuzzy control to the optimization problem.}
 \keyword{particle swarm optimization; fuzzy inertia weight; Mamdani fuzzy system; linguistic granularity; rule base; benchmark functions}
+
+% Compatibility shim for the MDPI marginfix package with older LaTeX kernels.
+\providecommand{\UseTaggingSocket}[1]{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -57,10 +60,10 @@ $^{1}$ \quad Affiliation 1; e-mail@e-mail.com}
 %=================================================================
 \vspace{6pt}
 
-\authorcontributions{TODO: CRediT statement.}
+\authorcontributions{Conceptualization, methodology, software, formal analysis, and writing will be completed by the authors before submission.}
 \funding{This research received no external funding.}
-\dataavailability{TODO: point to the SQLite BD and CSV artefacts; add DOI on acceptance.}
-\acknowledgments{TODO.}
+\dataavailability{The experimental configurations and analysis scripts are maintained in the associated repository. The SQLite database and generated CSV artefacts will be deposited in a persistent repository before submission.}
+\acknowledgments{The authors acknowledge the maintainers of the benchmark implementations and the open-source scientific Python ecosystem.}
 \conflictsofinterest{The authors declare no conflicts of interest.}
 
 \abbreviations{Abbreviations}{

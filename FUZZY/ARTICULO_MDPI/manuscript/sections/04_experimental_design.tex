@@ -2,17 +2,23 @@
 \section{Experimental Design}
 \label{sec:experimental_design}
 
-% TODO: F1--F23 classical benchmark suite (Abualigah et al.\ 2021), dims {10,30,50,100} for F1--F13, fixed dims for F14--F23, 31 independent runs, PSO baseline vs 32 PSO\_FCS variants.
+The experimental design follows a controlled factorial protocol. The benchmark contains the 23 classical functions F1--F23. Functions F1--F13 are evaluated at dimensions $d\in\{10,30,50,100\}$, whereas F14--F23 retain the dimensions imposed by their definitions. Each configuration is evaluated for 1000 iterations, with a population of 20 and 31 independent runs. The master seed is 42 and the run-specific seed is recorded for reproducibility.
 
 \subsection{Benchmark suite and dimensions}
 \label{subsec:benchmarks}
 
+The functions are grouped for analysis into unimodal functions, scalable multimodal functions, and fixed-dimensional multimodal or composite functions. The optimum associated with each function is used to compute normalized performance measures. Special care is required for functions whose documented optimum is expressed per dimension.
+
 \subsection{Factorial configuration}
 \label{subsec:factorial}
 
-% TODO: 4 granularities x 8 rule banks = 32 PSO_FCS + 1 baseline PSO, seed=42.
+The principal factorial design contains four levels of granularity and eight rule patterns, producing $4\times 8=32$ PSO\_FCS configurations. The output and input partition families are fixed to O1 and I1, respectively; both use uniform triangular partitions with overlap one and shoulders. A classical PSO with a linear inertia schedule from 0.9 to 0.4 is the single baseline.
+
+The resulting comparison has 33 algorithmic configurations per benchmark instance. A reduced smoke configuration is maintained separately to validate database population, execution, CSV generation, and bounds on $w$ before the full batch is launched.
 
 \subsection{Metrics and statistical tests}
 \label{subsec:metrics}
 
-% TODO: gap%, best fitness, convergence, non-parametric tests (Friedman + Nemenyi / Holm).
+The primary response variables are final best fitness, normalized gap, execution time, and number of function evaluations. Secondary responses include convergence area, diversity statistics, and the mean, standard deviation, and empirical entropy of the inertia-weight trajectory. Configuration rankings are computed globally and by problem class.
+
+The planned inferential analysis uses Friedman tests with Nemenyi or Holm-adjusted post-hoc comparisons for repeated configuration rankings, Wilcoxon signed-rank tests for paired comparisons against PSO, and factorial effect analysis for granularity, rule pattern, and their interaction. Effect sizes and confidence intervals will accompany $p$-values. The exact tests and exclusion policy will be frozen before analyzing the full batch.

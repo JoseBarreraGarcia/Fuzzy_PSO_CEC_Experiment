@@ -2,19 +2,38 @@
 \section{Parametric Fuzzy Inertia Controller}
 \label{sec:framework}
 
-% TODO: Mamdani FIS with parametric granularity n in {3,5,7,9} and rule bank R1--R8; partition generator; PSO integration.
+This section defines the static fuzzy-control component used by all PSO\_FCS variants. The controller receives normalized diversity and iteration progress and returns an inertia weight bounded by $[w_{\min},w_{\max}]$.
 
 \subsection{Mamdani FIS design}
 \label{subsec:fis_design}
 
-% TODO: inputs (diversity ratio, iteration progress), output (inertia weight w), triangular Ruspini partitions, defuzzification.
+The two inputs are the diversity ratio $d_t \in [0,1]$ and normalized progress $p_t \in [0,1]$. The output universe is normalized to $[0,1]$ and is linearly rescaled to $[w_{\min},w_{\max}]$ after defuzzification. For each evaluated granularity $n \in \{3,5,7,9\}$, the input and output universes use uniform triangular partitions with overlap one and shoulder functions at the boundaries. Thus, the partition satisfies the Ruspini condition $\sum_i \mu_i(x)=1$ over the normalized domain.
+
+For activated rules $r$, the aggregated output membership function is denoted by $\mu_{\mathrm{agg}}(z)$. The centroid is
+\begin{equation}
+	z_t = \frac{\int_0^1 z\,\mu_{\mathrm{agg}}(z)\,dz}{\int_0^1 \mu_{\mathrm{agg}}(z)\,dz},
+	\qquad
+	w_t = w_{\min} + z_t(w_{\max}-w_{\min}).
+\end{equation}
 
 \subsection{Rule bank R1--R8}
 \label{subsec:rules}
 
-% TODO: describe the eight rule patterns and how they generalize to arbitrary n.
+\subsection{Rule bank R1--R8}
+\label{subsec:rules}
+
+The rule bank contains eight fixed patterns representing the admissible directional relationships between diversity, progress, and the output inertia weight. Each pattern is generated algorithmically for arbitrary $n$; no rule matrix is manually rewritten for a particular granularity. A configuration is therefore identified by the pair $(n,R)$, with $n \in \{3,5,7,9\}$ and $R \in \{R1,\ldots,R8\}$.
+
+The rule generator produces $n^2$ consequents for every pattern. The resulting matrices are validated independently for cardinality, deterministic generation, and bounded output. The semantic descriptions of R1--R8 and their exact matrices will be added as a table once the final notation is frozen.
 
 \subsection{Integration with PSO}
 \label{subsec:pso_fcs}
 
-% TODO: velocity update, wMin/wMax bounds, w history logging.
+\subsection{Integration with PSO}
+\label{subsec:pso_fcs}
+
+At iteration $t$, the controller is evaluated from the current population state and its output is used in the standard PSO velocity update:
+\begin{equation}
+	v_{i,t+1}=w_t v_{i,t}+c_1 r_1(p_{i,t}-x_{i,t})+c_2 r_2(g_t-x_{i,t}),
+\end{equation}
+where $p_{i,t}$ and $g_t$ denote the personal and global best positions. The implementation records $w_t$, diversity, progress, and fitness at every iteration, enabling the analysis of convergence and controller dynamics without changing the solver interface.
