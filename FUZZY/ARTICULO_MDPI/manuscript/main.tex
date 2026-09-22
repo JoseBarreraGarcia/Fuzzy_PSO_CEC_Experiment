@@ -1,0 +1,87 @@
+%=================================================================
+% MDPI Biomimetics — Fuzzy PSO factorial study on F1--F23
+% Entry point. Uses the MDPI class shipped in Definitions/.
+% Body split into sections/*.tex; figures under figures/; tables under tables/.
+%=================================================================
+\documentclass[journal=biomimetics,article,submit,pdftex,moreauthors]{Definitions/mdpi}
+
+%=================================================================
+% MDPI internal commands — do not modify without reason
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+\datereceived{ }
+\daterevised{ }
+\dateaccepted{ }
+\datepublished{ }
+\hreflink{https://doi.org/}
+
+%=================================================================
+% Title / Authors — update before submission
+\Title{Joint Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure: A Factorial Study on F1--F23}
+\TitleCitation{Joint Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure}
+
+\newcommand{\orcidauthorA}{0000-0000-0000-000X}
+
+\Author{Firstname Lastname $^{1,}$*\orcidA{}}
+\AuthorNames{Firstname Lastname}
+\AuthorCitation{Lastname, F.}
+
+\address{%
+$^{1}$ \quad Affiliation 1; e-mail@e-mail.com}
+
+\corres{Correspondence: e-mail@e-mail.com}
+
+%=================================================================
+% Abstract & keywords
+\abstract{TODO: 200-word structured abstract (Background / Methods / Results / Conclusions).}
+\keyword{particle swarm optimization; fuzzy inertia weight; Mamdani fuzzy system; linguistic granularity; rule base; benchmark functions}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\input{sections/01_introduction.tex}
+\input{sections/02_related_work.tex}
+\input{sections/03_framework.tex}
+\input{sections/04_experimental_design.tex}
+\input{sections/05_results.tex}
+\input{sections/06_discussion.tex}
+\input{sections/07_conclusion.tex}
+
+%=================================================================
+\vspace{6pt}
+
+\authorcontributions{TODO: CRediT statement.}
+\funding{This research received no external funding.}
+\dataavailability{TODO: point to the SQLite BD and CSV artefacts; add DOI on acceptance.}
+\acknowledgments{TODO.}
+\conflictsofinterest{The authors declare no conflicts of interest.}
+
+\abbreviations{Abbreviations}{
+The following abbreviations are used in this manuscript:\\
+
+\noindent
+\begin{tabular}{@{}ll}
+PSO & Particle Swarm Optimization\\
+FCS & Fuzzy Control System\\
+FIS & Fuzzy Inference System\\
+MF  & Membership Function\\
+\end{tabular}
+}
+
+%=================================================================
+\begin{adjustwidth}{-\extralength}{0cm}
+
+\reftitle{References}
+
+\bibliography{refs}
+
+\end{adjustwidth}
+
+\end{document}
