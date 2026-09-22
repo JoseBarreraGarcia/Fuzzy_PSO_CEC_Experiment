@@ -1,0 +1,16 @@
+\begin{table}[h]
+\centering
+\caption{Summary of hypotheses H1--H5 with their governing statistic and verdict.}
+\label{tab:hypothesis_summary}
+\begin{tabular}{llll}
+\toprule
+Hypothesis & Statement & Key statistic & Verdict \\
+\midrule
+H1 & Granularity has diminishing returns & Friedman chi2 p=2.65e-200 & H0 rejected globally; within R1 the effect of n is \textless{} CD (not sig.) \\
+H2 & Best R depends on problem class & tau(composed, unimodal)=0.08 & supported \\
+H3 & Sensitivity to R decreases with n & n x R SRH p=0.34; peta\textasciicircum{}2(R)=0.063, peta\textasciicircum{}2(n)=0.0007 & rejected \\
+H4 & PSO\_FCS beats PSO on \textgreater{}=50\% of instances & best config: 27 wins / 33 ties / 2 losses (of 62) & rejected under strict \textgreater{}=50\% criterion; supported = False \\
+H5 & No static (n*, R*) dominates both S1 and S2 & tau(S1, S2)=0.09; argmin(S1)=PSO\_FCS:O1:3:I1:R5, argmin(S2)=PSO\_FCS:O1:5:I1:R6 & supported \\
+\bottomrule
+\end{tabular}
+\end{table}
