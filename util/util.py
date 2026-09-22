@@ -40,6 +40,10 @@ def cargar_configuracion(ruta_config):
     
     with open(ruta_config, 'r') as archivo:
         return json.load(archivo)
+
+def obtener_ruta_config(env_var, ruta_default):
+    """Devuelve una ruta de configuración desde entorno o usa la ruta por defecto."""
+    return os.getenv(env_var, ruta_default)
     
 def cargar_directorios():
     ruta_directorios = './config/directories.json'

@@ -1,0 +1,23 @@
+\chapter{Methodology} \label{chapter:marco_metodologico}
+
+\section{Research Questions}
+\begin{enumerate}
+    \item Can the dynamic selection of fuzzy schemes during the execution of a metaheuristic algorithm lead to improved optimization performance compared to traditional static fuzzy control configurations?
+    \item Which dynamic selection mechanism (static, stochastic, reinforcement learning, hyperheuristic) is the most effective for guiding the adaptation of fuzzy schemes in the context of complex optimization problems?
+    \item What impact does a fuzzy control system optimized by machine learning have on the dynamic tuning of metaheuristic parameters applied to different optimization problems?
+\end{enumerate}
+
+\section{Research Hypothesis}
+The integration of an adaptive fuzzy control system that dynamically selects among predefined fuzzy schemes for online parameter tuning of metaheuristics, guided by feedback from search process metrics, will significantly enhance the effectiveness, efficiency, robustness, and exploration–exploitation balance of such algorithms compared to approaches using static fuzzy configurations or fixed parameter settings.
+
+\section{General Objective}
+To design and evaluate an adaptive fuzzy control system that, within metaheuristic optimization frameworks, is capable of dynamically selecting fuzzy schemes to control algorithm parameters based on real-time search process metrics, in order to improve effectiveness, efficiency, robustness, and exploration–exploitation balance. 
+
+\subsubsection{Specific Objectives}
+\begin{enumerate}
+    \item To define a structured set of fuzzy schemes, each representing an alternative semantic configuration of the fuzzy system’s input variables, characterized by variation in membership function type, quantity, shape, domain coverage, and degree of overlap.
+    \item To develop a Mamdani-type fuzzy controller that selects, at runtime, the most appropriate fuzzy scheme based on search process metrics such as diversity, improvement rate, convergence speed, stagnation, and iteration index.
+    \item To implement and compare multiple selection strategies for fuzzy scheme adaptation, including static rule-based mechanisms, stochastic switching, reinforcement learning (Q-Learning), and hyperheuristic approaches.
+    \item To integrate the proposed adaptive controller into representative metaheuristics, including PSO and GA, selected for their complementary exploration–exploitation dynamics.
+    \item To empirically evaluate the proposed system using both benchmark mathematical functions (IEEE CEC) and benchmark of combinatorial problems (Set Covering, Knapsack, and Feature Selection) and real world applications of predictive models of Biomedical and Educational data optimized by Feature Selection, analyzing its performance under controlled experimental conditions according to metrics of effectiveness, efficiency, robustness and and exploration–exploitation balance.
+\end{enumerate}

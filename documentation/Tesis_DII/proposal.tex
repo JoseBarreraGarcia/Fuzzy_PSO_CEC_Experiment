@@ -1,0 +1,248 @@
+\chapter{Research Proposal} \label{chapter:proposal}
+
+\section{Motivation and contribution}
+\subsection{Motivation and Design Principles}
+
+Traditional parameter control mechanisms in metaheuristics—whether fixed, deterministic, or rule-based—often lack the responsiveness required to adapt to the dynamic nature of the search process. Even when fuzzy control systems are incorporated, they frequently rely on fixed membership functions and static rule bases, limiting their ability to reflect evolving optimization contexts. This motivates the development of a control mechanism that can not only adjust parameter values but also revise its own semantic interpretation of the optimization landscape in real-time.
+
+The design of the proposed system is guided by the following principles:
+
+\begin{itemize}
+    \item \textbf{Adaptivity:} The control mechanism must dynamically respond to signals such as stagnation, convergence speed, or diversity changes without relying on problem-specific tuning.
+    \item \textbf{Semantic Flexibility:} Instead of rigid membership structures, the system should incorporate multiple fuzzy schemes representing alternative interpretations of the same input metrics.
+    \item \textbf{Modularity and Generalizability:} The architecture should be applicable across different metaheuristic frameworks, such as PSO and GA, and across problem domains.
+    \item \textbf{Transparency and Interpretability:} Although adaptive, the system must retain its interpretability by employing Mamdani-type fuzzy rules, enabling post-hoc analysis and rule inspection.
+\end{itemize}
+
+\subsection{Core Contribution: Dual-Level Adaptation (Parameters + Semantics)}
+
+The core innovation of the proposal lies in its dual-layer adaptation strategy, where both control \textit{parameters} and their semantic representation (\textit{fuzzy schemes}) are adjusted during optimization. This mechanism is structured as follows:
+
+\begin{enumerate}
+    \item \textbf{Parameter-Level Adaptation:} At each iteration, fuzzy rules determine the value of a control parameter (e.g., inertia weight in PSO or mutation rate in GA) based on current indicators of search progress.
+    
+    \item \textbf{Semantic-Level Adaptation:} The fuzzy system dynamically selects among a predefined set of fuzzy schemes—each consisting of a coherent set of membership functions. This selection alters the interpretation of linguistic variables (e.g., “low diversity,” “high convergence”) depending on the current search behavior.
+\end{enumerate}
+
+This dual adaptation is driven by real-time metrics such as diversity, improvement rate, convergence speed, and stagnation index. Through this architecture, the system not only controls behavior but also redefines how it perceives the current state of the optimization process, enabling context-sensitive reasoning and improved performance across heterogeneous problem types.
+
+\section{System Architecture and Control Strategy}
+
+\subsection{Functional Architecture Overview}
+The adaptive fuzzy control system comprises several interconnected components that jointly support both levels of adaptation. These include:
+
+\begin{itemize}
+    \item A metric computation module that quantifies diversity, improvement, and convergence behavior.
+    \item A selector that evaluates conditions for semantic scheme switching, based on predefined criteria or learning policies.
+    \item A Mamdani-type fuzzy inference system whose input sets vary depending on the active fuzzy scheme.
+    \item A parameter update module that injects the adapted control value into the metaheuristic's population update procedure.
+\end{itemize}
+
+This modular architecture facilitates experimentation with different fuzzy schemes, rule sets, and selection strategies, and is designed to be embedded directly into the iterative loop of a metaheuristic algorithm. Full system details, including input/output definitions and flow diagrams, are provided in the following sections.
+
+\subsection{Inputs, Outputs, and Internal Components}
+To contextualize the proposed adaptive fuzzy control system, it is instructive to first examine the structure and limitations of conventional fuzzy controllers. As shown in Figure~\ref{fig:traditional_fuzzy_flow}, the conventional Mamdani Fuzzy Control System operates with a \textbf{fixed set of membership functions} and \textbf{manually defined rules}. While it can modulate metaheuristic parameters based on input values, its semantic interpretation of those values does not evolve during execution, limiting its responsiveness to different optimization phases.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{images/mamdani_fcs.pdf}
+\caption{Functional flow of the Traditional Mamdani Fuzzy Control System.}
+\label{fig:traditional_fuzzy_flow}
+\end{figure}
+
+
+In contrast, the proposed architecture introduces a dual-layer adaptation mechanism that enhances the responsiveness and plasticity of the control process. As illustrated in Figure~\ref{fig:fuzzy_flow}, the system dynamically selects among a predefined set of fuzzy schemes based on runtime observations of search process metrics. This selection precedes the standard Mamdani inference cycle—fuzzification, fuzzy inference, aggregation, and defuzzification—which remains structurally intact but semantically enriched.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{images/proposed_FCS.pdf}
+\caption{Functional flow of the proposed adaptive fuzzy control system.}
+\label{fig:fuzzy_flow}
+\end{figure}
+
+Each fuzzy scheme defines a distinct configuration of membership functions over the input space, allowing the system to change its semantic interpretation of linguistic variables during execution. The decision to switch schemes is guided by real-time indicators such as diversity, stagnation, or improvement rate, enabling the control system to adjust not only parameter values but also the meaning attributed to search process states.
+
+The internal operation of the adaptive controller is summarized in Algorithm~\ref{alg:afcs}. This procedure describes how real-time metrics are interpreted through dynamic fuzzy schemes to produce a context-sensitive control parameter.
+
+\begin{algorithm}[H]
+\caption{Adaptive Fuzzy Control System (AFCS)} \label{alg:afcs}
+\begin{algorithmic}[1]
+\Require Process metrics $\mathcal{M} = \{\text{diversity}, \text{stagnation}, \text{improvement rate}, \text{iteration index}\}$
+\Require Set of fuzzy schemes $\mathcal{S} = \{S_1, S_2, \dots, S_n\}$, each with associated membership functions
+\Ensure Adapted parameter value $\theta$ (e.g., inertia weight $w$, mutation rate $\mu$)
+
+\State Acquire current values of metrics: $\mathcal{M}_t$
+\State Select fuzzy scheme $S^* \in \mathcal{S}$ based on $\mathcal{M}_t$ and a predefined selection strategy
+
+\For{each input metric $m \in \mathcal{M}_t$}
+    \State Compute degree of membership $\mu_m$ using membership functions in $S^*$
+\EndFor
+
+\State Apply fuzzy inference rules over all $\mu_m$
+\State Aggregate the outputs into a fuzzy set
+\State Perform defuzzification to compute the crisp output $\theta$
+\State \Return adapted parameter $\theta$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Integration with Metaheuristics (PSO and GA)}
+The proposed adaptive fuzzy control system (AFCS) is designed to function as an embedded decision-making module within population-based metaheuristics. In this study, it is specifically integrated into two representative algorithms: Particle Swarm Optimization (PSO) and Genetic Algorithm (GA). These methods were selected for their contrasting exploration–exploitation dynamics and their proven effectiveness across a wide range of optimization domains. The standard versions of PSO and GA are presented in Algorithms~\ref{alg:PSO_normal} and~\ref{alg:GA_normal}, respectively.
+
+\begin{algorithm}[H]
+\caption{Standard Particle Swarm Optimization (PSO)} \label{alg:PSO_normal}
+\begin{algorithmic}[1]
+\State Initialize swarm of particles with random positions $x_i$ and velocities $v_i$
+\For{each particle $i$}
+    \State Evaluate fitness $f(x_i)$
+    \State Set personal best $p_i \gets x_i$
+\EndFor
+\State Set global best $g \gets \arg\min f(p_i)$
+\While{termination criterion not met}
+    \For{each particle $i$}
+        \State $v_i \gets w v_i + c_1 r_1 (p_i - x_i) + c_2 r_2 (g - x_i)$
+        \State $x_i \gets x_i + v_i$
+        \State Evaluate fitness $f(x_i)$
+        \State Update $p_i$ and $g$ if necessary
+    \EndFor
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Standard Genetic Algorithm (GA)} \label{alg:GA_normal}
+\begin{algorithmic}[1]
+\State Initialize population $P$ with random individuals
+\State Evaluate fitness $f(x)$ for each individual $x \in P$
+\While{termination criterion not met}
+    \State Select parents from $P$ using selection operator
+    \State Apply crossover to generate offspring
+    \State Apply mutation to offspring
+    \State Evaluate fitness of offspring
+    \State Form new population $P$ by selecting the best individuals (elitism or replacement)
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+Once embedded, the adaptive fuzzy control system (AFCS) continuously receives real-time metrics that characterize the state of the search process—such as diversity, improvement rate, and stagnation level. These indicators are interpreted through a fuzzy scheme that is dynamically selected at each iteration. Based on the fuzzy inference process, the controller generates a continuous-valued control signal, which is used to update a key algorithmic parameter, such as the inertia weight $w$ in PSO or the mutation rate $\mu$ in GA. This adaptive mechanism allows the metaheuristic to responsively modulate its search behavior, enhancing its ability to balance exploration and exploitation as the optimization evolves.
+
+The integration of the AFCS is deliberately designed to be modular and non-intrusive. Rather than altering the internal evolutionary operators—such as selection, crossover, or velocity updates—the controller interfaces exclusively with the parameter adaptation stage. At each iteration, it provides a revised parameter value based on the current state of the search, without modifying the metaheuristic's core logic. This design promotes interoperability, enabling seamless incorporation of the AFCS into a wide variety of optimization frameworks.
+
+To illustrate this integration, we extend the standard formulations of Particle Swarm Optimization (PSO) and Genetic Algorithm (GA) by embedding the AFCS as a parameter adaptation module. In PSO, the controller dynamically tunes the inertia weight $w$, a parameter critical for regulating the exploration–exploitation tradeoff. In GA, it adaptively adjusts the mutation rate $\mu$, promoting population diversity over time. In both cases, the controller operates within the main iteration loop, continuously processing runtime metrics to guide the adaptation process.
+
+The full implementation of these adaptive versions is presented in Algorithm~\ref{alg:AFCS_PSO} and Algorithm~\ref{alg:AFCS_GA}, respectively.
+
+\begin{algorithm}[H]
+\caption{Adaptive PSO with Fuzzy Control System (FCS)}\label{alg:AFCS_PSO}
+\begin{algorithmic}[1]
+\State Initialize swarm of particles with random positions $x_i$ and velocities $v_i$
+\State Initialize fuzzy control system with predefined fuzzy schemes
+\For{each particle $i$}
+    \State Evaluate fitness $f(x_i)$
+    \State Set personal best $p_i \gets x_i$
+\EndFor
+\State Set global best $g \gets \arg\min f(p_i)$
+\While{termination criterion not met}
+    \State Compute search process metrics (e.g., diversity, improvement rate, stagnation)
+    \State Use FCS to select fuzzy scheme and adapt inertia weight $w$
+    \For{each particle $i$}
+        \State $v_i \gets w v_i + c_1 r_1 (p_i - x_i) + c_2 r_2 (g - x_i)$
+        \State $x_i \gets x_i + v_i$
+        \State Evaluate fitness $f(x_i)$
+        \State Update $p_i$ and $g$ if necessary
+    \EndFor
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+\begin{algorithm}[H]
+\caption{Adaptive GA with Fuzzy Control System (FCS)}\label{alg:AFCS_GA}
+\begin{algorithmic}[1]
+\State Initialize population $P$ with random individuals
+\State Initialize fuzzy control system with predefined fuzzy schemes
+\State Evaluate fitness $f(x)$ for each individual $x \in P$
+\While{termination criterion not met}
+    \State Compute search process metrics (e.g., diversity, improvement, stagnation)
+    \State Use FCS to adapt mutation rate $\mu$
+    \State Select parents from $P$ using selection operator
+    \State Apply crossover to generate offspring
+    \State Apply mutation using adapted $\mu$
+    \State Evaluate fitness of offspring
+    \State Form new population $P$ by selecting the best individuals
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+
+% \section{Process Metrics and Control Variables}
+% \subsection{Definition of Metrics (Diversity, Stagnation, etc.)}
+% \subsection{Semantic Interpretation and Role in Control}
+\section{Semantic Adaptation and Switching Strategies}
+
+\subsection{Switching Criteria and Process Metrics}
+To enable context-sensitive behavior, the decision to switch from one fuzzy scheme to another is guided by observable metrics that reflect the state of the optimization process. These metrics include:
+
+\begin{itemize}
+    \item Diversity, which quantifies the structural dispersion of the population in the search space and supports the monitoring of exploration behavior \parencite{castillo2017dynamic, patel2022type};
+    \item Convergence speed, which measures the degree to which candidate solutions approach local or global optima and reflects exploitation dynamics \parencite{castillo2017dynamic, patel2022type};
+    \item Improvement rate, which captures the pace of fitness enhancement across iterations, serving as an indicator of search progress \parencite{castillo2017dynamic, patel2022type};
+    \item Stagnation, defined as a sequence of iterations without improvement, signaling potential entrapment in local optima or lack of movement in the search landscape \parencite{castillo2017dynamic, patel2022type};
+    \item Iteration Index, which encodes the current stage of the optimization process (scaled between 0 and 1), enabling temporally contextualized control behavior \parencite{peraza2018fuzzy}.
+\end{itemize}
+
+These metrics are simultaneously interpreted to characterize the current search status and to inform the upper-level selector module responsible for determining whether a change in fuzzy scheme is warranted. By dynamically adjusting the controller’s semantic configuration in response to these indicators, the system aims to improve performance across a range of problem scenarios.
+
+To assess the effectiveness of this semantic adaptation, four key performance dimensions will be considered:
+\begin{enumerate}
+    \item Effectiveness: Measures the algorithm’s ability to find high-quality or optimal solutions and it will be measured by best fitness values obtained, relative error to known optima, and success rate across independent runs \parencite{halim2021performance};
+    \item Efficiency: Refers to the computational resources required and it will be measured via the function evaluations required to reach a target performance, as well as average computational time \parencite{halim2021performance};
+    \item Robustness: quantified through the statistical dispersion of results using standard deviation, interquartile range \parencite{djebedjian2021global}.
+    \item Exploration–Exploitation Balance: measured by the exploration–exploitation ratio \parencite{crawford2021q}.
+\end{enumerate}
+
+By introducing a mechanism for dynamic scheme selection, this research advances a novel form of semantic-level adaptation. Switching between fuzzy schemes—each encoding a distinct interpretation of the input space—enables the controller to reconfigure both its decision logic and internal semantic representation at runtime. Each scheme functions as a behavioral mode, supporting exploratory, conservative, or balanced dynamics. When combined with adaptive selection strategies, this approach grants the system a degree of semantic flexibility and behavioral plasticity that surpasses conventional fuzzy control systems, making it particularly well-suited for complex or dynamic optimization environments.
+
+
+\subsection{Scheme Selection Methods}
+
+Depending on the level of adaptability desired, this module may implement:
+\begin{itemize}
+    \item Static rule-based switching, triggered by simple logical conditions\parencite{cord2001genetic};
+    \item Stochastic profile selection, where schemes are chosen probabilistically based on historical performance \parencite{qiu2020event, zhu2020event, haighton2024adaptable}.
+    \item Reinforcement learning strategies, such as Q-learning, enabling the controller to learn a policy for scheme selection across search contexts  \parencite{qiu2020event, zhu2020event, haighton2024adaptable}.
+    \item Hyperheuristic approaches, where fuzzy schemes are treated as low-level heuristics governed by a higher-level learning algorithm \parencite{burke2010classification, crawford2012dynamic}.
+\end{itemize}
+
+Each strategy will be empirically validated using benchmark problems in continuous optimization, combinatorial search, and feature selection.
+
+\section{Experimental and Validation Plan}
+To assess the viability of the proposed approach, we introduce an experimental plan that evaluates both the internal behavior and external performance of the system. As described in previous chapters, this adaptive fuzzy control system is embedded within a metaheuristic framework and designed to modulate internal parameters through a dual-layer adaptation mechanism: (i) parameter-level setting and (ii) semantic-level modulation via the dynamic selection of fuzzy schemes. The system operates as a feedback controller that interprets process metrics—such as diversity, convergence speed, improvement rate, stagnation, and iteration index—using fuzzy linguistic variables. Based on these inputs, it dynamically adjusts metaheuristic parameters in PSO and GA, aligning control behavior with the evolving state of the search process.
+\subsection{Benchmark Problems}
+
+To assess the performance and generalization capability of the proposed architecture, a comprehensive experimental protocol will be carried out. The system will be benchmarked on a set of representative optimization problems, covering multiple domains:
+\begin{itemize}
+    \item Continuous functions from the IEEE Congress on Evolutionary Computation (CEC) benchmark suites;
+    \item Combinatorial problems such as the Set Covering Problem (SCP) and the Knapsack Problem (KP);
+    \item The Feature Selection Problem, characterized by high-dimensional, binary, and sparse search spaces. In this context, we aim to evaluate the system both on synthetic benchmark datasets and on real-world classification scenarios, such as Biomedical or Educational data. This dual perspective will allow us to assess not only the system’s optimization capacity but also its practical relevance and transferability to applied learning tasks \parencite{cisternas2025application, barrera2023feature}.
+\end{itemize}
+\subsection{Evaluation Metrics}
+The system’s performance will be assessed in terms of \textbf{effectiveness}, \textbf{efficiency}, \textbf{robustness}, and \textbf{exploration–exploitation balance}, using the validation metrics already defined earlier. These criteria will guide a comparative evaluation of the different fuzzy scheme selection strategies under controlled experimental conditions.
+
+\subsection{Statistical Testing and Reproducibility}
+Each experimental condition will be executed multiple times under controlled random seeds to ensure statistical validity. Statistical significance will be tested using non-parametric tests such as the Friedman and Wilcoxon signed-rank procedures, in accordance with standard metaheuristic benchmarking practices. Convergence behavior will also be visually analyzed through fitness trajectory plots.
+
+The entire experimentation pipeline will be implemented in Python, employing libraries such as \texttt{SciPy}, \texttt{NumPy}, and \texttt{scikit-posthocs}. The complete framework (code, instances, results) will be made publicly available online through a dedicated GitHub repository, ensuring transparency, reproducibility, and open access. Given the computational complexity of the proposed protocol, dedicated infrastructure (e.g., high-performance computing nodes or GPU clusters) will be secured to guarantee timely execution.
+
+\subsection{Expected Outputs and Deliverables}
+\begin{itemize}
+    \item A modular and reusable fuzzy controller supporting dynamic scheme selection for online metaheuristic parameter setting;
+    \item A comparative evaluation of alternative fuzzy scheme selection mechanisms (static rules, stochastic strategies, reinforcement learning, hyperheuristics);
+    \item A set of benchmarking reports and visualizations documenting performance across diverse problem domains;
+    \item At least \hl{six} (SCI or SCIE) WoS-indexed journal articles and \hl{six} Scopus-indexed conference papers reporting on theoretical, methodological, and empirical contributions.
+\end{itemize}
+

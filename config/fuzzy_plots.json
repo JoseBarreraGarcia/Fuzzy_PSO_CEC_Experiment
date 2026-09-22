@@ -1,0 +1,30 @@
+{
+    "_comentarios": {
+        "descripcion": "Configuración para la generación de gráficos fuzzy (FUZZY/1_generate_fuzzy_plots.py).",
+        "rule_sets": "Lista de rule sets a graficar. R1-R8 disponibles. Vacío = solo R1 (default).",
+        "w_sets": "Lista de w_sets a graficar. 'auto' detecta los disponibles en el controlador.",
+        "input_sets": "Lista de input_sets para graficar MFs de entrada.",
+        "num_labels": "Lista de granularidades: [3], [5], o [3, 5] para ambas.",
+        "plots": "Controla qué tipos de gráficos se generan (true/false)."
+    },
+
+    "rule_sets": ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"],
+    "w_sets": "auto",
+    "input_sets": ["I1"],
+    "num_labels": [3, 5, 7, 9],
+
+    "plots": {
+        "input_diversity": true,
+        "input_progress": true,
+        "output_w_sets": true,
+        "rules_heatmap_individual": true,
+        "rules_heatmap_panel": true,
+        "w_sets_comparison": true,
+        "input_mf_comparison_3vs5": true,
+        "critical_points": true,
+        "surface_3d_individual": true,
+        "surface_3d_panel": true,
+        "input_sets_comparison": false,
+        "set_comparison_matrices": false
+    }
+}

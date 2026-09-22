@@ -1,0 +1,63 @@
+ID: 66
+Title: Impact of Input Membership Function Design on Fuzzy-Adaptive Particle Swarm Optimization: An Empirical Sensitivity Analysis
+Track: CLEI - Intelligent System
+
+has been accepted as a “full paper” for inclusion in the technical program and presentation at CLEI 2026.
+
+In this CLEI edition, we have received a large number of high-quality submissions, resulting in a very competitive evaluation and a rigorous selection process to comply with the IEEE and SCOPUS requirements. As a result of the review process, out of 297 submissions across five tracks, we have accepted 102 full papers (34% acceptance rate), 46 work-in-progress for publication, and 4 journal-first papers for presentation.
+
+Below you can find the reviewers' comments.
+
+Please revise your paper carefully according to the reviewers’ comments and begin preparing your camera-ready version. Make sure that the manuscript complies with the IEEE Proceedings template: https://www.ieee.org/conferences/publishing/templates.html. Your manuscript must not exceed the 10-page limit, including figures, references, and appendices. Extra pages will not be allowed.
+
+The deadline to submit your Camera-Ready version is June 21st, 2026. You will receive an email with instructions on how and where to submit your final version within the next few days. Please remember that at least one of the authors must register for the conference before the Camera-Ready deadline.
+
+CLEI 2026 will be held between September 7-11, 2026, in Mexico City, Mexico. Please visit the conference website at https://conferencia2026.clei.org/ for further information, including registration details.
+
+Once again, thank you for your contribution and congratulations on your accepted paper. We look forward to seeing you at CLEI 2026 in Mexico City!
+
+Please do not hesitate to contact us for any further information.
+
+SUBMISSION: 66
+TITLE: Impact of Input Membership Function Design on Fuzzy-Adaptive Particle Swarm Optimization: An Empirical Sensitivity Analysis
+
+----------------------- REVIEW 1 ---------------------
+
+SUBMISSION: 66
+TITLE: Impact of Input Membership Function Design on Fuzzy-Adaptive Particle Swarm Optimization: An Empirical Sensitivity Analysis
+
+----------- Comments to Authors -----------
+0. The paper is generally well written, but several sections of the methodology become overly detailed regarding membership-function parameter tables and configuration descriptions. Some condensation could improve readability without sacrificing reproducibility.
+
+1. The paper explicitly states that it does not propose a new optimization algorithm, but rather an empirical sensitivity study. While this is acceptable, the manuscript should more clearly articulate the broader scientific contribution and explain why the reported findings are sufficiently generalizable to influence fuzzy-adaptive PSO design practices.
+
+2. The experimental evaluation is limited to only six benchmark functions, with relatively modest dimensionality and a small number of multimodal landscapes. Including additional high-dimensional or more deceptive benchmark problems would strengthen the robustness of the conclusions.
+
+3. The study evaluates only triangular membership functions. Although this limitation is acknowledged by the authors, it significantly restricts the scope of the conclusions, particularly because Gaussian and trapezoidal functions are widely used in fuzzy control systems.
+
+4. The computational overhead introduced by the fuzzy controller is reported, but the paper does not discuss scalability or runtime implications in larger optimization settings. This becomes important if the approach is intended for computationally expensive problems.
+
+5. Although Wilcoxon statistical tests are included, some improvements reported for multimodal functions are not statistically significant. The manuscript should discuss these cases more carefully to avoid overstating the effectiveness of the fuzzy configurations.
+
+6. The paper focuses exclusively on inertia-weight adaptation. Other PSO parameters such as cognitive/social coefficients or velocity constraints remain fixed, which limits the ability to generalize the conclusions to broader fuzzy-adaptive PSO frameworks.
+
+7. The interpretation of the granularity results is interesting, particularly the conclusion that three-label partitions outperform five-label partitions in most cases. However, the explanation remains speculative and could be supported with additional analysis of rule activation frequency or membership overlap behavior.
+----------- Overall evaluation -----------
+The paper presents a careful and well-controlled empirical study addressing a relevant but underexplored aspect of fuzzy-adaptive PSO design. Although the contribution is primarily experimental rather than algorithmic, the methodology is sound, the analysis is reasonably thorough, and the conclusions are useful for researchers working on fuzzy metaheuristics. The novelty is moderate, and some limitations remain regarding benchmark diversity and depth of analysis, but the work provides meaningful insights that are appropriate for CLEI 2026.
+
+
+----------------------- REVIEW 2 ---------------------
+
+SUBMISSION: 66
+TITLE: Impact of Input Membership Function Design on Fuzzy-Adaptive Particle Swarm Optimization: An Empirical Sensitivity Analysis
+
+----------- Comments to Authors -----------
+- The literature review requires updating. Just two references between 2023 & 2026, and one of them is from a Python library for optimization.
+- Eq. 4, please describe all of its elements. The same check applies to all equations.
+- Instead of Figure 1, a detailed pseudocode would be more suitable for the sake of reproducing the results.
+- Why not add convergence graphs to analyze the online behavior of the different versions tested?
+- Comparing against a baseline is OK, but comparing against the state-of-the-art must be considered.
+- Instead of using the Wilcoxon signed-rank (sensitive to the sample order), the rank-sum version must be adopted.
+- Why not consider different dimensionalities in the experiments?
+----------- Overall evaluation -----------
+The paper presents an overlooked aspect of parameter control in PSO using a fuzzy-based approach. Some comments that require the authors’ attention:

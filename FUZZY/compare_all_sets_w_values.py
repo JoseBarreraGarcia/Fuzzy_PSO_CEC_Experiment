@@ -27,15 +27,15 @@ def _get_available_w_sets(controller_class):
     """
     try:
         available = []
-        for letter in ['A', 'B', 'C', 'D', 'E', 'F']:
+        for w_set_id in ['O1', 'O2', 'O3', 'O4', 'O5', 'O6']:
             try:
-                controller_class(letter)
-                available.append(letter)
+                controller_class(w_set_id)
+                available.append(w_set_id)
             except ValueError:
                 pass
-        return available if available else ['A', 'B']
+        return available if available else ['O1', 'O2']
     except Exception:
-        return ['A', 'B']
+        return ['O1', 'O2']
 
 
 def compute_surface(controller, div_range, prog_range):
@@ -56,10 +56,10 @@ def plot_nxn_matrix_3labels(input_set="I1"):
     Each cell: heatmap of Δw = Set_i(3L) - Set_j(3L)
     N is dynamically determined by the number of available sets.
     """
-    from fuzzy_controller_w import FuzzyInertiaController
+    from fuzzy_controller_w_3L import FuzzyInertiaController_3L
     
     plots_dir = ensure_plots_directory()
-    sets = _get_available_w_sets(FuzzyInertiaController)
+    sets = _get_available_w_sets(FuzzyInertiaController_3L)
     if not sets:
         sets = ['A', 'B']
     
@@ -74,7 +74,7 @@ def plot_nxn_matrix_3labels(input_set="I1"):
     surfaces_3L = {}
     for w_set in sets:
         try:
-            ctrl = FuzzyInertiaController(w_set=w_set, input_set=input_set)
+            ctrl = FuzzyInertiaController_3L(w_set=w_set, input_set=input_set)
             surfaces_3L[w_set] = compute_surface(ctrl, div_range, prog_range)
         except ValueError:
             # Skip if set not available
@@ -139,10 +139,10 @@ def plot_nxn_matrix_5labels(input_set="I1"):
     Each cell: heatmap of Δw = Set_i(5L) - Set_j(5L)
     N is dynamically determined by the number of available sets.
     """
-    from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
+    from fuzzy_controller_w_5L import FuzzyInertiaController_5L
     
     plots_dir = ensure_plots_directory()
-    sets = _get_available_w_sets(FuzzyInertiaController_5labels)
+    sets = _get_available_w_sets(FuzzyInertiaController_5L)
     if not sets:
         sets = ['A', 'B']
     
@@ -157,7 +157,7 @@ def plot_nxn_matrix_5labels(input_set="I1"):
     surfaces_5L = {}
     for w_set in sets:
         try:
-            ctrl = FuzzyInertiaController_5labels(w_set=w_set, input_set=input_set)
+            ctrl = FuzzyInertiaController_5L(w_set=w_set, input_set=input_set)
             surfaces_5L[w_set] = compute_surface(ctrl, div_range, prog_range)
         except ValueError:
             pass
@@ -221,11 +221,11 @@ def plot_nxn_matrix_3vs5labels(input_set="I1"):
     Each cell: heatmap of Δw = Set_j(5L) - Set_i(3L)
     N is dynamically determined by the number of available sets.
     """
-    from fuzzy_controller_w import FuzzyInertiaController
-    from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
+    from fuzzy_controller_w_3L import FuzzyInertiaController_3L
+    from fuzzy_controller_w_5L import FuzzyInertiaController_5L
     
     plots_dir = ensure_plots_directory()
-    sets = _get_available_w_sets(FuzzyInertiaController)
+    sets = _get_available_w_sets(FuzzyInertiaController_3L)
     if not sets:
         sets = ['A', 'B']
     
@@ -241,8 +241,8 @@ def plot_nxn_matrix_3vs5labels(input_set="I1"):
     surfaces_5L = {}
     for w_set in sets:
         try:
-            ctrl3 = FuzzyInertiaController(w_set=w_set, input_set=input_set)
-            ctrl5 = FuzzyInertiaController_5labels(w_set=w_set, input_set=input_set)
+            ctrl3 = FuzzyInertiaController_3L(w_set=w_set, input_set=input_set)
+            ctrl5 = FuzzyInertiaController_5L(w_set=w_set, input_set=input_set)
             surfaces_3L[w_set] = compute_surface(ctrl3, div_range, prog_range)
             surfaces_5L[w_set] = compute_surface(ctrl5, div_range, prog_range)
         except ValueError:

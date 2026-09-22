@@ -36,7 +36,7 @@ import seaborn as sns
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from BD.sqlite import BD
-from FUZZY.fuzzy_controller_w import get_fuzzy_controller
+from FUZZY.fuzzy_controller_w_3L import get_fuzzy_controller
 from scipy.interpolate import RegularGridInterpolator
 
 # ---------------------------------------------------------------------------
@@ -63,29 +63,40 @@ OUTPUT_DIR = 'Resultados/resumen/level2_aggregated_cec/w_relationships'
 # ---------------------------------------------------------------------------
 
 def parse_mh_name(mh_name):
-    """Parse 'PSO_FCS:A:3:I1' → {base, output_set, num_labels, input_set}."""
+    """Parse 'PSO_FCS:A:3:I1:R1' → {base, output_set, num_labels, input_set, rule_set}."""
     parts = mh_name.split(':')
-    if len(parts) >= 4:
+    if len(parts) >= 5:
         return {
             'base': parts[0], 'output_set': parts[1],
             'num_labels': int(parts[2]), 'input_set': parts[3],
+            'rule_set': parts[4],
+            'short_label': f"{parts[3]}-{parts[2]}L-{parts[4]}",
+        }
+    elif len(parts) >= 4:
+        return {
+            'base': parts[0], 'output_set': parts[1],
+            'num_labels': int(parts[2]), 'input_set': parts[3],
+            'rule_set': None,
             'short_label': f"{parts[3]}-{parts[2]}L",
         }
     elif len(parts) >= 3:
         return {
             'base': parts[0], 'output_set': parts[1],
             'num_labels': int(parts[2]), 'input_set': None,
+            'rule_set': None,
             'short_label': f"{parts[1]}-{parts[2]}L",
         }
     elif len(parts) == 2:
         return {
             'base': parts[0], 'output_set': parts[1],
             'num_labels': None, 'input_set': None,
+            'rule_set': None,
             'short_label': parts[1],
         }
     return {
         'base': mh_name, 'output_set': None,
         'num_labels': None, 'input_set': None,
+        'rule_set': None,
         'short_label': mh_name,
     }
 
@@ -128,13 +139,13 @@ def assign_styles(mh_names):
 _interp_cache = {}
 _LUT_RES = 101  # grid resolution for lookup table
 
-def _build_w_interpolator(w_set, num_labels, input_set):
+def _build_w_interpolator(w_set, num_labels, input_set, rule_set='R1'):
     """Build a 2D interpolation function for (diversity_ratio, progress) → w."""
-    key = (w_set, num_labels, input_set)
+    key = (w_set, num_labels, input_set, rule_set)
     if key in _interp_cache:
         return _interp_cache[key]
 
-    fcs = get_fuzzy_controller(w_set, num_labels=num_labels, input_set=input_set)
+    fcs = get_fuzzy_controller(w_set, num_labels=num_labels, input_set=input_set, rule_set=rule_set)
     d_axis = np.linspace(0, 1, _LUT_RES)
     p_axis = np.linspace(0, 1, _LUT_RES)
     w_grid = np.zeros((_LUT_RES, _LUT_RES), dtype=float)
@@ -164,11 +175,12 @@ def _compute_w_for_fcs(div_series, max_iter, mh_name):
     mh_name: e.g. 'PSO_FCS:A:3:I1' (to pick the right controller).
     """
     info = parse_mh_name(mh_name)
-    w_set = info['output_set'] or 'A'
+    w_set = info['output_set'] or 'O1'
     num_labels = info['num_labels'] or 3
     input_set = info['input_set'] or 'I1'
+    rule_set = info['rule_set'] or 'R1'
 
-    interp = _build_w_interpolator(w_set, num_labels, input_set)
+    interp = _build_w_interpolator(w_set, num_labels, input_set, rule_set)
 
     divs = np.array(div_series, dtype=float)
     n = len(divs)

@@ -5,7 +5,21 @@ __pycache__/
 
 *.db
 BD/*.db
+BD/*.bak*
+BD/*.db.bak*
 Resultados/
 backups/
 __pycache__/
 *.pyc
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+texput.log

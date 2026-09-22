@@ -1,0 +1,112 @@
+\chapter{Work Plan} \label{chapter:work_plan}
+% \section{Work Plan}
+The project is organized into five Work Packages (WPx) that structure the research and development activities required to implement and validate the proposed adaptive fuzzy control system. Each WP is composed of specific tasks (Tx) and expected achievements (Ax). A detailed timeline is presented in the Work Plan section.
+
+\paragraph{WP1: Definition of fuzzy schemes and semantic representation schemes}
+This work package directly supports Objective 1 by designing and formalizing fuzzy schemes as modular, reusable semantic profiles. These schemes vary in type, resolution, and structure, enabling multiple interpretations of input variables to be represented within the control system.
+
+\textbf{Tasks:}
+\begin{itemize}
+    \item T1.1 Survey of fuzzy membership function types and semantic partitioning strategies.
+    \item T1.2 Definition of granular configurations of fuzzy partitions that encode varying semantic resolutions, with emphasis on functional diversity and domain coverage.
+    \item T1.3 Implementation of fuzzy profile structures in a configurable control system.
+    \item T1.4 Design of semantic metrics to compare the effect of each profile on the fuzzy controller’s behavior.
+    \item T1.5 Writing of articles to disseminate the theoretical framework and the taxonomy of fuzzy schemes.
+\end{itemize}
+
+\textbf{Achievements:}
+\begin{itemize}
+    \item A1.1 Taxonomy of fuzzy schemes /schemes for adaptive fuzzy control.
+    \item A1.2 Software library of predefined fuzzy schemes for integration in metaheuristics.
+    \item A1.3 Submission of at least one (SCI or SCIE) WoS-indexed journal article and one Scopus-indexed conference paper on fuzzy profile design and semantic flexibility.
+\end{itemize}
+
+\paragraph{WP2: Design of the adaptive fuzzy control system}
+This WP supports Objective 2 and involves designing and implementing an adaptive fuzzy control system capable of switching between fuzzy schemes at runtime. The selection will be guided by observed behavior in the search process metrics.
+
+\textbf{Tasks:}
+\begin{itemize}
+    \item T2.1 Design of the fuzzy inference system (Mamdani-type) with dynamic profile switching.
+    \item T2.2 Definition of input metrics (a priori: diversity, convergence speed, improvement rate, stagnation, and iteration index).
+    \item T2.3 Implementation of runtime evaluation and switching mechanisms.
+    \item T2.4 Validation of the adaptive system under static and dynamic profile scenarios.
+    \item T2.5 Writing of articles on the architecture and design of the adaptive fuzzy system.
+\end{itemize}
+
+\textbf{Achievements:}
+\begin{itemize}
+    \item A2.1 Implementation of a modular adaptive fuzzy control system.
+    \item A2.2 Validation of the dynamic profile switching mechanism.
+    \item A2.3 Submission of at least one (SCI or SCIE) WoS-indexed journal article and one Scopus-indexed conference paper on system architecture and adaptive control behavior.
+\end{itemize}
+
+\paragraph{WP3: Dynamic selection strategies for fuzzy schemes}
+In this WP, directly related to Objective 3, several strategies for fuzzy profile selection will be developed and compared, including static control (baseline), stochastic methods, reinforcement learning (Q-learning), and hyperheuristics. These strategies will govern the semantic adaptation capability of the system by enabling contextual switching between fuzzy schemes according to online search process metrics feedback.
+
+\textbf{Tasks:}
+\begin{itemize}
+    \item T3.1 Review of existing dynamic selection techniques.
+    \item T3.2 Implementation of dynamic profile selectors based on different strategies (a priori stochastic methods, Q-learning, and hyperheuristics).
+    \item T3.3 Comparative analysis of selector performance in offline simulations.
+    \item T3.4 Feedback-based refinement of selection strategies.
+    \item T3.5 Writing of articles on the comparative performance of selection strategies.
+\end{itemize}
+
+\textbf{Achievements:}
+\begin{itemize}
+    \item A3.1 Software components for profile selection using different strategies.
+    \item A3.2 Benchmarking results comparing static and dynamic approaches.
+    \item A3.3 Submission of at least two (SCI or SCIE) WoS-indexed journal articles and two Scopus-indexed conference papers comparing the methodological strengths of static, stochastic, and learning-based selection strategies for semantic control.
+\end{itemize}
+
+\paragraph{WP4: Integration, testing, and benchmarking in metaheuristics}
+
+Directly supporting Objectives 4 and 5, this work package operationalizes the adaptive fuzzy control system by integrating it into state-of-the-art metaheuristics and validating its impact on a suite of classical and real-world optimization problems. The experimental evaluation focuses on quantifying the effectiveness, efficiency, robustness, and exploration–exploitation balance of different dynamic selection strategies within PSO and GA frameworks.
+
+\textbf{Tasks:}
+\begin{itemize}
+    \item T4.1 Selection and preprocessing of benchmark problems, including mathematical functions from the IEEE Congress on Evolutionary Computation (CEC), combinatorial problems such as the Set Covering Problem (SCP) and the Knapsack Problem (KP), and the Feature Selection Problem.
+    \item T4.2 Integration of the adaptive fuzzy control system into PSO and GA implementations.
+    \item T4.3 Design and execution of comparative experimental protocols under controlled settings, including static and dynamic fuzzy configurations.
+    \item T4.4 Analysis of the impact of dynamic fuzzy scheme selection in terms of optimization process indicators.
+    \item T4.5 Application of the design system on real-world cases of predictive models of Biomedical and Educational data optimized by Feature Selection, reducing the dimensionality problem.
+    \item T4.6 Writing and submission of scientific articles reporting the results and methodological contributions from the application of the system to each problem domain.
+\end{itemize}
+
+\textbf{Achievements:}
+\begin{itemize}
+    \item A4.1 Fully integrated and operational adaptive fuzzy control modules within PSO and GA.
+    \item A4.2 Comprehensive benchmarking dataset and experimental framework for evaluating fuzzy scheme selection strategies.
+    \item A4.3 Design and execution of comparative experimental protocols under controlled settings, evaluating static fuzzy configurations as baseline and all dynamic scheme selection strategies.
+    \item A4.4 Analytical report on the influence of fuzzy scheme semantic characteristics (e.g., number, shape, overlap of membership functions) on exploration–exploitation behavior and performance metrics.
+    \item A4.5 Submission of at least two (SCI or SCIE) WoS-indexed journal articles and two Scopus-indexed conference papers focused on applied optimization results and the generalizability of the proposed system across diverse problem domains.
+\end{itemize}
+
+\paragraph{WP5: Project management and dissemination}
+This work package ensures the effective coordination, documentation, and scientific dissemination of the project’s progress and outcomes. It encompasses internal management tasks, communication of intermediate and final results, and engagement with the research community through conferences and peer-reviewed publications.
+
+\textbf{Tasks:}
+\begin{itemize}
+    \item T5.1 Development and continuous updating of a project website serving as a public repository for documentation, open-source tools, fuzzy schemes, and benchmarking results.
+    \item T5.2 Coordination and monitoring of research activities, including scheduling, milestones, deliverables, and risk mitigation strategies.
+    \item T5.3 Preparation and submission of interim and final reports to accordance with the project's management requirements.
+    \item T5.4 Dissemination of results through oral and poster presentations at national and international scientific events.
+    \item T5.5 Preparation and submission of at least \hl{six} peer-reviewed publications and \hl{six} conference papers, targeting journals and conferences relevant to fuzzy systems, metaheuristics, and intelligent optimization.
+\end{itemize}
+
+\textbf{Achievements:}
+\begin{itemize}
+    \item A5.1 Operational project website and repository with publicly accessible code, fuzzy schemes, experimental datasets, and technical documentation.
+    \item A5.2 Timely delivery of all mandatory program reports.
+    \item A5.3 Scientific dissemination plan fulfilled through the submission of a minimum of \hl{six} (SCI or SCIE) WoS-indexed journal articles and \hl{six} Scopus-indexed conference papers.
+\end{itemize}
+
+\subsection{Gantt chart}
+The Gantt chart (Fig. \ref{fig:gantt}) has been completely designed according to the stages proposed in the methodology. For details of the activities of each stage, please refer to the methodology section.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Portadas/imagenes/gantt_chart.JPG}
+    \caption{Gantt Chart}
+    \label{fig:gantt}
+\end{figure}

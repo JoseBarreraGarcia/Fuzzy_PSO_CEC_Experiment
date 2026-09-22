@@ -172,8 +172,9 @@ def binarize_and_evaluate(mh, population, fitness, DS, best, matrixBin, instance
             
         fitness[i] = instance.fitness(population[i])
 
-        if mh == 'PSO':
+        if mh in ('PSO', 'PSO_FCS') or mh.startswith('PSO_FCS:'):
             if fitness[i] < pBestScore[i]:
+                pBestScore[i] = fitness[i]
                 pBest[i] = np.copy(population[i])
                 
         if mh == 'LOA':

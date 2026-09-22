@@ -17,7 +17,7 @@ from Solver.population.population_SCP import (
 
 from BD.sqlite import BD
 
-from FUZZY.fuzzy_controller_w import get_fuzzy_controller
+from FUZZY.fuzzy_controller_w_3L import get_fuzzy_controller
 
 
 def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost, extra_params=None):
@@ -52,12 +52,12 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost, e
 
     ### JBG
     fcs = None
-    w_set = "B"  # Default
+    w_set = "O1"  # Default
     num_labels = 3  # Default
     input_set = "I1"  # Default CLEI2026
     rule_set = "R1"  # Default WEA2026
     if mh == 'PSO_FCS' or (mh.startswith('PSO_FCS') and ':' in mh):
-        # Extraer w_set del nombre si viene en formato PSO_FCS:A
+        # Extraer w_set del nombre si viene en formato PSO_FCS:O1
         if ':' in mh:
             mh_base, w_set = mh.split(':')[:2]
             w_set = w_set.upper()

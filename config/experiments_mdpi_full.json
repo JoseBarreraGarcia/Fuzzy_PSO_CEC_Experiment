@@ -1,0 +1,113 @@
+{
+    "_doc": {
+        "purpose": "Batch completo del paper MDPI: estudio empirico de sensibilidad del FCS Mamdani (granularidad x reglas) en PSO sobre el Classical Benchmark Suite F1-F23.",
+        "scope": "PSO baseline + 32 variantes PSO_FCS (4 granularidades x 8 reglas) sobre las 23 funciones clasicas, dimensiones {10,30,50,100} para F1-F13 y dimensiones fijas para F14-F23.",
+        "benchmark_ref": "Abualigah, L., Diabat, A., Mirjalili, S., Abd Elaziz, M., & Gandomi, A. H. (2021). The Arithmetic Optimization Algorithm. Computer Methods in Applied Mechanics and Engineering, 376, 113609.",
+        "usage": "$env:PSO_EXPERIMENTS_CONFIG = '.\\config\\experiments_mdpi_full.json'; python 0_0_reiniciar.py; python 1_0_poblarDB.py; python 2_main.py",
+        "expected_total_experiments": 63426,
+        "expected_total_experiments_breakdown": "62 instancias (13 escalables x 4 dims + 10 fijas) x 33 configs (1 PSO + 32 PSO_FCS) x 31 runs",
+        "estimated_runtime_hours": "DEPENDE del hardware; estimar a partir del tiempo medio del smoke",
+        "f8_note": "F8 (Schwefel 2.26) optimo almacenado en BD = -418.9829 (por dimension). Optimo real para dim=d es -418.9829*d. Considerar al computar gap%."
+    },
+
+    "ben": true,
+    "scp": false,
+    "uscp": false,
+    "kp": false,
+
+    "mhs": ["PSO", "PSO_FCS"],
+
+    "DS_actions": ["S4-ELIT"],
+
+    "dimensiones": {
+        "BEN": {
+            "F1":  [10, 30, 50, 100],
+            "F2":  [10, 30, 50, 100],
+            "F3":  [10, 30, 50, 100],
+            "F4":  [10, 30, 50, 100],
+            "F5":  [10, 30, 50, 100],
+            "F6":  [10, 30, 50, 100],
+            "F7":  [10, 30, 50, 100],
+            "F8":  [10, 30, 50, 100],
+            "F9":  [10, 30, 50, 100],
+            "F10": [10, 30, 50, 100],
+            "F11": [10, 30, 50, 100],
+            "F12": [10, 30, 50, 100],
+            "F13": [10, 30, 50, 100],
+
+            "F14": [2],
+            "F15": [4],
+            "F16": [2],
+            "F17": [2],
+            "F18": [2],
+            "F19": [3],
+            "F20": [6],
+            "F21": [4],
+            "F22": [4],
+            "F23": [4]
+        }
+    },
+
+    "experimentos": {
+        "BEN": {"iteraciones": 1000, "poblacion": 20, "num_experimentos": 31},
+        "SCP": {},
+        "USCP": {},
+        "KP": {}
+    },
+
+    "use_seed": true,
+    "seed": 42,
+    "parallel_workers": 6,
+    "console_summary_only": true,
+
+    "instancias": {
+        "BEN": [
+            "F1", "F2", "F3", "F4", "F5", "F6", "F7",
+            "F8", "F9", "F10", "F11", "F12", "F13",
+            "F14", "F15", "F16", "F17", "F18", "F19", "F20", "F21", "F22", "F23"
+        ],
+        "SCP": [],
+        "USCP": [],
+        "KP": []
+    },
+
+    "mh_params": {
+        "PSO_FCS": [
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R2", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R3", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R4", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R5", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R6", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R7", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9},
+
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R2", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R3", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R4", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R5", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R6", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R7", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 5, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9},
+
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R2", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R3", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R4", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R5", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R6", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R7", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 7, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9},
+
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R2", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R3", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R4", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R5", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R6", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R7", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9}
+        ]
+    }
+}

@@ -1,0 +1,100 @@
+% diagram_fcs.tex
+% Compact block diagram of the proposed Fuzzy Control System (FCS) for the
+% PSO inertia weight w. Designed to be \input{} from paper_wea2026.tex.
+%
+% Requires: \usepackage{tikz}, \usetikzlibrary{arrows.meta, positioning}
+%
+% All acronyms used here (PSO, FIS, FCS, PSO-FCS, PSO-STD, COG) MUST be
+% defined at first occurrence in the main text BEFORE this figure is included.
+%
+% Caption is intentionally short: the full reading guide of the diagram
+% appears in the paragraph that introduces this figure in paper_wea2026.tex.
+%
+% diagram_fcs.tex
+% Compact LNCS-oriented block diagram of the proposed PSO-FCS architecture.
+%
+
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+    x=1cm,y=1cm,
+    >=Latex,
+    font=\scriptsize,
+    block/.style={
+        draw, thick, rounded corners=2pt,
+        minimum height=0.62cm,
+        minimum width=1.85cm,
+        align=center,
+        inner sep=2pt
+    },
+    inputblock/.style={
+        draw, thick, rounded corners=2pt,
+        minimum height=0.52cm,
+        minimum width=2.05cm,
+        align=center,
+        inner sep=1.5pt
+    },
+    fis/.style={
+        draw, thick, rounded corners=2pt,
+        minimum height=2.0cm,
+        minimum width=3.85cm,
+        align=center,
+        inner sep=4pt
+    },
+    sig/.style={->, thick},
+    ann/.style={font=\tiny}
+]
+
+% --- Fixed coordinates to avoid overlaps after resizing ---
+\node[block, minimum width=2.15cm] (pso) at (0,0)
+{PSO swarm\\(Eq.~\ref{eq:velocity})};
+
+\node[inputblock] (div) at (2.65,0.48)
+{diversity $d^{t}$};
+
+\node[inputblock] (prog) at (2.65,-0.48)
+{progress $p^{t}$};
+
+\node[fis] (fis) at (6.15,0)
+{\textbf{Mamdani FIS}\\[3pt]
+1.~Fuzzification\\[1pt]
+2.~\underline{Rule Base}: Rules R1--R8\\[1pt]
+3.~Inference Engine\\[1pt]
+4.~Aggregation\\[1pt]
+5.~Defuzzification};
+
+\node[block, minimum width=2.0cm] (resc) at (9.55,0)
+{rescale\\to $[w_{\min},w_{\max}]$};
+
+\node[block, minimum width=1.25cm] (w) at (11.45,0)
+{$w^{t+1}$};
+
+% --- Input extraction from PSO ---
+\coordinate (tap) at (1.35,0);
+
+\draw[sig] (pso.east) -- (tap) |- (div.west);
+\draw[sig] (tap) |- (prog.west);
+
+% --- Inputs to FIS ---
+\draw[sig] (div.east) -- ([yshift=0.48cm]fis.west);
+\draw[sig] (prog.east) -- ([yshift=-0.48cm]fis.west);
+
+% --- Main output path ---
+\draw[sig] (fis.east) -- (resc.west);
+\draw[sig] (resc.east) -- (w.west);
+
+% --- Feedback path ---
+\draw[sig] (w.south) -- ++(0,-1.00) -| (pso.south)
+    node[pos=0.32, below, ann] {feedback to Eq.~\ref{eq:velocity}};
+
+% --- Compact internal specification label ---
+%\node[ann, anchor=north] at ($(fis.south)+(0,-0.05)$)
+%{rules R1--R8};
+
+\end{tikzpicture}%
+}
+\caption{PSO-FCS architecture.}
+\label{fig:fcs}
+\end{figure}

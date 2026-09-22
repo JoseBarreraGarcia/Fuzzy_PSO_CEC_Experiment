@@ -25,14 +25,14 @@ plt.rcParams['legend.fontsize'] = 9
 plt.rcParams['figure.titlesize'] = 11
 plt.rcParams['lines.linewidth'] = 1.2
 
-from FUZZY.fuzzy_controller_w import FuzzyInertiaController, tri
-from FUZZY.fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
+from FUZZY.fuzzy_controller_w_3L import FuzzyInertiaController_3L, tri
+from FUZZY.fuzzy_controller_w_5L import FuzzyInertiaController_5L
 
 def plot_membership_functions():
     """Generate membership function visualizations for 3 and 5 labels (LNCS format)."""
     
     os.makedirs('FUZZY/plots', exist_ok=True)
-    sets = ['A', 'B', 'C', 'D']
+    sets = ['O1', 'O2', 'O3', 'O4']
     
     # Create figure with subplots for outputs
     fig, axes = plt.subplots(2, 4, figsize=(7.5, 5.5))
@@ -41,8 +41,8 @@ def plot_membership_functions():
     
     for col_idx, w_set in enumerate(sets):
         # Instantiate controllers
-        ctrl3 = FuzzyInertiaController(w_set=w_set)
-        ctrl5 = FuzzyInertiaController_5labels(w_set=w_set)
+        ctrl3 = FuzzyInertiaController_3L(w_set=w_set)
+        ctrl5 = FuzzyInertiaController_5L(w_set=w_set)
         
         # === ROW 0: Output w membership functions 3 labels ===
         ax = axes[0, col_idx]
@@ -116,9 +116,9 @@ def test_controller_responses():
         print(f"{'Set':<5} {'3-label $w$':<18} {'5-label $w$':<18} {'Difference':<18} {'% Change':<18}")
         print("-" * 130)
         
-        for w_set in ['A', 'B', 'C', 'D']:
-            ctrl3 = FuzzyInertiaController(w_set=w_set)
-            ctrl5 = FuzzyInertiaController_5labels(w_set=w_set)
+        for w_set in ['O1', 'O2', 'O3', 'O4']:
+            ctrl3 = FuzzyInertiaController_3L(w_set=w_set)
+            ctrl5 = FuzzyInertiaController_5L(w_set=w_set)
             
             w3 = ctrl3.compute_w(diversity, progress)
             w5 = ctrl5.compute_w(diversity, progress)
@@ -157,14 +157,14 @@ def create_comparative_plot():
     for idx, (diversity, progress, title) in enumerate(test_points_simple):
         ax = axes[idx]
         
-        sets = ['A', 'B', 'C', 'D']
+        sets = ['O1', 'O2', 'O3', 'O4']
         x_pos = np.arange(len(sets))
         w3_values = []
         w5_values = []
         
         for w_set in sets:
-            ctrl3 = FuzzyInertiaController(w_set=w_set)
-            ctrl5 = FuzzyInertiaController_5labels(w_set=w_set)
+            ctrl3 = FuzzyInertiaController_3L(w_set=w_set)
+            ctrl5 = FuzzyInertiaController_5L(w_set=w_set)
             w3_values.append(ctrl3.compute_w(diversity, progress))
             w5_values.append(ctrl5.compute_w(diversity, progress))
         

@@ -1,0 +1,496 @@
+\chapter{Theoretical Framework} \label{chapter:marco_teorico}
+\section{Optimization and Metaheuristics}
+\subsection{Optimization Problems}
+
+
+An optimization problem in computer science involves identifying the best possible solution, typically a maximum or minimum, of an objective function, subject to a set of constraints imposed on the decision variables. As stated by \textcite{houssein2024metaheuristics}, optimization addresses the fundamental question: \textit{how to obtain the best solution for a problem while considering a set of limitations?} In their recent work, Houssein et al.~\parencite{houssein2024metaheuristics} also propose a comprehensive taxonomy that classifies optimization problems according to the nature of decision variables (discrete, continuous, or mixed), the presence or absence of constraints, and structural characteristics such as multi-objectivity and combinatorial complexity. This framework reflects typical configurations encountered in real-world engineering and computational applications.
+
+Figure~\ref{fig:optimization_taxonomy} offers a visual summary of this taxonomy, illustrating the interrelationships among different problem classes and highlighting their relevance in practice.
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{images/Optimization_problem_taxonomy.jpeg}
+\caption{Taxonomy of optimization problems based on decision variables, objective function type, and constraints. \parencite{houssein2024metaheuristics}.}
+\label{fig:optimization_taxonomy}
+\end{figure}
+
+A generic optimization problem is composed of several key components. At its core is the \textit{objective function}, which is a mathematical expression to be maximized or minimized, typically representing cost, performance, utility, or another measure of interest \parencite{Khomenko2018, carissimo2024limits}. The variables over which this function is defined are known as \textit{decision variables}; these represent the unknown quantities that must be determined in order to optimize the objective \parencite{Khomenko2018, zheng2022review, zhan2022survey}. 
+
+\textit{Constraints} are conditions imposed on the decision variables, typically formulated as equalities or inequalities, which define the subset of solutions that are considered feasible \parencite{zheng2022review, zhan2022survey}. The set of all feasible solutions forms the \textit{search space}, representing all possible combinations of variable values that satisfy the given constraints \parencite{Khomenko2018}. Finally, the \textit{optimal solution} is defined as the feasible configuration that produces the best possible value—either a maximum or a minimum—of the objective function \parencite{carissimo2024limits}.
+
+
+To consolidate the previous definitions, Algorithm~\ref{alg:opt_problem_structure} formalizes the general structure of an optimization problem using standard mathematical notation. Let $X = \{x_1, x_2, \dots, x_n\}$ denote the set of decision variables, where each $x_i$ belongs to a domain of permissible values. The objective function $f : \mathbb{R}^n \rightarrow \mathbb{R}$ maps each candidate solution $x \in \mathbb{R}^n$ to a real-valued performance score. A set of constraints $\mathcal{C} = \{c_1(x), c_2(x), \dots, c_m(x)\}$ defines the feasibility of each solution by restricting the values that $x$ can assume.
+
+The feasible region, denoted by $\mathcal{S}$, is the subset of $\mathbb{R}^n$ consisting of all points that satisfy every constraint $c_i$. The optimization task is to find a solution $x^* \in \mathcal{S}$ such that the value $f(x^*)$ is optimal—either minimal or maximal—depending on the problem formulation.
+
+\begin{algorithm}[H]
+\caption{Formal Structure of an Optimization Problem}
+\label{alg:opt_problem_structure}
+\begin{algorithmic}[1]
+\Require Set of decision variables $X = \{x_1, x_2, \dots, x_n\}$
+\Require Objective function $f : \mathbb{R}^n \rightarrow \mathbb{R}$
+\Require Set of constraints $\mathcal{C} = \{c_1(x), c_2(x), \dots, c_m(x)\}$
+\State Define feasible region: $\mathcal{S} \gets \{x \in \mathbb{R}^n \mid c_i(x) \text{ is satisfied }~\forall c_i \in \mathcal{C} \}$
+\State Solve:
+\[
+x^* = \arg\min_{x \in \mathcal{S}} f(x) \quad \text{or} \quad x^* = \arg\max_{x \in \mathcal{S}} f(x)
+\]
+\State \Return Optimal solution $x^*$ and optimal value $f(x^*)$
+\end{algorithmic}
+\end{algorithm}
+
+This formal structure provides a unified framework for modeling a wide variety of optimization problems. However, depending on the nature of the decision variables and the characteristics of the search space, these problems can be categorized into distinct types. In particular, the distinction between continuous and discrete variables plays a crucial role in determining the appropriate solution techniques, as it directly influences algorithmic design, computational complexity, and the selection of metaheuristic or exact methods.
+
+Among the different categories identified in the taxonomy, the distinction between continuous and discrete optimization problems is particularly relevant for algorithm design.
+
+In \textit{continuous optimization problems}, the decision variables can assume any real value within bounded or unbounded intervals. These problems often feature smooth and differentiable objective functions and are typically addressed using gradient-based or calculus-driven techniques \parencite{chen2009novel, stein2004continuous}. In contrast, \textit{discrete optimization problems} restrict the decision variables to finite or countable sets, such as integers or categorical values. The resulting search space consists of isolated points, which precludes the use of differential calculus and requires specialized combinatorial or enumerative strategies \parencite{bartz2017model, shen2018fractional}.
+
+A particularly challenging subset of discrete optimization is \textit{combinatorial optimization}, where the objective is to select the best configuration or subset of elements under structural or logical constraints. Problems in this class, such as the traveling salesman problem (TSP) and the knapsack problem (KP), are notorious for their exponential growth in solution space as the problem size increases \parencite{santucci2020algebraic, zhao2024neural, fatih2006particle}. Many of these problems are classified as NP-hard, meaning that no known algorithm can solve all instances efficiently in polynomial time. In such cases, finding or even verifying optimal solutions may require exponential time in the worst case \parencite{ahmed2021probabilistic, buchheim2018robust}. Classic NP-hard examples include TSP, KP, the maximum cut problem, and the vertex cover problem \parencite{schuetz2022combinatorial, chatterjee2024solving}, all of which exhibit severe scalability issues as dimensionality increases \parencite{honari2022combinatorial, dutta2021ising}.
+
+Due to these limitations, a wide range of approximation algorithms, heuristics, and metaheuristics has emerged as an alternative to exact methods. These techniques aim to provide high-quality, near-optimal solutions within acceptable computational budgets and time constraints. Among them, metaheuristics stand out for their flexibility, robustness, and ability to adapt to large-scale, high-dimensional, or dynamically changing problem landscapes \parencite{wang2021deep, chatterjee2024solving}.
+
+While exact approaches such as linear programming (LP), mixed-integer programming (MIP), and branch-and-bound remain important tools for small or well-structured problems, their practical application is often constrained by several factors. These include poor scalability—as the computational cost increases rapidly with problem size \parencite{duan2023applications, agung2021performance}—as well as time sensitivity, where the need for rapid decision-making surpasses the response capacity of exact solvers \parencite{jaber2024review}. Moreover, these methods generally rely on static, fully specified models and therefore perform poorly under conditions of uncertainty, dynamic constraints, or evolving objectives \parencite{achamrah2024leveraging}.
+
+As a result, heuristic and hybrid strategies have gained increasing attention in both theoretical and applied optimization. Among them, metaheuristic algorithms offer a promising and versatile framework for addressing complex optimization problems, particularly in combinatorial and NP-hard domains. Their adaptability, scalability, and independence from gradient information make them especially suited to the types of problems addressed in this research \parencite{talbi2009metaheuristics}.
+
+This context justifies the adoption of adaptive metaheuristic strategies—capable of dynamically responding to problem complexity—which are explored in the following section.
+
+
+\subsection{Metaheuristics: Principles and Taxonomy}
+
+Metaheuristics have become a central paradigm in the field of optimization, particularly within the broader category of approximate or incomplete solution methods. Unlike exact algorithms, which offer guarantees of optimality at high computational cost, metaheuristics provide high-quality solutions with reasonable effort, making them suitable for hard optimization problems \parencite{talbi2009metaheuristics, gendreau2010handbook, sorensen2018history}. Their applicability spans combinatorial, continuous, discrete, and mixed-variable domains, positioning them among the most widely adopted optimization strategies in both academic and industrial settings.
+
+By abstracting away problem-specific details and relying on general exploration and exploitation strategies, metaheuristics offer modularity, flexibility, and adaptability. Their effectiveness stems from customizable components—such as variation operators, selection mechanisms, encoding schemes, and control parameters—that can be tuned or adapted to match different problem landscapes \parencite{glover1986future, tzanetos2020comprehensive}.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Sistema de Control Difuzo - Frame 4.jpg}
+    \caption{A general taxonomy of data-driven metaheuristics. Adapted from Talbi}
+    \label{fig:datadriven_mh}
+\end{figure}
+
+
+A major research direction in recent years has been the development of adaptive and data-driven metaheuristics  \parencite{talbi2021machine}. These approaches aim to reduce reliance on expert configuration by incorporating learning mechanisms that allow the algorithm to adapt based on performance feedback. Talbi \parencite{talbi2009metaheuristics} proposed a hierarchical taxonomy of data-driven metaheuristics, which distinguishes three levels of integration: (1) the problem level (e.g., landscape analysis or problem decomposition), (2) low-level components (e.g., adaptive operators), and (3) high-level strategy control (e.g., algorithm selection based on learned patterns).
+
+
+
+
+% \subsubsection{Parameter Configuration in Metaheuristics}
+A closely related dimension of adaptability is parameter configuration. The configuration of metaheuristic parameters plays a pivotal role in determining algorithm behavior, convergence dynamics, and overall performance. Parameters govern how the algorithm explores and exploits the search space. Poor configurations may lead to premature convergence or inefficient behavior. Three main approaches have been studied: static tuning, which relies on offline configuration through expert knowledge or trial-and-error \parencite{hamadi2010autonomous, dorigo1996ant,kennedy1995particle}; dynamic parameter control, which adjusts values at runtime in response to feedback signals \parencite{huang2019survey, caceres2017experimental}; and self-adaptive mechanisms, where parameters evolve along with candidate solutions. Recent trends highlight the emergence of autonomous search frameworks \parencite{karaboga2007powerful}, aiming to embed intelligent, runtime adaptation into the algorithm itself. These developments provide a conceptual foundation for integrating fuzzy logic controllers as interpretable and flexible tools for dynamic parameter adaptation.
+
+\subsubsection{Positioning of this Work within Low-Level Online Adaptation}
+Particularly relevant to this proposal is the Parameter Settings component at the Low-level layer. Traditionally, this task required expert-defined rules or static parameter tuning, but data-driven methods now offer the possibility of controlling them through feedback mechanisms. In Talbi’s taxonomy, such mechanisms can operate in offline mode (before execution) or online, meaning during runtime, enabling dynamic responses to observed search dynamics. Our proposal is situated within the low-level component as an online parameter setting, where we aim to control metaheuristic parameters based on search behavioral metrics such as stagnation, improvement rate, diversity, or convergence speed through the iterations. In particular, the system will be integrated into Particle Swarm Optimization (PSO) and Genetic Algorithm (GA), as representative and widely used metaheuristics.
+
+Recent advances show that fuzzy logic-based controllers are particularly suitable for dynamic parameter adaptation. These systems use fuzzy rules to infer parameter adjustments from linguistic descriptors of algorithm behavior. For example, if diversity is low and improvement stagnates, a fuzzy rule may increase the exploration tendency by adjusting parameters accordingly. This strategy allows real-time control over the exploration–exploitation balance using interpretable and flexible rule sets. As such, fuzzy controllers offer a promising avenue for embedding semantic adaptability in metaheuristic configuration, using the data-driven paradigm described above \parencite{eftimov2020dsctool}.
+Our data-driven proposal: a modular fuzzy control system capable of selecting predefined fuzzy schemes during the execution of a metaheuristic algorithm. These profiles encode different configurations of membership functions that influence how the controller interprets the state of the search through well-defined process metrics, and use this information to regulate the internal parameters of the algorithm dynamically. Through this adaptive mechanism, we aim to improve metaheuristic robustness, responsiveness, and performance in solving optimization problems.
+
+Given the limitations of static or purely self-adaptive strategies for parameter control, fuzzy logic has emerged as a compelling alternative. It is capable of modeling uncertain, imprecise, or nonlinear relationships through interpretable linguistic rules. Its ability to encode expert knowledge and support real-time decision-making makes it particularly suitable for embedding adaptive behavior into metaheuristics. 
+
+In what follows, we present the theoretical and mathematical foundations of fuzzy logic and fuzzy control systems, which underpin the semantic-level adaptivity at the core of our proposed architecture.
+
+
+\section{Fuzzy Logic: Foundations}
+
+
+\subsection{Fuzzy Set Theory and Membership Functions}
+Fuzzy logic is a mathematical framework developed to model and reason with vague, imprecise, or incomplete information, particularly in scenarios where traditional binary logic fails to capture the complexity of real-world conditions. Introduced by Zadeh \parencite{zadeh1983role, zadeh1992knowledge}, fuzzy logic enables inference with degrees of truth, where propositions are not constrained to being absolutely true or false, but rather can hold partial truth values ranging continuously between 0 and 1.
+
+This capacity to handle gradation in truth values allows fuzzy logic to effectively represent linguistic concepts such as "hot", "fast", or "high", which are inherently ambiguous. For example, a person may be considered 0.7 tall and 0.3 not tall, depending on the selected membership function. Classical logic, in contrast, enforces a binary classification of this property, which limits its expressive power and its capacity to manage uncertainty \parencite{sabahi2013qualified, yen1999fuzzy}.
+
+Fuzzy logic is grounded in fuzzy set theory, where each element $x$ in a universe of discourse $X$ has a membership degree $\mu_A(x) \in [0, 1]$ to a fuzzy set $A$. In contrast, classical (crisp) sets define membership using a binary function:
+
+\begin{equation}
+\mu_A(x) =
+\begin{cases}
+1, & \text{if } x \in A \\
+0, & \text{if } x \notin A
+\end{cases}
+\label{eq:crisp-membership}
+\end{equation}
+
+Fuzzy sets allow partial inclusion, which makes them particularly suitable for modeling real-world categories with blurred boundaries. The semantic richness of fuzzy sets supports reasoning with linguistic quantifiers such as ``most,'' ``few,'' or ``approximately 0.8,'' which are not naturally handled in classical logic systems~\parencite{liberatore2002project, zadeh1983role}.
+
+
+
+\subsection{Core Concepts and Mathematical Principles of Fuzzy Logic}
+
+At the heart of fuzzy logic lies the concept of the fuzzy set, which generalizes the classical notion of set membership. A fuzzy set $A$ over a universe $X$ is defined by a membership function:
+
+\begin{equation}
+\mu_A : X \rightarrow [0, 1]
+\label{eq:membership-function}
+\end{equation}
+
+where each element $x \in X$ is assigned a degree of membership $\mu_A(x)$~\parencite{sadollah2018introductory, beliakov1996fuzzy, dombi2021modifiers}. The flexibility of fuzzy sets enables the representation of vague and linguistic concepts with partial truth values.
+
+Membership functions are the cornerstone of fuzzy modeling, as they determine how input values are translated into degrees of membership. Several standard shapes are commonly employed due to their interpretability and computational efficiency. The most widely adopted forms include triangular, trapezoidal, and Gaussian membership functions, each exhibiting distinct characteristics and mathematical formulations, as detailed in the following paragraphs.
+
+The triangular membership function is defined by three parameters $a < b < c$, which determine the triangle's base and peak:
+
+\begin{equation}
+\mu(x) =
+\begin{cases}
+0, & x \leq a \\
+\frac{x-a}{b-a}, & a < x \leq b \\
+\frac{c-x}{c-b}, & b < x \leq c \\
+0, & x > c
+\end{cases}
+\label{eq:triangular-mf}
+\end{equation}
+
+This function increases linearly from $a$ to $b$, reaches its peak at $b$, and then decreases linearly to $0$ at $c$.
+
+The trapezoidal membership function generalizes the triangular one using four parameters $a < b \leq c < d$, defining the base and the flat top:
+
+\begin{equation}
+\mu(x) =
+\begin{cases}
+0, & x \leq a \\
+\frac{x-a}{b-a}, & a < x \leq b \\
+1, & b < x \leq c \\
+\frac{d-x}{d-c}, & c < x \leq d \\
+0, & x > d
+\end{cases}
+\label{eq:trapezoidal-mf}
+\end{equation}
+
+It allows representing concepts that are fully true within a range $[b, c]$ and gradually transition outside it.
+
+The Gaussian membership function is defined as:
+
+\begin{equation}
+\mu(x) = \exp\left( -\frac{(x - c)^2}{2\sigma^2} \right)
+\label{eq:gaussian-mf}
+\end{equation}
+
+Here, $c$ is the center (mean) of the distribution and $\sigma$ controls its spread. This function provides a smooth and differentiable representation of uncertainty.
+
+These functions are selected based on the specific characteristics of the application and can be fine-tuned using expert knowledge, statistical data, or empirical evaluation \parencite{sadollah2018introductory, dombi2021modifiers, pedrycz2015designing}. Their mathematical form affects both the precision and the interpretability of the fuzzy system.
+
+The construction of membership functions plays a critical role in the effectiveness of fuzzy models. For instance, triangular and trapezoidal functions are frequently employed in control systems due to their simplicity and ease of implementation, while Gaussian functions offer smoother transitions and are preferred when uncertainty modeling is essential~\parencite{sadollah2018introductory, dombi2021modifiers}. Regardless of their shape, all membership functions must satisfy the following basic condition:
+
+\begin{equation}
+\mu_A(x) \in [0, 1]
+\label{eq:membership-bound}
+\end{equation}
+
+
+
+\subsection{Fuzzy Reasoning and Inference Rules}
+Fuzzy logic provides a systematic framework for modeling uncertainty, incorporating approximate reasoning through fuzzy rules and the capacity to integrate predicate logic with probabilistic elements~\parencite{zadeh1992knowledge, mendel1995fuzzy}. This is particularly useful in control and expert systems, where interpretability, gradation, and adaptability are essential.
+
+A canonical example of fuzzy reasoning is expressed in the form of an implication rule such as:
+
+\begin{equation}
+\textbf{IF } \text{temperature IS high} \textbf{ THEN } \text{fan\_speed IS fast}
+\label{eq:ejemplo_fuzzy-rule}
+\end{equation}
+
+In this case, both \texttt{high} and \texttt{fast} correspond to fuzzy sets. Their interaction depends on the degrees of membership assigned to the input variables and the strength of the rule. Unlike binary logic, fuzzy rules can be partially activated, contributing proportionally to the system output.
+
+\subsection{T-norms, S-norms, and Fuzzy Modifiers}
+
+In fuzzy inference systems, reasoning is carried out by combining and modulating the degrees of membership associated with fuzzy sets. This process relies on three core components: triangular norms (\textit{t-norms}), triangular conorms (\textit{s-norms}), and fuzzy modifiers (or linguistic hedges).
+
+A \textbf{t-norm} is a binary operator $T: [0,1]^2 \rightarrow [0,1]$ that generalizes the logical AND by combining fuzzy truth values. Common examples include the minimum operator $T_{\min}(a,b) = \min(a,b)$ and the product $T_{\text{prod}}(a,b) = a \cdot b$, both satisfying properties such as commutativity, associativity, monotonicity, and the identity element $T(a,1)=a$~\parencite{klement2013triangular}.
+
+Similarly, an \textbf{s-norm} $S: [0,1]^2 \rightarrow [0,1]$ extends the logical OR operation. Examples include the maximum operator $S_{\max}(a,b) = \max(a,b)$ and the probabilistic sum $S_{\text{prob}}(a,b) = a + b - ab$, with neutral element $0$ (i.e., $S(a,0) = a$).
+
+\textbf{Fuzzy modifiers} are unary functions $M: [0,1] \rightarrow [0,1]$ that alter membership degrees to reflect linguistic nuances. For instance, the intensifier “very” can be represented as $M_{\text{very}}(a) = a^2$, and the negation “not” as $M_{\text{not}}(a) = 1 - a$~\parencite{dombi2021modifiers}.
+
+These operators complete the foundational elements of fuzzy inference and provide formal mechanisms for rule combination and semantic modulation.
+
+
+
+
+
+
+% \subsection{T-norms, S-norms, and Fuzzy Modifiers}
+
+
+% Beyond the design of membership functions, fuzzy inference systems rely on additional mathematical operators to evaluate the combination and modulation of fuzzy values. Two fundamental families of operations are the \textbf{t-norms} and \textbf{s-norms}, which generalize classical logic operations of conjunction (AND) and disjunction (OR), respectively~\parencite{klement2013triangular}. Additionally, \textbf{fuzzy modifiers} (or linguistic hedges) serve to adjust the intensity of fuzzy membership values, adding semantic richness to the inference process~\parencite{dombi2021modifiers}.
+
+% \subsubsection*{T-norms: Fuzzy Conjunction Operators}
+
+% A triangular norm, or \textit{t-norm}, is a binary operator $T: [0,1]^2 \rightarrow [0,1]$ that determines the truth degree of the fuzzy AND operation between two inputs $a$ and $b$. This mechanism is used to combine antecedents in fuzzy rules. For instance, in a rule with the form:
+
+% \[
+% \text{IF } x \text{ is } A \text{ AND } y \text{ is } B,
+% \]
+
+% the conjunction is computed as $T(\mu_A(x), \mu_B(y))$.
+
+% To ensure logical consistency, valid t-norms must satisfy four properties:
+% \begin{itemize}
+%     \item \textbf{Commutativity:} The order of inputs does not affect the result, i.e., $T(a, b) = T(b, a)$.
+%     \item \textbf{Associativity:} Grouping of operations is irrelevant: $T(a, T(b, c)) = T(T(a, b), c)$.
+%     \item \textbf{Monotonicity:} Increasing one or both inputs should not decrease the output.
+%     \item \textbf{Identity Element:} The value 1 acts neutrally: $T(a, 1) = a$.
+% \end{itemize}
+
+% Typical examples include:
+% \begin{align*}
+%     T_{\min}(a, b) &= \min(a, b) & \text{(Zadeh t-norm)} \\
+%     T_{\text{prod}}(a, b) &= a \cdot b & \text{(Algebraic product)} \\
+%     T_{\text{Luk}}(a, b) &= \max(0, a + b - 1) & \text{(Łukasiewicz t-norm)}
+% \end{align*}
+
+% \subsubsection*{S-norms: Fuzzy Disjunction Operators}
+
+% In parallel, a triangular conorm or \textit{s-norm} $S: [0,1]^2 \rightarrow [0,1]$ generalizes the logical OR. It combines inputs when fuzzy rules use disjunctions:
+
+% \[
+% \text{IF } x \text{ is } A \text{ OR } y \text{ is } B.
+% \]
+
+% Valid s-norms must also satisfy the properties of commutativity, associativity, monotonicity, and having 0 as an identity element (i.e., $S(a, 0) = a$). Common examples include:
+% \begin{align*}
+%     S_{\max}(a, b) &= \max(a, b) & \text{(Zadeh s-norm)} \\
+%     S_{\text{prob}}(a, b) &= a + b - a \cdot b & \text{(Probabilistic sum)} \\
+%     S_{\text{Luk}}(a, b) &= \min(1, a + b) & \text{(Łukasiewicz s-norm)}
+% \end{align*}
+
+% These operators are key for aggregating fuzzy conditions when multiple paths to rule activation are allowed.
+
+% \subsubsection*{Fuzzy Modifiers (Linguistic Hedges)}
+
+% Fuzzy modifiers are unary functions $M: [0,1] \rightarrow [0,1]$ used to transform membership values and reflect linguistic intensifiers like "very", "somewhat", or "not". For instance:
+
+% \begin{align*}
+%     M_{\text{very}}(a) &= a^2 & \text{(intensifies membership)} \\
+%     M_{\text{somewhat}}(a) &= \sqrt{a} & \text{(attenuates membership)} \\
+%     M_{\text{not}}(a) &= 1 - a & \text{(fuzzy negation)}
+% \end{align*}
+
+% These transformations adapt the meaning of fuzzy sets and are used extensively in rule definitions. For example, the rule:
+
+% \[
+% \text{IF temperature is very high THEN fan speed is fast}
+% \]
+
+% applies the modifier “very” to the set “high temperature”, effectively narrowing its membership function and increasing its selectivity.
+
+
+% In summary, t-norms, s-norms, and fuzzy modifiers form an essential triad in fuzzy inference systems. They allow for nuanced rule construction, semantic control of membership degrees, and consistent reasoning under uncertainty. Their correct definition and calibration are essential to building robust and interpretable fuzzy control architectures.
+
+
+
+
+\section{Fuzzy Control Systems (FCS)}
+Fuzzy control systems (FCS) are rule-based mechanisms designed to emulate human reasoning in decision-making and control processes. They operate by evaluating fuzzy logic rules over input variables, employing membership functions to represent linguistic terms, and generating output decisions in a flexible and interpretable manner. FCS are particularly effective in environments characterized by uncertainty, nonlinearity, or incomplete system knowledge~\parencite{kumari2024modelling, arun2017modeling, praharaj2022modeling}.
+
+\subsection{Structure of Mamdani-Type Controllers}
+Among the various types of fuzzy inference systems, the Mamdani-type controller—originally introduced by~\parencite{procyk1979linguistic}—is the most widely adopted due to its intuitive structure and transparency. These features make it particularly suitable for applications that require human interpretability. The general architecture of a Mamdani FCS comprises three sequential stages: fuzzification, inference, and defuzzification, each governed by a well-defined mathematical formulation~\parencite{kumari2024modelling, arun2018modelling}, as illustrated in Figure~\ref{fig:mamdani-architecture}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/fuzzy_control_system_basico.JPG}
+    \caption{Mamdani Fuzzy Control System.}
+    \label{fig:mamdani-architecture}
+\end{figure}
+
+
+\paragraph{Fuzzification.}
+This stage transforms crisp numerical inputs into fuzzy values by computing their degree of membership to predefined fuzzy sets. Given an input $x$ and a fuzzy set $A$, the fuzzification process evaluates the membership function $\mu_A(x) \in [0, 1] \label{eq:fuzzification}$. This value quantifies the extent to which the input corresponds to a fuzzy concept (e.g., \texttt{high temperature}). The specific membership function $\mu_A(x)$ is selected according to the nature of the input variable and may adopt triangular, trapezoidal, or Gaussian shapes, as previously discussed~\parencite{sadollah2018introductory, pedrycz2015designing}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Inference Engine (Rule Evaluation and Aggregation).}
+The inference stage applies a rule base composed of fuzzy \textbf{IF-THEN} statements. A typical fuzzy rule takes the form: 
+\begin{equation}
+\textbf{IF } x_1 \text{ is } A_1 \textbf{ AND } x_2 \text{ is } A_2 \textbf{ THEN } y \text{ is } B \label{eq:fuzzy-rule_general}
+\end{equation}
+
+For each rule, a \textit{firing strength} $\alpha$ is computed to assess the degree to which the antecedents are satisfied. This is typically done using a $t$-norm operator. One common choice is the minimum function:
+
+\begin{equation}
+\alpha = \min \left( \mu_{A_1}(x_1), \mu_{A_2}(x_2) \right)
+\label{eq:firing-strength}
+\end{equation}
+
+The consequent fuzzy set $B$ is then scaled (i.e., truncated) by the firing strength $\alpha$. All resulting fuzzy outputs from multiple rules are subsequently aggregated using an $s$-norm operator, often the maximum, to produce a single fuzzy output set~\parencite{kumari2024modelling, arun2017modeling, praharaj2022modeling}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Defuzzification.}
+The final step in a fuzzy control system is defuzzification, which converts the aggregated fuzzy output set into a single crisp value suitable for control actions. The most commonly used defuzzification technique is the \textit{centroid method} (also known as the center of gravity), defined as:
+
+\begin{equation}
+y^* = \frac{ \int y \cdot \mu_{\text{B}_{\text{agg}}}(y) \, dy }{ \int \mu_{\text{B}_{\text{agg}}}(y) \, dy }
+\label{eq:centroid}
+\end{equation}
+
+Here, $y^*$ denotes the defuzzified crisp output value, and $\mu_{\text{B}_{\text{agg}}}(y)$ is the membership function of the aggregated fuzzy output set. Other defuzzification methods include the center of sums, center of area, and mean of maxima, which may be applied depending on the specific requirements of the application~\parencite{praharaj2022modeling, arun2018modelling}
+.
+
+
+
+\subsection{Applications of FCS in Metaheuristics}
+Fuzzy control systems (FCS) have demonstrated significant utility in the domain of optimization, particularly when embedded within metaheuristic algorithms. Their main advantage lies in providing adaptive parameter tuning mechanisms that respond dynamically to the behavior of the search process. This capability addresses one of the key limitations of metaheuristics: their performance sensitivity to fixed control parameters \parencite{valdez2014survey, diaz2017new}.
+
+Metaheuristic algorithms such as PSO, GA, and Differential Evolution (DE) rely on internal parameters, like inertia weights, crossover rates, or mutation factors, that critically influence the balance between exploration and exploitation. Traditionally, these parameters are tuned offline or remain static during execution, potentially resulting in suboptimal convergence or premature stagnation \parencite{sadollah2018introductory, valdez2010fuzzy}.
+
+By integrating fuzzy controllers, these algorithms can adapt parameters control, adjusting them during the search based on process metrics. For example, in fuzzy-adaptive PSO variants, the inertia weight $(w)$ may be modified dynamically using linguistic rules derived from fuzzy inputs such as \texttt{diversity is low} or \texttt{fitness improvement is moderate} \parencite{valdez2014survey}. This allows the algorithm to promote exploration when needed or to intensify exploitation when convergence begins.
+
+Fuzzy systems contribute a human-interpretable reasoning layer to metaheuristics, where expert knowledge or empirical observations are encoded as rule bases. A generic fuzzy rule for parameter adaptation might be IF improvement IS low AND diversity IS low THEN increase inertia weight.
+
+In this context, the fuzzy inputs (e.g., improvement, diversity) are normalized metrics computed from the algorithm’s search state, while the outputs are control actions such as adjusting PSO’s inertia weight or GA’s mutation rate. These outputs are defuzzified and applied to the metaheuristic at each iteration, creating a feedback loop that enhances responsiveness and robustness \parencite{diaz2017new, valdez2010fuzzy}.
+
+The use of fuzzy control systems has been validated across various problem domains, including engineering design, scheduling, and feature selection, demonstrating improvements in convergence speed, solution quality, and robustness to problem scale and complexity \parencite{valdez2014survey,sadollah2018introductory}. Notably, the Mamdani-type fuzzy system remains a preferred architecture due to its interpretability and suitability for real-time adjustments.
+
+
+
+\subsection{Limitations of Traditional FCS for Parameter Control}
+Fuzzy control systems (FCS) have long been recognized as a valuable approach for adaptive parameter control in metaheuristic algorithms due to their ability to manage imprecision and dynamically adjust system behavior. However, traditional implementations—particularly those based on type-1 fuzzy logic—exhibit significant limitations that restrict their effectiveness in dynamic and complex optimization scenarios.
+
+One of the most critical limitations is their reduced capacity to handle uncertainty. Since type-1 fuzzy systems use fixed membership functions, they are often unable to capture the inherent variability and noise present in real-world optimization problems. As a result, their adaptability to evolving search conditions becomes limited, particularly in high-dimensional or stochastic environments \parencite{patel2022shadowed, castillo2021high, castillo2018generalized, patel2022type, cuevas2022generalized, castillo2019shadowed}.
+
+Another challenge lies in the computational complexity associated with more advanced fuzzy models. While type-2 and generalized type-2 fuzzy systems offer improved uncertainty handling, they also impose significant computational overhead. This can hinder their practical applicability in time-constrained or resource-limited settings, such as embedded systems or real-time optimization tasks \parencite{castillo2021high, patel2022shadowed, castillo2019shadowed}.
+
+In addition, traditional fuzzy systems face scalability issues as the number of parameters or decision rules increases. Designing a robust and interpretable rule base typically requires extensive expert knowledge and becomes increasingly difficult as metaheuristics grow in complexity. This problem is exacerbated when fuzzy systems are applied across multiple domains or algorithm variants \parencite{marques2011parameter, jackson2016comparative}.
+
+Finally, there is evidence that traditional fuzzy controllers may not always outperform simpler heuristic or crisp rule-based approaches. In certain general-purpose applications, the added complexity of fuzzy logic does not consistently translate into better performance, leading to performance plateaus or marginal gains \parencite{jackson2016comparative}.
+
+In response to these limitations, recent studies have explored enhancements such as type-2 fuzzy sets \parencite{castillo2018generalized, patel2022shadowed}, interval and shadowed fuzzy representations \parencite{castillo2021high, castillo2019shadowed}, and hybrid models that incorporate evolutionary techniques to automate rule design and reduce human dependency \parencite{marques2011parameter, castillo2018generalized}. However, despite these improvements, there remains a gap in methods capable of dynamically adjusting the semantic structure of the fuzzy system itself during execution—a challenge that motivates the adaptive architecture proposed in this thesis.
+
+
+\section{Proposed Semantic Adaptation via Fuzzy Schemes}
+
+
+
+\subsection{Definition and Formalization of Fuzzy Schemes}
+Although various authors have explored the design and configuration of fuzzy partitions and sets of membership functions \parencite{sadollah2018introductory, dombi2021modifiers}, the notion of a fuzzy scheme is not formally established as a standard term in the literature, as an example. In this proposal, we define a fuzzy scheme as a structured and coherent configuration of membership functions that determines a semantic partition of a linguistic variable’s domain. This operational construct, introduced by the authors, serves as a core abstraction to enable dynamic representation and adaptation of input semantics within fuzzy control systems.
+Each fuzzy scheme determines how crisp input values are interpreted semantically through a set of overlapping fuzzy sets. In practice, it represents one possible semantic encoding of a variable, and different schemes can lead to significantly different interpretations and control behavior. This interpretive flexibility forms the basis for the semantic adaptation mechanism developed in the present project.
+Formally, a fuzzy partition $\mathcal{P}$ of a universe $X$ is defined as a finite collection of fuzzy sets $A_1, A_2, \dots, A_n$, where each set $A_i$ is characterized by a membership function $\mu_{A_i}(x)$. The partition must satisfy the following soft constraint:
+
+\begin{equation}
+\sum_{i=1}^{n} \mu_{A_i}(x) \approx 1, \quad \forall x \in X
+\label{eq:fuzzy-partition}
+\end{equation}
+
+This condition ensures that every value $x$ belongs to the fuzzy partition to some degree.
+
+
+\subsection{Semantic Modulation in Fuzzy Systems}
+A fuzzy scheme, as defined here, is not merely a set of isolated fuzzy sets, but an interrelated structure defined by several design elements:
+
+\begin{itemize}
+    \item The number of fuzzy sets composing the partition (e.g., three for \texttt{low}, \texttt{medium}, \texttt{high} versus five for finer granularity);
+    \item The type of membership functions employed (e.g., triangular, trapezoidal, Gaussian);
+    \item The distribution and overlap of the sets across the variable’s domain;
+    \item The semantic labels assigned to each fuzzy set (e.g., \texttt{low temperature}, \\ \texttt{very low temperature}).
+\end{itemize}
+
+These elements collectively determine the resolution, sensitivity, and semantic granularity of the fuzzy controller. For instance, a scheme with three broad triangular sets may support smoother but coarser control decisions, while a five-set Gaussian scheme may capture more nuanced variations at the expense of computational complexity \parencite{sadollah2018introductory, pedrycz2015designing}.
+
+Fuzzy schemes play a pivotal role in shaping how a fuzzy control system interprets and responds to inputs. Since the rule base of a Mamdani controller operates over linguistic values, changing the fuzzy scheme alters the underlying semantics of those values without modifying the rule structure. This introduces a powerful mechanism for semantic modulation, enabling the same control logic to behave differently depending on the active scheme \parencite{dombi2021modifiers}.
+
+In conventional fuzzy systems, the scheme is fixed at design time. However, in adaptive frameworks such as the one proposed here, the controller is capable of selecting among predefined fuzzy schemes at runtime. This selection is guided by search process metrics. By enabling the controller to alter its own semantic representation of the input space, the system acquires a second degree of adaptiveness, enhancing its ability to respond effectively to different phases of the optimization process \parencite{valdez2014survey, diaz2017new}.
+
+Thus, fuzzy schemes are treated as modular, dynamically interchangeable semantic profiles. Each one defines a coherent fuzzy partition over an input variable, enabling the controller to operate under alternative interpretations of the search landscape. This capacity to switch online between schemes constitutes a form of semantic adaptation, in which the meaning assigned to input variables is no longer fixed but instead context-dependent and adjustable. Unlike traditional approaches that only modify parameter values within a static partition, our proposed system incorporates a higher-level mechanism that reconfigures the semantic structure of the controller itself. As noted in the literature, such semantic-level adaptation enhances the system’s robustness, responsiveness, and ability to generalize across dynamic environments \parencite{wang2023fuzzy, castillo2018generalized}.
+
+
+\subsection{Interaction with Static Rule Bases in Mamdani Controllers}
+In Mamdani-type fuzzy control systems, the core reasoning mechanism relies on a fixed set of fuzzy rules that operate over linguistic variables defined by fuzzy sets. These fuzzy sets are instantiated through a specific fuzzy scheme, understood as a particular configuration of membership functions that defines the semantic partition of the input space. Consequently, the fuzzy scheme plays a critical role in shaping the behavior of the controller, as it determines how numerical inputs are interpreted before rule evaluation.
+
+While the rule base in a Mamdani controller remains static, the meaning of the linguistic terms in both antecedents and consequents is governed by the active fuzzy scheme. For example, the term high diversity may refer to different numerical intervals depending on whether it is defined using triangular or Gaussian functions, and whether the domain is partitioned into three or five fuzzy sets. In this sense, the fuzzy scheme functions as a semantic interface between numerical inputs and the controller’s inference layer \parencite{dombi2021modifiers}.
+This separation between rule structure and membership function configuration is particularly relevant in adaptive control contexts. It allows the controller to adjust its semantic interpretation of inputs without modifying the underlying logic of the rule base. By switching from one fuzzy scheme to another, the system may adopt a more coarse or fine-grained view of the same variable, thus modulating the generalization or specificity of its response \parencite{sadollah2018introductory, pedrycz2015designing}.
+
+In conventional Mamdani systems, the fuzzy scheme is chosen at design time and remains fixed throughout execution. In contrast, the adaptive architecture proposed in this project incorporates a fuzzy controller capable of dynamically selecting among multiple predefined fuzzy schemes during runtime. This semantic adaptation is guided by search process metrics such as stagnation, loss of diversity, or improvement rate \parencite{valdez2014survey, diaz2017new}.
+For instance, during early iterations of a metaheuristic, a fuzzy scheme composed of broad, overlapping membership functions may promote exploration by enabling more general interpretations of input conditions. Later in the process, a scheme with narrower and sharper functions can provide more selective control, favoring exploitation. This switching mechanism allows the controller to reconfigure its perception of the input space according to the phase of the optimization process, while keeping the rule base unchanged.
+The integration of a fuzzy scheme selection module introduces a dual form of adaptivity. First, it supports metaheuristics parameter-level settings by adjusting control variables such as the inertia weight in PSO or the mutation rate in GA. Second, it enables semantic flexibility by altering the internal representation of linguistic variables in response to the observed search behavior. By combining these two mechanisms, the system achieves behavioral plasticity: the capacity to modulate its control behavior based on runtime environmental feedback. This dual adaptation—at both numerical and semantic levels—constitutes a methodological advancement over traditional fuzzy controllers with static partitions and fixed interpretations \parencite{wang2023fuzzy, aliev2025type, xiao2019membership}.
+
+
+% \subsection{Illustrative Examples of Scheme Effects}
+
+
+
+
+\section{Dynamic Scheme Selection Mechanisms}
+
+
+\subsection{Motivation for Dynamic Semantic Adaptation}
+The capacity to dynamically adapt fuzzy controllers during execution has been extensively studied, particularly in the context of intelligent control and optimization. Most prior work focuses on the dynamic tuning of fuzzy rule bases, membership functions, or control parameters using external mechanisms. However, to the best of our knowledge, the specific notion of fuzzy schemes, as defined in this proposal as coherent configurations of membership functions forming a fuzzy partition, has not been previously addressed as a modular and dynamically selectable component. This distinction positions the present work within a novel direction that expands the scope of semantic adaptation in fuzzy systems.
+
+Dynamic fuzzy adaptation has demonstrated clear benefits in various domains, including enhanced convergence, improved tracking, reduced steady-state error, and robustness under changing conditions. Early work by Ref. \parencite{hirakawa2002selection} introduced adaptive selection of fuzzy rules via automatic tuning of membership functions. Ref \parencite{lin1991neural} proposed neuro-fuzzy systems capable of online rule adaptation, while Ref. \parencite{wang1992generating} developed hybrid methods to generate and update fuzzy rules dynamically.
+
+The conceptual novelty of this proposal lies in treating fuzzy schemes as first-class adaptive units—each scheme encoding a distinct semantic representation of an input variable through a predefined partition of the domain. Unlike adaptive adjustments of individual membership functions, which may result in uncontrolled semantic drift or inconsistency, the use of predefined, coherent schemes ensures internal consistency and interpretability. Moreover, enabling a controller to switch between schemes allows for dynamic reinterpretation of the same input variable, aligning system behavior with evolving search contexts. This aligns with the broader trend in intelligent systems toward modularity, interpretability, and runtime flexibility. From a cognitive systems perspective, it can be likened to switching between different “modes of perception” depending on environmental cues, supporting the design of more context-aware metaheuristic adaptation mechanisms.
+
+
+\subsection{Available Techniques for dynamic selection}
+Multiple techniques have been proposed for implementing dynamic fuzzy adaptation. These include:
+Stochastic methods, such as evolutionary strategies and genetic algorithms, used to evolve rule bases or membership function parameters during runtime \parencite{qiu2020event, zhu2020event, haighton2024adaptable}.
+\begin{itemize}
+    \item Reinforcement learning, in particular Q-learning and actor-critic models, which allow fuzzy systems to learn control policies by interacting with their environment and receiving feedback \parencite{qiu2020event, zhu2020event, haighton2024adaptable}.
+    \item Event-triggered mechanisms, in which structural changes to the fuzzy system are made only when specific conditions or thresholds are met, reducing computational overhead while retaining adaptability \parencite{qiu2020event, zhu2020event, haighton2024adaptable, si2022event}.
+    \item Neuro-fuzzy hybrid models, which allow the continuous online adjustment of fuzzy rules or membership parameters based on gradient descent or Hebbian learning \parencite{li2023fuzzy, si2022event}.
+\end{itemize}
+
+While these methods primarily operate on individual rules or membership functions, they provide a conceptual foundation for this proposal's approach: runtime selection of complete fuzzy schemes. Each scheme represents a self-contained semantic profile over an input variable (metric from the process), allowing the controller to operate under distinct interpretations depending on the search context.
+
+Building upon these techniques, the dynamic selection of fuzzy schemes is framed here as a higher-order control problem. Rather than modifying internal parameters directly, the system must choose among discrete fuzzy configurations that each impose a different bias on the inference process. This design parallels the concept of meta-control in cognitive architectures, where different strategies are selected based on situational awareness.
+
+To enable such dynamic selection, a key challenge is defining selection criteria that reliably indicate when a switch is needed. Candidate criteria include: (i) stagnation of the metaheuristic’s objective function; (ii) sudden changes in diversity metrics; (iii) deterioration of exploitation indicators; and (iv) the lack of improvement over a given time window. These signals can trigger scheme switches either deterministically (e.g., threshold rules) or probabilistically (e.g., softmax-based choice), depending on the desired trade-off between stability and reactivity. This framework provides a foundation for implementing lightweight hyperheuristics or reinforcement-learning-based selectors without compromising the interpretability of the fuzzy controller.
+
+
+% \subsection{Formal Definition of Scheme Selection}
+% Let $\mathcal{S} = \{S_1, S_2, \dots, S_k\}$ be a finite set of predefined fuzzy schemes, each $S_i$ representing a distinct fuzzy partition over the domain of an input variable. Let $m_t$ denote a vector of observed process metrics at iteration $t$ (e.g., improvement rate, diversity, stagnation index). 
+
+% We define the scheme selection function $\pi: \mathbb{R}^d \rightarrow \mathcal{S}$ such that:
+% \[
+% s_t = \pi(m_t)
+% \]
+% where $s_t$ is the scheme selected at time $t$. The function $\pi$ can be deterministic, threshold-based, probabilistic (e.g., softmax policy), or learned via reinforcement signals.
+
+% The fuzzy controller then uses $s_t$ to evaluate the fuzzy inference process at iteration $t$, enabling semantic adaptation through scheme switching.
+
+% \begin{table}[H]
+% \centering
+% \caption{Taxonomy of Dynamic Scheme Selection Mechanisms}
+% \label{tab:selection_mechanisms}
+% \begin{tabular}{@{}p{3.5cm}p{9.5cm}@{}}
+% \toprule
+% \textbf{Strategy Type} & \textbf{Description} \\ \midrule
+% \textbf{Threshold-based switching} & Changes scheme when predefined metrics exceed fixed thresholds. Simple and interpretable but lacks flexibility. \\
+% \textbf{Stochastic switching} & Randomized selection guided by probabilities or weights, often derived from recent performance indicators. \\
+% \textbf{Reinforcement learning} & Learns an optimal scheme-selection policy by maximizing cumulative reward from switching decisions. \\
+% \textbf{Event-triggered switching} & Triggers scheme change only when relevant events (e.g., stagnation, loss of diversity) occur, reducing computational cost. \\
+% \textbf{Hyperheuristic-based} & Uses a higher-level heuristic to select among schemes, often guided by features of the search process. \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% \begin{algorithm}[H]
+% \caption{General Flow of Dynamic Fuzzy Scheme Selection}
+% \label{alg:general_scheme_selection}
+% \begin{algorithmic}[1]
+% \State Initialize metaheuristic algorithm $\mathcal{A}$ and fuzzy controller
+% \State Define scheme set $\mathcal{S} = \{S_1, \dots, S_k\}$
+% \State Select initial scheme $s_0 \in \mathcal{S}$
+
+% \For{each iteration $t$}
+%     \State Execute $\mathcal{A}$ using current fuzzy controller with scheme $s_t$
+%     \State Measure process metrics $m_t$
+%     \If{switching\_condition$(m_t)$ is true}
+%         \State $s_{t+1} \gets \pi(m_t)$ \Comment{Select new scheme}
+%         \State Update fuzzy controller with $s_{t+1}$
+%     \Else
+%         \State $s_{t+1} \gets s_t$
+%     \EndIf
+% \EndFor
+% \end{algorithmic}
+% \end{algorithm}
+
+
+% \subsection{Comparison with Other Adaptive Fuzzy Techniques}
+% \hl{agregar una tabla o texto comparativo entre tu enfoque y otros enfoques de adaptación.}
+
+
+
+
+% \section{Summary }
+% \hl{Having established the theoretical foundations of adaptive fuzzy control systems and the rationale for dynamic scheme selection, we now proceed to describe the methodological design of this proposal, including the specific research questions, experimental strategy, and validation plan}
+

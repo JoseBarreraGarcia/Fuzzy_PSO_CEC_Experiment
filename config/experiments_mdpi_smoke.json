@@ -1,0 +1,58 @@
+{
+    "_doc": {
+        "purpose": "Smoke test del pipeline MDPI: ~100 experimentos para validar end-to-end (poblar BD, ejecutar, generar CSVs) antes del batch completo.",
+        "scope": "PSO baseline + 4 variantes PSO_FCS (extremos del cubo: 3L-R1, 9L-R1, 3L-R8, 9L-R8) sobre 6 funciones del Classical Benchmark Suite F1-F23.",
+        "benchmark_ref": "Abualigah, L., Diabat, A., Mirjalili, S., Abd Elaziz, M., & Gandomi, A. H. (2021). The Arithmetic Optimization Algorithm. Computer Methods in Applied Mechanics and Engineering, 376, 113609.",
+        "usage": "$env:PSO_EXPERIMENTS_CONFIG = '.\\config\\experiments_mdpi_smoke.json'; python 0_0_reiniciar.py; python 1_0_poblarDB.py; python 2_main.py",
+        "expected_total_experiments": 100,
+        "estimated_runtime_minutes": "10-30 (depende del hardware, parallel_workers=6)"
+    },
+
+    "ben": true,
+    "scp": false,
+    "uscp": false,
+    "kp": false,
+
+    "mhs": ["PSO", "PSO_FCS"],
+
+    "DS_actions": ["S4-ELIT"],
+
+    "dimensiones": {
+        "BEN": {
+            "F1":  [30, 100],
+            "F5":  [30, 100],
+            "F9":  [30, 100],
+            "F12": [30, 100],
+            "F21": [4],
+            "F23": [4]
+        }
+    },
+
+    "experimentos": {
+        "BEN": {"iteraciones": 500, "poblacion": 20, "num_experimentos": 2},
+        "SCP": {},
+        "USCP": {},
+        "KP": {}
+    },
+
+    "use_seed": true,
+    "seed": 42,
+    "parallel_workers": 6,
+    "console_summary_only": true,
+
+    "instancias": {
+        "BEN": ["F1", "F5", "F9", "F12", "F21", "F23"],
+        "SCP": [],
+        "USCP": [],
+        "KP": []
+    },
+
+    "mh_params": {
+        "PSO_FCS": [
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9},
+            {"w_set": "O1", "num_labels": 9, "input_set": "I1", "rule_set": "R8", "wMin": 0.1, "wMax": 0.9}
+        ]
+    }
+}

@@ -23,6 +23,8 @@ from io import StringIO
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from analysis_modules_cec.level1_raw_data_cec import OPTIMOS_CEC2017
+
 # LNCS Format Configuration
 plt.rcParams['figure.figsize'] = (7.5, 6)  # 3.25 inch width for 1-column LNCS (88mm = 3.46 inch)
 plt.rcParams['font.family'] = 'Times New Roman'
@@ -235,9 +237,17 @@ def plot_pso_vs_psofcs(output_dir, df_comparison, df_experiments=None):
         
         # 2. Gap distribution (boxplot)
         ax = axes[0, 1]
-        if df_experiments is not None and 'gap_optimo_pct' in df_experiments.columns:
+        # Determine if % gap is valid for this function (optimum != 0)
+        optimo_val = OPTIMOS_CEC2017.get(funcion, None)
+        use_pct = (optimo_val is not None) and (abs(optimo_val) >= 1e-10)
+        gap_col = 'gap_optimo_pct' if use_pct else 'gap_optimo_abs'
+        gap_col_agg = 'gap_pct_medio' if use_pct else 'gap_abs_medio'
+        gap_ylabel = 'Gap to Optimum (%)' if use_pct else 'Absolute Gap to Optimum'
+        gap_title = 'Relative Error to Optimum' if use_pct else 'Absolute Error to Optimum'
+
+        if df_experiments is not None and gap_col in df_experiments.columns:
             df_func_exp = df_experiments[df_experiments['funcion'] == funcion]
-            data_to_plot = [df_func_exp[df_func_exp['MH'] == mh]['gap_optimo_pct'].dropna().values 
+            data_to_plot = [df_func_exp[df_func_exp['MH'] == mh][gap_col].dropna().values 
                            for mh in sorted(df_func_exp['MH'].unique())]
             labels = sorted(df_func_exp['MH'].unique())
             
@@ -250,26 +260,32 @@ def plot_pso_vs_psofcs(output_dir, df_comparison, df_experiments=None):
             
             # Add mean markers (X)
             for i, (label, data) in enumerate(zip(labels, data_to_plot)):
-                mean_val = np.mean(data)
-                ax.plot(i + 1, mean_val, marker='x', markersize=6, color='black', 
-                       markeredgewidth=1.5, zorder=3)
+                if len(data) > 0:
+                    mean_val = np.mean(data)
+                    ax.plot(i + 1, mean_val, marker='x', markersize=6, color='black', 
+                           markeredgewidth=1.5, zorder=3)
             
-            ax.set_ylabel('Gap to Optimum (%)', fontsize=12)
+            ax.set_ylabel(gap_ylabel, fontsize=12)
             ax.set_xlabel('Metaheuristic', fontsize=12)
             ax.set_title(f'Gap Distribution', fontsize=12, fontweight='bold')
             ax.grid(True, alpha=0.3, axis='y')
             ax.tick_params(axis='x', labelsize=9, rotation=22)
-        else:
+        elif gap_col_agg in df_func.columns:
             # Fallback to bar chart if experiment data not available
-            df_sorted = df_func.sort_values('gap_pct_medio')
-            bars = ax.barh(df_sorted['MH'], df_sorted['gap_pct_medio'])
+            df_sorted = df_func.sort_values(gap_col_agg)
+            bars = ax.barh(df_sorted['MH'], df_sorted[gap_col_agg])
             for i, bar in enumerate(bars):
                 mh = df_sorted.iloc[i]['MH']
                 bar.set_color(COLORS_MH.get(mh, '#999999'))
-            add_bar_value_labels(ax, bars, fmt='.1f', orientation='h')
-            ax.set_xlabel('Gap to Optimum (%)', fontsize=12)
-            ax.set_title('Relative Error to Global Optimum', fontsize=12, fontweight='bold')
+            fmt = '.1f' if use_pct else '.2e'
+            add_bar_value_labels(ax, bars, fmt=fmt, orientation='h')
+            ax.set_xlabel(gap_ylabel, fontsize=12)
+            ax.set_title(gap_title, fontsize=12, fontweight='bold')
             ax.grid(True, alpha=0.3, axis='x')
+        else:
+            ax.text(0.5, 0.5, 'Gap not available\n(optimum = 0, use absolute fitness)',
+                   ha='center', va='center', transform=ax.transAxes, fontsize=9, color='gray')
+            ax.set_title('Gap to Optimum', fontsize=12, fontweight='bold')
         
         # 3. Mean fitness vs std (NO labels on data points)
         ax = axes[1, 0]

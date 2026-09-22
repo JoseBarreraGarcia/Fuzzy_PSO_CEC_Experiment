@@ -92,7 +92,7 @@ def update_population(population, fitness, _, lb, ub, function, best, bestFitnes
                 population[i] = posibles_mejoras[i]
                 fitness[i] = mejora_fitness
 
-    if mh == 'PSO' or mh == 'TJO':
+    if mh in ('PSO', 'PSO_FCS', 'TJO'):
         for i in range(population.shape[0]):
             
             if fitness[i] < pBestScore[i]:

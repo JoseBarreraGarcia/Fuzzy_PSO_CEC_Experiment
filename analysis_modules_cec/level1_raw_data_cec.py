@@ -97,13 +97,20 @@ def extract_experiments_data(output_dir):
         optimo = OPTIMOS_CEC2017.get(row['funcion'], None)
         if optimo is None or pd.isna(row['fitness']):
             return np.nan
-        # Si óptimo es 0, usar diferencia absoluta como métrica
-        if abs(optimo) < 1e-10:
-            return abs(row['fitness'] - optimo)
-        # Si óptimo no es 0, usar porcentaje relativo
-        return ((row['fitness'] - optimo) / abs(optimo)) * 100
-    
-    df['gap_optimo_pct'] = df.apply(calcular_gap, axis=1)
+        # Si óptimo NO es 0, usar porcentaje relativo
+        if abs(optimo) >= 1e-10:
+            return ((row['fitness'] - optimo) / abs(optimo)) * 100
+        # Si óptimo es 0, %gap no es factible → retornar NaN (usar gap_absoluto)
+        return np.nan
+
+    def calcular_gap_abs(row):
+        optimo = OPTIMOS_CEC2017.get(row['funcion'], None)
+        if optimo is None or pd.isna(row['fitness']):
+            return np.nan
+        return abs(row['fitness'] - optimo)
+
+    df['gap_optimo_pct'] = df.apply(calcular_gap, axis=1)    # NaN cuando optimo=0
+    df['gap_optimo_abs'] = df.apply(calcular_gap_abs, axis=1) # siempre disponible
     
     # Guardar
     csv_path = os.path.join(output_dir, 'ben_experiments_all_runs.csv')
@@ -122,11 +129,12 @@ def extract_best_per_config(output_dir, df):
     stats = df.groupby(['funcion', 'MH']).agg({
         'fitness': ['min', 'max', 'mean', 'std', 'count'],
         'tiempoEjecucion': 'mean',
-        'gap_optimo_pct': 'mean'
+        'gap_optimo_pct': 'mean',
+        'gap_optimo_abs': 'mean'
     }).round(4)
     
     stats.columns = ['fitness_min', 'fitness_max', 'fitness_mean', 'fitness_std', 
-                      'n_runs', 'tiempo_medio', 'gap_medio_pct']
+                      'n_runs', 'tiempo_medio', 'gap_medio_pct', 'gap_medio_abs']
     stats = stats.reset_index()
     
     csv_path = os.path.join(output_dir, 'ben_best_per_config.csv')
@@ -295,11 +303,12 @@ def extract_mh_comparison(output_dir, df_experiments):
     comparison = df_experiments.groupby(['funcion', 'MH']).agg({
         'fitness': ['min', 'mean', 'std'],
         'tiempoEjecucion': 'mean',
-        'gap_optimo_pct': 'mean'
+        'gap_optimo_pct': 'mean',
+        'gap_optimo_abs': 'mean'
     }).round(4)
     
     comparison.columns = ['fitness_min', 'fitness_mean', 'fitness_std', 
-                         'tiempo_medio', 'gap_pct_medio']
+                         'tiempo_medio', 'gap_pct_medio', 'gap_abs_medio']
     comparison = comparison.reset_index()
     comparison = comparison.sort_values(['funcion', 'fitness_mean'])
     

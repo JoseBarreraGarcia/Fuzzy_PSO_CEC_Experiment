@@ -1,0 +1,226 @@
+## Key papers grouped by topic
+
+Below is a structured guide to the most relevant papers for your three questions, with a short note on what each contributes.
+
+### A. Fuzzy adaptive PSO and metaheuristics (design, inertia weight, performance)
+
+| Focus | Key contribution & relevance | Citations |
+|-------|-----------------------------|-----------|
+| Fuzzy adaptive PSO (classic) | Introduces a fuzzy system to dynamically adapt PSO inertia weight based on swarm performance; shows gains over fixed/linear inertia, especially on asymmetric/dynamic environments [1]| [1]|
+| Per‑particle fuzzy self‑tuning PSO (FST‑PSO) | Multiple fuzzy rules map particle distance/fitness to per‑particle inertia, cognitive/social factors and velocity bounds; essentially settings‑free PSO, with faster convergence and competitive/better accuracy vs PSO, DE, CMA‑ES, ABC, GA [2]| [2]|
+| MIMO fuzzy controller in PSO (MFCPSO) | Multiple‑input multiple‑output fuzzy logic controls acceleration coefficient and elite‑selection proportion, using both fitness and novelty; strong improvements on CEC 2017, especially large‑scale multimodal functions [3]| [3]|
+| Fuzzy adaptive inertia in GA–PSO hybrid | Mamdani fuzzy system adapts inertia weight to control diversity in a GA–PSO hybrid, targeting fast yet non‑premature convergence [4]| [4]|
+| Fuzzy signatures for inertia (Signature PSO) | Uses a fuzzy “signature” (structured linguistic representation of particle state) to adjust inertia weight in LQR tuning; shows better control performance vs other inertia strategies [5]| [5]|
+| Fuzzy‑search Bat algorithm (ASF‑BA) | Uses Sugeno‑type fuzzy search and adaptive inertia in Bat Algorithm; outperforms BA, DE, PSO on CEC 2017 and NN training, showing fuzzy parameter control generalizes beyond PSO [6]| [6]|
+| Comparative fuzzy inertia vs other schemes | Directly compares fuzzy adaptive inertia with constant, random, linear, nonlinear schedules; fuzzy scheme plus co‑evolution improves performance on 11 benchmark functions [7]| [7]|
+| Interval type‑2 fuzzy PSO parameters | Compares different membership function types in interval type‑2 fuzzy system for PSO parameter adaptation; shows MF shape strongly affects optimization quality [8]| [8]|
+
+**Figure 1:** Core fuzzy-adaptive PSO and metaheuristic designs and findings.
+
+### B. Metaheuristic tuning of fuzzy membership functions (linguistic granularity & semantics)
+
+| Focus | Key contribution & relevance | Citations |
+|-------|-----------------------------|-----------|
+| PSO‑tuned fuzzy controllers (water tank, inverted pendulum) | Uses several PSO variants (with inertia, constriction) to optimize membership functions for fuzzy controllers; shows PSO‑based tuning greatly improves control accuracy and illustrates effect of MF parametrization [9]| [9]|
+| Bee Colony tuning of MFs | BCO metaheuristic optimizes number/shape of membership functions in a real‑world energy‑consumption estimator; tuned MFs significantly increase precision vs expert‑designed sets [10]| [10]|
+| PSO‑trained neuro‑fuzzy classifier with linguistic hedges | Membership functions built from piecewise sections modified by linguistic hedge operators; PSO learns hedge strengths and consequents, achieving better classification than competing fuzzy/neuro‑fuzzy methods, highlighting value of richer linguistic semantics and MF flexibility [11]| [11]|
+
+### C. Linguistic information granulation and scale consistency (granularity & semantic representation)
+
+| Focus | Key contribution & relevance | Citations |
+|-------|-----------------------------|-----------|
+| Linguistic information granulation + PSO (TSOG‑PSO) | Proposes linguistic information‑based granulation models for distributed linguistic preference relations, solved by a specialized PSO; shows how different granulation/control factors reshape the optimization landscape and decision outcomes [12]| [12]|
+| Penalty‑based co‑evolutionary PSO for linguistic granulation | Defines a granulation model balancing consistency and consensus in distributed linguistic preferences, solved via co‑evolutionary PSO; demonstrates that linguistic granulation choices impact optimization and group decisions [13]| [13]|
+| Multi‑granularity linguistic scale consistency | Analyzes how different linguistic granularities can produce inconsistent aggregation/ranking; proposes an attitude‑based representation to maintain consistency, directly evidencing that granularity and semantic scales affect decision and aggregation behavior [14]| [14]|
+
+### D. Non‑fuzzy but relevant adaptive PSO baselines
+
+These are useful comparison points for adaptive inertia without fuzzy logic:
+
+- Stability‑based adaptive inertia weight (SAIW): dimension‑wise adaptive inertia and acceleration based on stability analysis and distance to pbest, significantly improving PSO on many benchmarks [15].  
+- Bayesian adaptive inertia (BPSO): uses Bayesian techniques plus Cauchy mutation to adapt inertia, improving accuracy and convergence vs other inertia strategies [16].
+
+They help isolate what fuzzy/linguistic design adds beyond numeric adaptation.
+
+## How to use this set
+
+- For **fuzzy inertia and parameter adaptation in PSO/metaheuristics**: start with [1], [2], [3], [7], [6], [4], [5], [8].  
+- For **effects of membership function design and linguistic semantics**: emphasize [8], [11], [10], [9].  
+- For **linguistic granularity and semantic representation in optimization/decision settings**: focus on [12], [13], [14], with [11], [8]as supporting technical evidence.
+
+This set covers both algorithmic mechanisms (how fuzzy controllers are built) and semantic aspects (granularity, hedges, type‑2 sets) that influence adaptation behavior.
+ 
+
+ 
+## References documents by topics
+ 
+`1.` Shi, Y., & Eberhart, R. Fuzzy adaptive particle swarm optimization. *Proceedings of the 2001 Congress on Evolutionary Computation (IEEE Cat. No.01TH8546).* 2001; 1. https://doi.org/10.1109/cec.2001.934377
+ @inproceedings{shi2001fuzzy,
+  title={Fuzzy adaptive particle swarm optimization},
+  author={Shi, Yuhui and Eberhart, Russell C},
+  booktitle={Proceedings of the 2001 congress on evolutionary computation (IEEE Cat. No. 01TH8546)},
+  volume={1},
+  pages={101--106},
+  year={2001},
+  organization={IEEE}
+}
+`2.` Nobile, M., Cazzaniga, P., Besozzi, D., Colombo, R., Mauri, G., & Pasi, G. Fuzzy Self-Tuning PSO: A settings-free algorithm for global optimization. *Swarm Evol. Comput..* 2017; 39. https://doi.org/10.1016/j.swevo.2017.09.001
+@article{nobile2018fuzzy,
+  title={Fuzzy Self-Tuning PSO: A settings-free algorithm for global optimization},
+  author={Nobile, Marco S and Cazzaniga, Paolo and Besozzi, Daniela and Colombo, Riccardo and Mauri, Giancarlo and Pasi, Gabriella},
+  journal={Swarm and evolutionary computation},
+  volume={39},
+  pages={70--85},
+  year={2018},
+  publisher={Elsevier}
+}
+ 
+`3.` Xia, X., Song, H., Zhang, Y., Gui, L., Xu, X., Li, K., & Li, Y. A Particle Swarm Optimization With Adaptive Learning Weights Tuned by a Multiple-Input Multiple-Output Fuzzy Logic Controller. *IEEE Transactions on Fuzzy Systems.* 2023; 31. https://doi.org/10.1109/tfuzz.2022.3227464
+@article{xia2022particle,
+  title={A particle swarm optimization with adaptive learning weights tuned by a multiple-input multiple-output fuzzy logic controller},
+  author={Xia, Xuewen and Song, Haojie and Zhang, Yinglong and Gui, Ling and Xu, Xing and Li, Kangshun and Li, Yuanxiang},
+  journal={IEEE Transactions on Fuzzy Systems},
+  volume={31},
+  number={7},
+  pages={2464--2478},
+  year={2022},
+  publisher={IEEE}
+}
+`4.` Noronha, R. Diversity Control in the Hybridization GA-PSO with Fuzzy Adaptive Inertial Weight. *2021 5th International Conference on Intelligent Computing and Control Systems (ICICCS).* 2021 https://doi.org/10.1109/iciccs51141.2021.9432269
+ @inproceedings{noronha2021diversity,
+  title={Diversity control in the hybridization GA-PSO with fuzzy adaptive inertial weight},
+  author={Noronha, Rodrigo Possid{\^o}nio},
+  booktitle={2021 5th International Conference on Intelligent Computing and Control Systems (ICICCS)},
+  pages={1055--1062},
+  year={2021},
+  organization={IEEE}
+}
+`5.` Komarudin, A., Setyawan, N., Kamajaya, L., Achmadiah, M., & Zulfatman, Z. Signature PSO: A novel inertia weight adjustment using fuzzy signature for LQR tuning. *Bulletin of Electrical Engineering and Informatics.* 2021 https://doi.org/10.11591/eei.v10i1.2667
+@article{komarudin2021signature,
+  title={Signature PSO: A novel inertia weight adjustment using fuzzy signature for LQR tuning},
+  author={Komarudin, Achmad and Setyawan, Novendra and Kamajaya, Leonardo and Achmadiah, Mas Nurul and Zulfatman, Zulfatman},
+  journal={Bulletin of Electrical Engineering and Informatics},
+  volume={10},
+  number={1},
+  pages={308--318},
+  year={2021}
+}
+`6.` Rauf, H., Malik, S., Shoaib, U., Irfan, M., & Lali, M. Adaptive inertia weight Bat algorithm with Sugeno-Function fuzzy search. *Appl. Soft Comput..* 2020; 90. https://doi.org/10.1016/j.asoc.2020.106159
+@article{rauf2020adaptive,
+  title={Adaptive inertia weight Bat algorithm with Sugeno-Function fuzzy search},
+  author={Rauf, Hafiz Tayyab and Malik, Sumbal and Shoaib, Umar and Irfan, Muhammad Naeem and Lali, M Ikramullah},
+  journal={Applied Soft Computing},
+  volume={90},
+  pages={106159},
+  year={2020},
+  publisher={Elsevier}
+}
+`7.` Valdez, F., Vázquez, J., Melin, P., & Castillo, O. Comparative study of the use of fuzzy logic in improving particle swarm optimization variants for mathematical functions using co-evolution. *Appl. Soft Comput..* 2017; 52. https://doi.org/10.1016/j.asoc.2016.09.024
+@article{valdez2017comparative,
+  title={Comparative study of the use of fuzzy logic in improving particle swarm optimization variants for mathematical functions using co-evolution},
+  author={Valdez, Fevrier and Vazquez, Juan Carlos and Melin, Patricia and Castillo, Oscar},
+  journal={Applied Soft Computing},
+  volume={52},
+  pages={1070--1083},
+  year={2017},
+  publisher={Elsevier}
+}
+
+`8.` Olivas, F., Valdez, F., & Castillo, O. A Comparative Study of Membership Functions for an Interval Type-2 Fuzzy System used to Dynamic Parameter Adaptation in Particle Swarm Optimization. *.* 2014 https://doi.org/10.1007/978-3-319-05170-3_5
+@incollection{olivas2014comparative,
+  title={A comparative study of membership functions for an interval type-2 fuzzy system used to dynamic parameter adaptation in particle swarm optimization},
+  author={Olivas, Frumen and Valdez, Fevrier and Castillo, Oscar},
+  booktitle={Recent advances on hybrid approaches for designing intelligent systems},
+  pages={67--78},
+  year={2014},
+  publisher={Springer}
+}
+`9.` Fierro, R., Castillo, O., Valdez, F., & Melin, P. Optimization of Membership Functions for the Fuzzy Controllers of the Water Tank and Inverted Pendulum with Differents PSO Variants. *TELKOMNIKA Telecommunication Computing Electronics and Control.* 2013; 11. https://doi.org/10.12928/telkomnika.v11i4.1182
+@article{fierro2013optimization,
+  title={Optimization of membership functions for the fuzzy controllers of the water tank and inverted pendulum with differents PSO variants},
+  author={Fierro, Resffa and Castillo, Oscar and Valdez, Fevrier and Melin, Patricia},
+  journal={TELKOMNIKA (Telecommunication Computing Electronics and Control)},
+  volume={11},
+  number={4},
+  pages={699--714},
+  year={2013}
+}
+
+`10.` Nikolic, M., Šelmić, M., Macura, D., & Ćalić, J. Bee Colony Optimization metaheuristic for fuzzy membership functions tuning. *Expert Syst. Appl..* 2020; 158. https://doi.org/10.1016/j.eswa.2020.113601
+@article{nikolic2020bee,
+  title={Bee colony optimization metaheuristic for fuzzy membership functions tuning},
+  author={Nikoli{\'c}, Milo{\v{s}} and {\v{S}}elmi{\'c}, Milica and Macura, Dragana and {\'C}ali{\'c}, Jovana},
+  journal={Expert Systems with Applications},
+  volume={158},
+  pages={113601},
+  year={2020},
+  publisher={Elsevier}
+}
+
+`11.` Chatterjee, A., & Siarry, P. A PSO-aided neuro-fuzzy classifier employing linguistic hedge concepts. *Expert Syst. Appl..* 2007; 33. https://doi.org/10.1016/j.eswa.2006.08.006
+@article{chatterjee2007pso,
+  title={A PSO-aided neuro-fuzzy classifier employing linguistic hedge concepts},
+  author={Chatterjee, Amitava and Siarry, Patrick},
+  journal={Expert Systems with Applications},
+  volume={33},
+  number={4},
+  pages={1097--1109},
+  year={2007},
+  publisher={Elsevier}
+}
+
+`12.` Huang, T., Tang, X., Zhao, S., Zhang, Q., & Pedrycz, W. Linguistic information-based granular computing based on a tournament selection operator-guided PSO for supporting multi-attribute group decision-making with distributed linguistic preference relations. *Inf. Sci..* 2022; 610. https://doi.org/10.1016/j.ins.2022.07.050
+@article{huang2022linguistic,
+  title={Linguistic information-based granular computing based on a tournament selection operator-guided PSO for supporting multi-attribute group decision-making with distributed linguistic preference relations},
+  author={Huang, Ting and Tang, Xiaoan and Zhao, Shuangyao and Zhang, Qiang and Pedrycz, Witold},
+  journal={Information Sciences},
+  volume={610},
+  pages={488--507},
+  year={2022},
+  publisher={Elsevier}
+}
+
+`13.` Zhang, Q., Huang, T., Tang, X., Xu, K., & Pedrycz, W. A Linguistic Information Granulation Model and Its Penalty Function-Based Co-Evolutionary PSO Solution Approach for Supporting GDM with Distributed Linguistic Preference Relations. *Inf. Fusion.* 2022; 77. https://doi.org/10.1016/j.inffus.2021.07.017
+@article{zhang2022linguistic,
+  title={A linguistic information granulation model and its penalty function-based co-evolutionary PSO solution approach for supporting GDM with distributed linguistic preference relations},
+  author={Zhang, Qiang and Huang, Ting and Tang, Xiaoan and Xu, Kaijie and Pedrycz, Witold},
+  journal={Information Fusion},
+  volume={77},
+  pages={118--132},
+  year={2022},
+  publisher={Elsevier}
+}
+
+`14.` Zhao, S., Dong, Y., Wu, S., & Martínez, L. Linguistic scale consistency issues in multi-granularity decision making contexts. *Appl. Soft Comput..* 2021; 101. https://doi.org/10.1016/j.asoc.2020.107035
+@article{zhao2021linguistic,
+  title={Linguistic scale consistency issues in multi-granularity decision making contexts},
+  author={Zhao, Sihai and Dong, Yucheng and Wu, Siqi and Mart{\'\i}nez, Luis},
+  journal={Applied Soft Computing},
+  volume={101},
+  pages={107035},
+  year={2021},
+  publisher={Elsevier}
+}
+
+`15.` Taherkhani, M., & Safabakhsh, R. A novel stability-based adaptive inertia weight for particle swarm optimization. *Appl. Soft Comput..* 2016; 38. https://doi.org/10.1016/j.asoc.2015.10.004
+@article{taherkhani2016novel,
+  title={A novel stability-based adaptive inertia weight for particle swarm optimization},
+  author={Taherkhani, Mojtaba and Safabakhsh, Reza},
+  journal={Applied Soft Computing},
+  volume={38},
+  pages={281--295},
+  year={2016},
+  publisher={Elsevier}
+}
+
+`16.` Zhang, L., Tang, Y., Hua, C., & Guan, X. A new particle swarm optimization algorithm with adaptive inertia weight based on Bayesian techniques. *Appl. Soft Comput..* 2015; 28. https://doi.org/10.1016/j.asoc.2014.11.018
+@article{zhang2015new,
+  title={A new particle swarm optimization algorithm with adaptive inertia weight based on Bayesian techniques},
+  author={Zhang, Limin and Tang, Yinggan and Hua, Changchun and Guan, Xinping},
+  journal={Applied Soft Computing},
+  volume={28},
+  pages={138--149},
+  year={2015},
+  publisher={Elsevier}
+}
+ 

@@ -31,7 +31,8 @@ class BD:
         self.__cursor = cursor
 
     def conectar(self):
-        conn = sqlite3.connect(self.getDataBase())
+        conn = sqlite3.connect(self.getDataBase(), timeout=30)
+        conn.execute('PRAGMA journal_mode=WAL')
         cursor = conn.cursor()
         
         self.setConexion(conn)
@@ -351,7 +352,8 @@ class BD:
         self.desconectar()
     
     def obtenerExperimento(self):
-        conn = sqlite3.connect(self.getDataBase())
+        conn = sqlite3.connect(self.getDataBase(), timeout=30)
+        conn.execute('PRAGMA journal_mode=WAL')
         conn.execute('BEGIN EXCLUSIVE')
         cursor = conn.cursor()
         cursor.execute(''' SELECT * FROM experimentos WHERE estado = 'pendiente' ORDER BY id_experimento ASC LIMIT 1''')

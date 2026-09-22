@@ -53,18 +53,28 @@ OUTPUT_DIR = 'Resultados/resumen/level2_aggregated_cec/convergence_curves'
 # ---------------------------------------------------------------------------
 
 def parse_mh_name(mh_name):
-    """Parse an MH name like 'PSO_FCS:A:3:I1' into components.
+    """Parse an MH name like 'PSO_FCS:A:3:I1:R1' into components.
 
-    Returns dict with keys: base, output_set, num_labels, input_set, short_label.
+    Returns dict with keys: base, output_set, num_labels, input_set, rule_set, short_label.
     For 'PSO' (baseline), most fields are None.
     """
     parts = mh_name.split(':')
-    if len(parts) >= 4:
+    if len(parts) >= 5:
         return {
             'base': parts[0],
             'output_set': parts[1],
             'num_labels': int(parts[2]),
             'input_set': parts[3],
+            'rule_set': parts[4],
+            'short_label': f"{parts[3]}-{parts[2]}L-{parts[4]}",
+        }
+    elif len(parts) >= 4:
+        return {
+            'base': parts[0],
+            'output_set': parts[1],
+            'num_labels': int(parts[2]),
+            'input_set': parts[3],
+            'rule_set': None,
             'short_label': f"{parts[3]}-{parts[2]}L",
         }
     elif len(parts) >= 3:
@@ -73,6 +83,7 @@ def parse_mh_name(mh_name):
             'output_set': parts[1],
             'num_labels': int(parts[2]),
             'input_set': None,
+            'rule_set': None,
             'short_label': f"{parts[1]}-{parts[2]}L",
         }
     elif len(parts) == 2:
@@ -81,6 +92,7 @@ def parse_mh_name(mh_name):
             'output_set': parts[1],
             'num_labels': None,
             'input_set': None,
+            'rule_set': None,
             'short_label': parts[1],
         }
     else:
@@ -89,6 +101,7 @@ def parse_mh_name(mh_name):
             'output_set': None,
             'num_labels': None,
             'input_set': None,
+            'rule_set': None,
             'short_label': mh_name,
         }
 

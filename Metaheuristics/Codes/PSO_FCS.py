@@ -1,16 +1,16 @@
 import numpy as np
 
 from Diversity.Codes.diversity import calculate_diversity
-from FUZZY.fuzzy_controller_w import FuzzyInertiaController
+from FUZZY.fuzzy_controller_w_3L import FuzzyInertiaController_3L
 
 
 def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
-                  maxDiversity, fcs: FuzzyInertiaController, w_set="B"):
+                  maxDiversity, fcs: FuzzyInertiaController_3L, w_set="O1"):
     """
     PSO con Fuzzy Controlled inertia weight.
     
     Parámetros:
-        w_set (str): Set de funciones de pertenencia ('A', 'B', 'C', etc.)
+        w_set (str): Set de funciones de pertenencia ('O1', 'O2', 'O3', etc.)
                      Si fcs tiene un w_set diferente, se crea uno nuevo localmente.
     """
     Vmax = 0.1 * ub0
@@ -19,7 +19,7 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
 
     # Si el set del controlador no coincide, crear uno local
     if fcs.w_set.upper() != w_set.upper():
-        fcs = FuzzyInertiaController(wMin=fcs.wMin, wMax=fcs.wMax, w_set=w_set)
+        fcs = FuzzyInertiaController_3L(wMin=fcs.wMin, wMax=fcs.wMax, w_set=w_set)
 
     # --- 1) Diversidad actual + normalización ---
     div_t, maxDiversity, XPL, XPT = calculate_diversity(population, maxDiversity)

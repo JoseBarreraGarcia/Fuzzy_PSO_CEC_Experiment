@@ -11,7 +11,7 @@ Output: FUZZY/fuzzy_lookup_table.csv
 import os
 import csv
 import numpy as np
-from fuzzy_controller_w import FuzzyInertiaController, tri
+from fuzzy_controller_w_3L import FuzzyInertiaController_3L, tri
 
 
 # ============================================================================
@@ -109,13 +109,13 @@ def generate_lookup_table(output_dir="./FUZZY", step=0.02, input_set="I1"):
     # Usamos arange con un pequeño margen para asegurar que 1.0 se incluya
     diversity_values = np.arange(0.0, 1.0 + step/2, step)
     progress_values = np.arange(0.0, 1.0 + step/2, step)
-    w_sets = ['A', 'B', 'C', 'D']
+    w_sets = ['O1', 'O2', 'O3', 'O4']
     
     # Crear controladores para cada w_set
     controllers = {}
     for w_set in w_sets:
         try:
-            controllers[w_set] = FuzzyInertiaController(w_set, input_set=input_set)
+            controllers[w_set] = FuzzyInertiaController_3L(w_set, input_set=input_set)
         except ValueError as e:
             print(f"[WARN] No se pudo crear controlador para {w_set}: {e}")
     

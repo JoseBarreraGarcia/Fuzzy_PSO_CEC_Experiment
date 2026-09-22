@@ -12,8 +12,8 @@ from mpl_toolkits.mplot3d import Axes3D
 # Ensure imports work
 sys.path.insert(0, os.getcwd())
 
-from fuzzy_controller_w import FuzzyInertiaController
-from fuzzy_controller_w_5labels import FuzzyInertiaController_5labels
+from fuzzy_controller_w_3L import FuzzyInertiaController_3L
+from fuzzy_controller_w_5L import FuzzyInertiaController_5L
 
 def plot_3d_comparison(input_set="I1"):
     """Create 3D surface comparison between 3-label and 5-label controllers."""
@@ -26,8 +26,8 @@ def plot_3d_comparison(input_set="I1"):
     prog_range = np.linspace(0.01, 0.99, 50)
     DIV, PROG = np.meshgrid(div_range, prog_range)
     
-    ctrl3 = FuzzyInertiaController(w_set='A', input_set=input_set)
-    ctrl5 = FuzzyInertiaController_5labels(w_set='A', input_set=input_set)
+    ctrl3 = FuzzyInertiaController_3L(w_set='O1', input_set=input_set)
+    ctrl5 = FuzzyInertiaController_5L(w_set='O1', input_set=input_set)
     
     W3 = np.zeros_like(DIV)
     W5 = np.zeros_like(DIV)
@@ -66,7 +66,7 @@ def plot_3d_comparison(input_set="I1"):
     cbar.set_label('Δw', fontsize=9)
     
     plt.tight_layout()
-    output_path = './FUZZY/plots/08_3d_surface_comparison.png'
+    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'plots', '08_3d_surface_comparison.png')
     plt.savefig(output_path, dpi=300, bbox_inches='tight', format='png')
     plt.close(fig)
     

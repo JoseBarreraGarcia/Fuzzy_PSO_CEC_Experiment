@@ -7,10 +7,10 @@ from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
 from Diversity.imports import compute_gap_rdp, diversity_per_dimension, population_entropy
 from Metaheuristics.imports import IterarPO
 from Problem.Benchmark.Problem import fitness as f
-from FUZZY.fuzzy_controller_w import get_fuzzy_controller
+from FUZZY.fuzzy_controller_w_3L import get_fuzzy_controller
 
 from Solver.population.population_BEN import initialize_population, evaluate_population, update_population, iterate_population
-from FUZZY.fuzzy_controller_w import FuzzyInertiaController
+from FUZZY.fuzzy_controller_w_3L import FuzzyInertiaController_3L
 from Util.console_logging import print_initial, print_iteration, print_final
 from Util.csv_writer import open_csv, write_csv_row, close_csv
 from Util.util import convert_into_binary
@@ -55,7 +55,7 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     
     # ========== SOLO AGREGAR nfe EN EL HEADER ==========
     results = open(dirResult + f"{mh}_{function}_{id}.csv", "w")
-    results.write("iter,nfe,best_fitness,mean_fitness,std_fitness,time,XPL,XPT,DIV,GAP,RDP,ENT,Divj_mean,Divj_min,Divj_max\n")
+    results.write("iter,nfe,best_fitness,mean_fitness,std_fitness,time,XPL,XPT,DIV,GAP,RDP,ENT,Divj_mean,Divj_min,Divj_max,w\n")
     # ====================================================
     
     results_divj = open(dirResult + f"{mh}_{function}_{id}_divj.csv", "w")
@@ -69,16 +69,19 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     fcs = None
     w_set = None
     if mh == 'PSO_FCS':
-        # Obtener w_set desde extra_params (ej: 'A', 'B', 'C', 'D')
-        w_set = str(extra_params.get('w_set', 'B')).upper() if extra_params else 'B'
+        # Obtener w_set desde extra_params (ej: 'O1', 'O2', 'O3', 'O4')
+        w_set = str(extra_params.get('w_set', 'O1')).upper() if extra_params else 'O1'
         # Obtener número de etiquetas lingüísticas (3 o 5)
         num_labels = int(extra_params.get('num_labels', 3)) if extra_params else 3
         # CLEI2026: Obtener input_set (configuración de MFs de entrada)
         input_set = str(extra_params.get('input_set', 'I1')).upper() if extra_params else 'I1'
         # WEA2026: Obtener rule_set (base de reglas R1-R6)
         rule_set = str(extra_params.get('rule_set', 'R1')).upper() if extra_params else 'R1'
+        # Obtener wMin/wMax configurables desde experiments.json
+        wMin = float(extra_params.get('wMin', 0.0)) if extra_params else 0.0
+        wMax = float(extra_params.get('wMax', 1.0)) if extra_params else 1.0
         # Crear controller con factory function
-        fcs = get_fuzzy_controller(w_set, num_labels=num_labels, input_set=input_set, rule_set=rule_set)
+        fcs = get_fuzzy_controller(w_set, num_labels=num_labels, input_set=input_set, rule_set=rule_set, wMin=wMin, wMax=wMax)
     
     # Iteración 0
     meanFitness0 = float(np.mean(fitness))
@@ -88,11 +91,19 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     ent_avg0, ent_dim0 = population_entropy(population, bins=20, lb=lb, ub=ub)
     time0 = initializationTime2 - initializationTime1
     
+    # w en iter=0 (valor inicial: wMax del esquema)
+    if mh == 'PSO_FCS' and fcs is not None:
+        w0 = float(fcs.wMax)
+    elif mh == 'PSO':
+        w0 = 0.9
+    else:
+        w0 = float('nan')
+
     # ========== SOLO AGREGAR nfe_counter[0] ==========
     results.write(
         f"0,{nfe_counter[0]},{bestFitness:.6e},{meanFitness0:.6f},{stdFitness0:.6f},"
         f"{time0:.3f},{XPL:.6f},{XPT:.6f},{maxDiversity:.6f},"
-        f"{gap0:.6f},{rdp0:.6f},{ent_avg0:.6f},{divj_mean0:.6f},{divj_min0:.6f},{divj_max0:.6f}\n"
+        f"{gap0:.6f},{rdp0:.6f},{ent_avg0:.6f},{divj_mean0:.6f},{divj_min0:.6f},{divj_max0:.6f},{w0:.6f}\n"
     )
     # =================================================
     
@@ -147,11 +158,20 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
         
         timerFinal = time.time()
         
+        # w por iteración
+        if mh == 'PSO':
+            wMax_lin, wMin_lin = 0.9, 0.1
+            w_iter = float(wMax_lin - iter * ((wMax_lin - wMin_lin) / maxIter))
+        elif mh == 'PSO_FCS' and fcs is not None and hasattr(fcs, 'w_history') and len(fcs.w_history) > 0:
+            w_iter = float(fcs.w_history[-1])
+        else:
+            w_iter = float('nan')
+
         # ========== SOLO AGREGAR nfe_counter[0] ==========
         results.write(
             f"{iter},{nfe_counter[0]},{bestFitness:.6e},{meanFitness:.6f},{stdFitness:.6f},"
             f"{round(timerFinal - timerStart,3)},{XPL:.6f},{XPT:.6f},{div_t:.6f},"
-            f"{gap:.6f},{rdp:.6f},{ent_avg:.6f},{divj_mean:.6f},{divj_min:.6f},{divj_max0:.6f}\n"
+            f"{gap:.6f},{rdp:.6f},{ent_avg:.6f},{divj_mean:.6f},{divj_min:.6f},{divj_max0:.6f},{w_iter:.6f}\n"
         )
         # =================================================
         

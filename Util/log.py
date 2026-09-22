@@ -1,3 +1,4 @@
+import os
 import numpy as np
 
 from colorama import Fore, init
@@ -5,6 +6,13 @@ from colorama import Fore, init
 from datetime import datetime
 
 init(autoreset=True)
+
+def _prefix():
+    wid = os.environ.get('PSO_WORKER_ID')
+    return f"[W{wid}] " if wid is not None else ""
+
+def _is_summary_only():
+    return os.environ.get('PSO_CONSOLE_SUMMARY') == '1'
 
 def obtener_fecha_hora():
     # Obtener la fecha y hora actual
@@ -16,8 +24,11 @@ def obtener_fecha_hora():
     return formatted_time
 
 def log_message(iter, bestFitness, optimo, timeEjecuted, XPT, XPL, div_t, results):
+    if _is_summary_only():
+        return
+    p = _prefix()
     msg = (
-        f"Iteración: {iter:<4} | "
+        f"{p}Iteración: {iter:<4} | "
         f"Mejor Fitness: {bestFitness:>7.2e} | "
         f"Óptimo: {optimo:>9.2e} | "
         f"Tiempo (s): {timeEjecuted:>4.3f} | "
@@ -41,9 +52,12 @@ def log_progress(iter, maxIter, bestFitness, optimo, timeEjecuted, XPT, XPL, div
         print(f"Error al escribir en el archivo de resultados: {e}")
 
     # Imprimir en consola solo según la condición
+    if _is_summary_only():
+        return
     if (iter) % (maxIter // 4) == 0:
+        p = _prefix()
         msg = (
-            f"Iteración: {iter:<4} | "
+            f"{p}Iteración: {iter:<4} | "
             f"Mejor Fitness: {bestFitness:>7.2e} | "
             f"Óptimo: {optimo:>9.2e} | "
             f"Tiempo (s): {timeEjecuted:>4.3f} | "
@@ -54,43 +68,62 @@ def log_progress(iter, maxIter, bestFitness, optimo, timeEjecuted, XPT, XPL, div
         print(msg)
 
 def initial_log(function, dim, mh, bestFitness, optimo, initializationTime1, initializationTime2, XPT, XPL, maxDiversity, results):
-    print(f"{function} {dim} {mh} - Best Fitness Inicial: {bestFitness:.2e}")
-    print("------------------------------------------------------------------------------------------------------")
+    if _is_summary_only():
+        return
+    p = _prefix()
+    print(f"{p}{function} {dim} {mh} - Best Fitness Inicial: {bestFitness:.2e}")
+    print(f"{p}------------------------------------------------------------------------------------------------------")
     log_message(0, bestFitness, optimo, initializationTime2 - initializationTime1, XPT, XPL, maxDiversity, results)
 
 def initial_log_scp_uscp(instance, DS, bestFitness, instances, initializationTime1, initializationTime2, XPT, XPL, maxDiversity, results):
-    print(f"{instances} - {DS} - {instance.getBlockSizes()} - Best Fitness Inicial: {bestFitness:.2e}")
-    print("------------------------------------------------------------------------------------------------------")
+    if _is_summary_only():
+        return
+    p = _prefix()
+    print(f"{p}{instances} - {DS} - {instance.getBlockSizes()} - Best Fitness Inicial: {bestFitness:.2e}")
+    print(f"{p}------------------------------------------------------------------------------------------------------")
     log_message(0, bestFitness, instance.getOptimum(), initializationTime2 - initializationTime1, XPT, XPL, maxDiversity, results)
 
 def final_log(bestFitness, initialTime, finalTime):
-    print("------------------------------------------------------------------------------------------------------")
-    print(f"{Fore.GREEN}Tiempo de ejecución (s): {(finalTime - initialTime):.2f}")
-    print(f"{Fore.GREEN}Best Fitness: {bestFitness:.2e}")
-    print("------------------------------------------------------------------------------------------------------")
+    p = _prefix()
+    if _is_summary_only():
+        print(f"{p}{Fore.GREEN}Fitness: {bestFitness:.2e} | Time: {(finalTime - initialTime):.2f}s")
+        return
+    print(f"{p}------------------------------------------------------------------------------------------------------")
+    print(f"{p}{Fore.GREEN}Tiempo de ejecución (s): {(finalTime - initialTime):.2f}")
+    print(f"{p}{Fore.GREEN}Best Fitness: {bestFitness:.2e}")
+    print(f"{p}------------------------------------------------------------------------------------------------------")
         
 def final_log_scp(bestFitness, subsSelected, initialTime, finalTime):
-    print("------------------------------------------------------------------------------------------------------")
-    print(f"{Fore.GREEN}Tiempo de ejecución (s): {(finalTime - initialTime):.2f}")
-    print(f"{Fore.GREEN}Best Fitness: {bestFitness:.2e} ({bestFitness})")
-    print(f"{Fore.GREEN}Subconjuntos seleccionados: {subsSelected}")
-    print("------------------------------------------------------------------------------------------------------")
+    p = _prefix()
+    if _is_summary_only():
+        print(f"{p}{Fore.GREEN}Fitness: {bestFitness:.2e} | Subsets: {subsSelected} | Time: {(finalTime - initialTime):.2f}s")
+        return
+    print(f"{p}------------------------------------------------------------------------------------------------------")
+    print(f"{p}{Fore.GREEN}Tiempo de ejecución (s): {(finalTime - initialTime):.2f}")
+    print(f"{p}{Fore.GREEN}Best Fitness: {bestFitness:.2e} ({bestFitness})")
+    print(f"{p}{Fore.GREEN}Subconjuntos seleccionados: {subsSelected}")
+    print(f"{p}------------------------------------------------------------------------------------------------------")
 
 def log_experimento(data):
     """Log para mostrar el inicio del procesamiento de un experimento."""
-    print(f"Procesando Experimento ID: {data[0][0]}")
-    print(f"Instancia: {data[0][1]}")
-    print(f"{Fore.CYAN}Metaheurística: {data[0][2]}")
-    print(f"Binarización: {data[0][3]}")
-    print(f"Parámetros: {data[0][4]}")
-    print(f"Estado: {data[0][9]}")
-    print("------------------------------------------------------------------------------------------------------")
+    p = _prefix()
+    if _is_summary_only():
+        print(f"{p}{Fore.CYAN}Exp {data[0][0]}: {data[0][2]} - {data[0][1]}")
+        return
+    print(f"{p}Procesando Experimento ID: {data[0][0]}")
+    print(f"{p}Instancia: {data[0][1]}")
+    print(f"{p}{Fore.CYAN}Metaheurística: {data[0][2]}")
+    print(f"{p}Binarización: {data[0][3]}")
+    print(f"{p}Parámetros: {data[0][4]}")
+    print(f"{p}Estado: {data[0][9]}")
+    print(f"{p}------------------------------------------------------------------------------------------------------")
 
 def log_error(id, mensaje):
     """Log para mostrar errores en rojo."""
-    print(f"{Fore.RED}Error al ejecutar el experimento ID: {id}")
-    print(f"{Fore.RED}Mensaje: {mensaje}")
-    print("------------------------------------------------------------------------------------------------------")
+    p = _prefix()
+    print(f"{p}{Fore.RED}Error al ejecutar el experimento ID: {id}")
+    print(f"{p}{Fore.RED}Mensaje: {mensaje}")
+    print(f"{p}------------------------------------------------------------------------------------------------------")
 
 def log_final(total_time):
     """Log para mostrar el final del procesamiento con tiempo total."""

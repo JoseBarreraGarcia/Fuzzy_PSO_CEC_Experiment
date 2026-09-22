@@ -40,6 +40,8 @@
 \usepackage{cite}
 \usepackage{textcomp}
 \usepackage{xcolor}
+% Marker for CLEI 2026 review-response changes. Wrap text to highlight in red.
+\newcommand{\new}[1]{{\color{red}#1}}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -112,7 +114,10 @@ Fuzzy control systems offer a way to adapt PSO parameters online through qualita
 
 Consequently, the effect of linguistic granularity and membership function configuration on PSO performance has not been systematically studied. It remains unclear to what extent different fuzzy linguistic schemes, even under identical control logic, influence optimization behavior across problems with different landscape characteristics.
 
-This paper presents an experimental analysis of fuzzy-controlled PSO variants that differ exclusively in linguistic granularity and membership function design. No new optimization algorithm is proposed. Instead, the study compares alternative fuzzy semantic configurations under identical control logic and measures their effect on performance and robustness across representative benchmark functions. The results show that fuzzy scheme design is a non-trivial experimental factor in adaptive metaheuristic optimization, one that prior work has largely treated as a fixed choice.
+% [A3 / R1.1] Reformulación de la contribución científica (metodológica/prescriptiva) y scope de generalización.
+\new{This paper addresses that gap through a controlled empirical study. Rather than proposing a new algorithm, the contribution is methodological and prescriptive: (i)~it isolates the input membership function partition as an explicit experimental factor, holding the rule base and output set constant so that any performance change is attributable to the input geometry; (ii)~it provides quantitative evidence that this factor is non-negligible, with the choice of partition shape and granularity producing measurable differences in mean fitness and run-to-run variability; and (iii)~it distills a concrete design guideline---moderate-overlap three-label partitions---that researchers and practitioners can adopt as a default starting point when configuring a fuzzy-adaptive PSO.}
+
+\new{The scope of the empirical claims is deliberately bounded by the benchmark suite, which spans both unimodal high-dimensional landscapes (Sphere, Rosenbrock, Griewank in $d{=}100$) and multimodal low-dimensional ones (the Shekel family in $d{=}4$). Within these two regimes the partition-geometry effect is consistent across functions of the same class, which supports a tentative generalization: the qualitative pattern observed---moderate-overlap and coarse-granularity dominate, excessive-overlap and fine-granularity degrade performance---is a property of the controller's interaction with the search state itself, not an artifact of any single benchmark. The findings are therefore most directly applicable to fuzzy-adaptive PSO designs that rely on diversity- and progress-based inputs, which is the dominant pattern in the recent literature~\cite{nobile2018fuzzy, xia2022particle, roy2024hyperparameter, wang2023hierarchical, morales2023stagnation}.}
 
 The rest of the paper proceeds as follows. Section~\ref{sec:related_work} reviews relevant work on fuzzy-adaptive parameter control in PSO and related optimization frameworks. Section~\ref{sec:framework} describes the fuzzy-controlled PSO framework and the linguistic configurations evaluated in this study. Section~\ref{sec:experimental_setup} details the benchmark functions, parameter settings, and experimental protocol. The experimental results and their discussion are presented in Section~\ref{sec:results}. Finally, Section~\ref{sec:conclusions} summarizes the main findings and outlines directions for future research.
 
@@ -129,7 +134,8 @@ Two lines of prior work are relevant here: strategies for adaptive inertia weigh
 
 Since Shi and Eberhart introduced the inertia weight~\cite{shi1998modified}, many authors have tried to replace the original linear decreasing schedule with state-dependent alternatives. Chatterjee and Siarry~\cite{chatterjee2006nonlinear} introduced nonlinear decreasing functions that accelerate convergence in later iterations, while Nickabadi et al.~\cite{nickabadi2011novel} designed a feedback-based mechanism that adjusts~$w$ according to the swarm's success ratio, coupling the control signal to actual search progress rather than to a predefined temporal schedule.
 
-Fuzzy logic provides a qualitative alternative by encoding adaptation knowledge as linguistic rules. Shi and Eberhart~\cite{shi2001fuzzy} first showed that a Mamdani-type controller driven by swarm performance indicators can outperform static schedules. Their work set the stage for a line of research in which $w$ is governed by linguistic inference rather than by an explicit function of the iteration count. Valdez et al.~\cite{valdez2017comparative} extended this approach with co-evolutionary strategies and showed consistent advantages over classical PSO across diverse benchmarks. Nobile et al.~\cite{nobile2018fuzzy} proposed a self-tuning mechanism that simultaneously adjusts multiple PSO parameters at the particle level, while Xia et al.~\cite{xia2022particle} introduced a multiple-input multiple-output fuzzy controller for adapting learning coefficients and elite selection. Olivas et al.~\cite{olivas2014comparative} showed that interval type-2 controllers can handle additional uncertainty from noisy landscapes, and Roy et al.~\cite{roy2024hyperparameter} recently proposed evolving fuzzy policies that adapt up to seven hyperparameters---arguably the broadest fuzzy control architecture for PSO published so far.
+Fuzzy logic provides a qualitative alternative by encoding adaptation knowledge as linguistic rules. Shi and Eberhart~\cite{shi2001fuzzy} first showed that a Mamdani-type controller driven by swarm performance indicators can outperform static schedules. Their work set the stage for a line of research in which $w$ is governed by linguistic inference rather than by an explicit function of the iteration count. Valdez et al.~\cite{valdez2017comparative} extended this approach with co-evolutionary strategies and showed consistent advantages over classical PSO across diverse benchmarks. Nobile et al.~\cite{nobile2018fuzzy} proposed a self-tuning mechanism that simultaneously adjusts multiple PSO parameters at the particle level, while Xia et al.~\cite{xia2022particle} introduced a multiple-input multiple-output fuzzy controller for adapting learning coefficients and elite selection. Olivas et al.~\cite{olivas2014comparative} showed that interval type-2 controllers can handle additional uncertainty from noisy landscapes, and Roy et al.~\cite{roy2024hyperparameter} recently proposed evolving fuzzy policies that adapt up to seven hyperparameters---arguably the broadest fuzzy control architecture for PSO published so far. % [A5 / R2.1] Referencias 2023--2025 sobre fuzzy-PSO (morales2023, wang2023, li2025rapso).
+\new{More recent contributions reinforce the trend toward richer fuzzy adaptation mechanisms: Morales-Casta\~neda et al.~\cite{morales2023stagnation} incorporate a stagnation variable into the fuzzy controller to react to convergence plateaus, Wang et al.~\cite{wang2023hierarchical} introduce a hierarchical fuzzy-logic learning scheme that modulates particle behaviour at multiple levels, and Li et al.~\cite{li2025rapso} combine reinforcement learning with an adaptive weight strategy that conceptually overlaps with fuzzy-driven adaptation.}
 
 A common trait in the works reviewed above is that the input membership functions---defining how diversity, fitness progress, or other indicators are fuzzified---are chosen a priori, and their geometric configuration is seldom examined as an experimental factor. Research efforts have concentrated on rule base design, output set selection, or the number of controlled parameters, while the input partition tends to be treated as a fixed design element.
 
@@ -154,7 +160,7 @@ This section describes the PSO framework and the fuzzy control layer added to it
 \subsection{Baseline Particle Swarm Optimization}
 \label{subsec:baseline_pso}
 
-The baseline corresponds to the canonical PSO formulation, where particle motion is governed by inertia, cognitive attraction toward the personal best, and social attraction toward the global best position. Particle dynamics are defined by
+A swarm of $N$~particles cooperates to minimise an objective function $f\colon\mathbb{R}^d\to\mathbb{R}$ over a bounded search space $\prod_{k=1}^{d}[L_k, U_k]$, where $d$~denotes the problem dimensionality and $L_k$, $U_k$ are the lower and upper bounds of dimension~$k$. The baseline corresponds to the canonical PSO formulation~\cite{kennedy1995particle, shi1998modified}, where each particle $i$ is characterised by a position $x_i(t)\in\mathbb{R}^d$ and a velocity $v_i(t)\in\mathbb{R}^d$; motion is governed by inertia, cognitive attraction toward the personal best, and social attraction toward the global best position. Particle dynamics are defined by
 \begin{equation}
     v_i(t{+}1) = w \cdot v_i(t) + c_1 r_1 \bigl(p_i - x_i(t)\bigr) + c_2 r_2 \bigl(g - x_i(t)\bigr),
     \label{eq:pso_velocity}
@@ -163,7 +169,7 @@ The baseline corresponds to the canonical PSO formulation, where particle motion
     x_i(t{+}1) = x_i(t) + v_i(t{+}1),
     \label{eq:pso_position}
 \end{equation}
-where $p_i$ and $g$ denote the personal and global best positions, and $r_1, r_2 \in [0,1]$ are uniformly distributed random variables.
+where $w$ is the inertia weight, $c_1$ and $c_2$ are the cognitive and social acceleration coefficients, $p_i$ and $g$ denote the personal and global best positions, and $r_1, r_2 \in [0,1]$ are uniformly distributed random variables.
 
 In the baseline configuration, the inertia weight follows a deterministic linear decreasing schedule from $0.9$ to $0.1$ over the optimization horizon~\cite{abualigah2021arithmetic}. The acceleration coefficients are set to $c_1 = c_2 = 2.0$ for all configurations. This baseline is the reference against which fuzzy-controlled inertia adaptation is measured.
 
@@ -187,13 +193,44 @@ where $d$ is the problem dimensionality and $[L_k, U_k]$ are the bounds of dimen
 
 The fuzzy controller maps these inputs to an inertia weight constrained to $[w_{\min}, w_{\max}]$. Defuzzification is performed using the centroid method:
 \begin{equation}
-    w_t = \frac{\int z \, \mu_{\text{agg}}(z)\, dz}{\int \mu_{\text{agg}}(z)\, dz},
+    w_t = \frac{\int_{Z} z \, \mu_{\text{agg}}(z)\, dz}{\int_{Z} \mu_{\text{agg}}(z)\, dz},
     \label{eq:defuzzification}
 \end{equation}
-where $\mu_{\text{agg}}(z)$ denotes the aggregated output membership function. Fig.~\ref{fig:fcs_architecture_vertical} illustrates the integration of the fuzzy controller within the PSO iteration loop.
+% [A2 / R2.2] Descripción completa de los elementos de Ec.~\ref{eq:defuzzification}: z, Z, mu_agg y mapeo afín al rango operativo.
+\new{where $z \in Z = [0, 1]$ is the output variable spanning the normalized inertia-weight domain, and $\mu_{\text{agg}}(z) \in [0, 1]$ is the aggregated output membership function obtained by combining (via the max operator) the clipped consequents of all rules activated at iteration~$t$. The resulting $w_t \in [0,1]$ is then affinely mapped to the operational range $[w_{\min}, w_{\max}]$.} Fig.~\ref{fig:fcs_architecture_vertical} illustrates the integration of the fuzzy controller within the PSO iteration loop.
 
 
 \input{fcs_architecture}
+
+% [B3 / R2.3] Pseudocódigo del FCS-PSO para reproducibilidad (preferido sobre figura de arquitectura).
+\new{Algorithm~\ref{alg:fcs_pso} summarizes the resulting procedure. The fuzzy controller is queried once per iteration at the swarm level, so the entire FIS evaluation block is independent of both the population size~$N$ and the problem dimensionality~$d$.}
+
+{\color{red}
+\begin{algorithm}[ht]
+\caption{Fuzzy-Controlled PSO (FCS--PSO)}
+\label{alg:fcs_pso}
+\small
+\begin{algorithmic}[1]
+\Require $f\colon\mathbb{R}^d\to\mathbb{R}$, $T_{\max}$, $N$, $d$, $[L_k,U_k]_{k=1}^{d}$, $[w_{\min}, w_{\max}]$, FIS
+\Ensure global best position $g$
+\State Initialize $x_i \sim \mathcal{U}([L_k,U_k]_{k=1}^d)$, $v_i \gets \mathbf{0}$ for $i = 1, \dots, N$
+\State Evaluate $f(x_i)$; set $p_i \gets x_i$; $g \gets \arg\min_i f(p_i)$
+\For{$t = 1$ \textbf{to} $T_{\max}$}
+    \State $t_{\text{progress}} \gets t / T_{\max}$ \Comment{Eq.~\eqref{eq:iteration_progress}}
+    \State $D(t) \gets \text{diversity}(\{x_i\})$ \Comment{Eq.~\eqref{eq:diversity_metric}}
+    \State $w_t \gets \textsc{FIS}.\text{infer}(D(t),\, t_{\text{progress}})$ \Comment{Eq.~\eqref{eq:defuzzification}}
+    \For{$i = 1$ \textbf{to} $N$}
+        \State Update $v_i$ with $w_t$ \Comment{Eq.~\eqref{eq:pso_velocity}}
+        \State Update $x_i$ \Comment{Eq.~\eqref{eq:pso_position}}
+        \State Evaluate $f(x_i)$
+        \If{$f(x_i) < f(p_i)$} $p_i \gets x_i$ \EndIf
+    \EndFor
+    \State $g \gets \arg\min_i f(p_i)$
+\EndFor
+\State \Return $g$
+\end{algorithmic}
+\end{algorithm}
+}
 
 \subsection{Input Membership Function Configurations}
 \label{subsec:input_mf_configs}
@@ -211,31 +248,25 @@ All four configurations share the same linguistic labels---low, medium, and high
 
 Two levels of linguistic granularity are also considered: a three-label partition (low, medium, high) and a five-label one (very\_low, low, medium, high, very\_high). In the five-label case, each input set extends its geometric principles---overlap degree, boundary treatment---to five uniformly spaced labels. Crossing four input geometries with two granularity levels yields eight fuzzy-controlled PSO variants.
 
-Tables~\ref{tab:input_sets_3L} and~\ref{tab:input_sets_5L} detail the triangular parameters $(a, b, c)$ for each configuration at both granularity levels. The same partition is applied symmetrically to both input variables.
+Table~\ref{tab:input_sets_3L} details the triangular parameters $(a, b, c)$ for each configuration at both granularity levels. The same partition is applied symmetrically to both input variables.
 
+% [A6 / R1.0] Tablas de parámetros MF 3L y 5L fusionadas en una sola table* con dos bloques.
 \begin{table*}[htbp]
-    \caption{Three-label triangular MF parameters $(a, b, c)$ for each input set. In I4, extreme labels use shoulder functions where $a{=}b$ or $b{=}c$.}
+    \caption{\new{Triangular membership function parameters $(a, b, c)$ for each input set, at three- and five-label granularity. In I4, extreme labels use shoulder functions where $a{=}b$ or $b{=}c$. I2 achieves zero overlap between adjacent labels at both granularities. The same partition is applied symmetrically to diversity and iteration progress.}}
     \label{tab:input_sets_3L}
     \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{lcccc}
     \toprule
     Label & I1 (Standard) & I2 (Narrow) & I3 (Wide) & I4 (Shoulder) \\
     \midrule
+    \multicolumn{5}{l}{\emph{Three-label granularity (9 rules)}}\\
     Low/Early   & $(0.0, 0.2, 0.4)$ & $(0.0, 0.16, 0.33)$ & $(0.0, 0.25, 0.5)$ & $(0.0, 0.0, 0.35)$ \\
     Medium/Mid  & $(0.3, 0.5, 0.7)$ & $(0.33, 0.5, 0.66)$ & $(0.25, 0.5, 0.75)$ & $(0.2, 0.5, 0.8)$ \\
     High/Late   & $(0.6, 0.8, 1.0)$ & $(0.66, 0.84, 1.0)$ & $(0.5, 0.75, 1.0)$ & $(0.65, 1.0, 1.0)$ \\
-    \bottomrule
-    \end{tabular}
-\end{table*}
-
-\begin{table*}[htbp]
-    \caption{Five-label triangular MF parameters $(a, b, c)$ for each input set. I4 retains shoulder functions at extremes; I2 achieves zero overlap between adjacent labels.}
-    \label{tab:input_sets_5L}
-    \centering
-    \begin{tabular}{lcccc}
-    \toprule
-    Label & I1 (Standard) & I2 (Narrow) & I3 (Wide) & I4 (Shoulder) \\
     \midrule
+    \multicolumn{5}{l}{\emph{Five-label granularity (25 rules)}}\\
     Very Low/Very Early & $(0.0, 0.15, 0.3)$  & $(0.0, 0.1, 0.2)$  & $(0.0, 0.15, 0.35)$  & $(0.0, 0.0, 0.25)$  \\
     Low/Early           & $(0.2, 0.35, 0.5)$  & $(0.2, 0.3, 0.4)$  & $(0.15, 0.3, 0.5)$ & $(0.15, 0.3, 0.45)$ \\
     Medium/Mid          & $(0.35, 0.5, 0.65)$ & $(0.4, 0.5, 0.6)$  & $(0.3, 0.5, 0.7)$  & $(0.35, 0.5, 0.65)$ \\
@@ -332,7 +363,7 @@ The second group comprises three variants of the Shekel function in a four-dimen
 
 All functions were evaluated through the \texttt{Opfunu} library~\cite{Van_Thieu_2024_Opfunu}, which provides reference implementations of classical benchmarks. Table~\ref{tab:benchmark_functions} summarizes the selected benchmarks.
 
-\begin{table*}[!ht]
+\begin{table}[!ht]
     \caption{Benchmark functions used in the experimental evaluation.}
     \label{tab:benchmark_functions}
     \centering
@@ -348,7 +379,7 @@ All functions were evaluated through the \texttt{Opfunu} library~\cite{Van_Thieu
     F23 (Shekel, $m{=}10$) & Multimodal & $4$   & $[0, 10]^d$     & $-10.5363$ \\
     \bottomrule
     \end{tabular}
-\end{table*}
+\end{table}
 
 \subsection{Parameter Settings and Evaluation Protocol}
 \label{subsec:protocol}
@@ -359,7 +390,7 @@ Each algorithm--function combination was executed over $31$ independent runs. A 
 
 The baseline PSO with linearly decreasing inertia weight was evaluated alongside eight fuzzy-controlled variants (PSO--FCS). These variants result from the full factorial combination of the four input set configurations described in Section~\ref{subsec:input_mf_configs} (I1--I4) and two granularity levels (3 and 5~labels), with the output fuzzy set~(A) and rule base held constant. Table~\ref{tab:algorithm_configs} summarizes the nine configurations, totaling $9 \times 6 \times 31 = 1{,}674$ independent experiments.
 
-\begin{table*}[!ht]
+\begin{table}[!ht]
     \caption{Algorithm configurations evaluated. All PSO--FCS variants share the same rule base and output set; only input membership functions and granularity vary.}
     \label{tab:algorithm_configs}
     \centering
@@ -378,7 +409,7 @@ The baseline PSO with linearly decreasing inertia weight was evaluated alongside
     PSO--FCS--I4--5L & Fuzzy (FCS) & A & 5 & I4 (Shoulder) \\
     \bottomrule
     \end{tabular}
-\end{table*}
+\end{table}
 
 Performance was assessed using the final best fitness value and the relative gap to the known global optimum, defined as
 \begin{equation}
@@ -389,7 +420,8 @@ Performance was assessed using the final best fitness value and the relative gap
 \end{equation}
 For functions with $f_{\text{opt}} = 0$ (F1, F5, F11), performance is reported directly as the absolute best fitness value, since the relative gap is undefined.
 
-Robustness was evaluated via the mean and standard deviation of final fitness values across the 31~runs. Statistical significance was assessed using the Wilcoxon signed-rank test at $\alpha = 0.05$, which exploits the paired design enabled by shared random seeds. Computational cost was measured using wall-clock execution time.
+Robustness was evaluated via the mean and standard deviation of final fitness values across the 31~runs. % [A1 / R2.6] Justificación del Wilcoxon signed-rank por estrategia de seeding pareada + rank-sum como complemento.
+\new{Statistical significance was assessed primarily with the Wilcoxon signed-rank test at $\alpha = 0.05$. The choice of a paired test is deliberate: the shared seeding strategy ensures that, for any fixed run index~$k$, all algorithms start from the same initial population, so each $k$-th observation of one algorithm is naturally paired with the $k$-th observation of another. Under this design the signed-rank test removes initialization-induced variance and yields higher statistical power than its independent-samples counterpart, in line with established practice in nonparametric comparison of metaheuristics~\cite{derrac2011practical}. The Wilcoxon rank-sum (Mann--Whitney~$U$) test, which treats the two samples as independent, is also reported as a complementary indicator of distributional difference.} Computational cost was measured using wall-clock execution time.
 
 All experiments were conducted on a 64-bit system with an Intel Core~i7 CPU (2.8~GHz) and 16~GB of RAM. The algorithms were implemented in Python~3.11.9 and executed sequentially.
 
@@ -407,23 +439,26 @@ The results fall into three parts and are discussed below: the overall compariso
 \subsection{Overall Performance: PSO vs PSO--FCS}
 \label{subsec:overall_results}
 
-Table~\ref{tab:pso_vs_fcs} summarizes the comparison between the baseline PSO and the best-performing PSO--FCS variant for each benchmark function. The best fuzzy configuration per function was selected by lowest mean fitness (for minimization problems F1, F5, F11) or highest mean fitness (for maximization problems F21--F23) across 31~runs.
+Table~\ref{tab:pso_vs_fcs} summarizes the comparison between the baseline PSO and the best-performing PSO--FCS variant for each benchmark function. All six functions are minimization problems: F1, F5, and F11 have a global optimum of zero, while the Shekel functions F21--F23 have negative global optima ($-10.1532$, $-10.4029$, and $-10.5363$, respectively). The best fuzzy configuration per function was therefore selected by lowest mean fitness across 31~runs in all cases.
 
+
+% [A1 / R2.6] Tabla actualizada con ambos p-values: signed-rank (p_sr) y rank-sum (p_rs).
 \begin{table}[ht]
-    \caption{PSO vs best PSO--FCS variant per function. Fitness improvement, standard deviation reduction, Wilcoxon signed-rank $p$-value, and computational overhead are reported over 31 independent runs.}
+    \caption{\new{PSO vs best PSO--FCS variant per function. Fitness improvement, standard deviation reduction, Wilcoxon signed-rank ($p_{\text{sr}}$) and rank-sum ($p_{\text{rs}}$) $p$-values, and computational overhead are reported over 31 independent runs.}}
     \label{tab:pso_vs_fcs}
     \centering
     \footnotesize
-    \begin{tabular}{@{}lclrrrr@{}}
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular}{@{}lclrrrrr@{}}
     \toprule
-    Func. & Win & Best FCS & Impr.\% & $\sigma$\,Red.\% & $p$ & OH\% \\
+    Func. & Win & Best FCS & Impr.\% & $\sigma$\,Red.\% & $p_{\text{sr}}$ & $p_{\text{rs}}$ & OH\% \\
     \midrule
-    F1  & PSO & I1:3L & --- & --- & $<$0.001\rlap{***} & 20.1 \\
-    F5  & PSO & I1:5L & --- & --- & $<$0.001\rlap{***} & 27.6 \\
-    F11 & PSO & I1:3L & --- & --- & $<$0.001\rlap{***} & 20.2 \\
-    F21 & FCS & I2:5L & $+$22.9 & $-$63.0 & 0.041\rlap{*} & 3.6 \\
-    F22 & FCS & I1:3L & $+$6.5  & $-$58.7 & 0.824\,ns & 5.3 \\
-    F23 & FCS & I2:3L & $+$9.9  & $-$57.3 & 0.504\,ns & 1.0 \\
+    F1  & PSO & I1:3L & --- & --- & $<$0.001\rlap{***} & $<$0.001\rlap{***} & 20.1 \\
+    F5  & PSO & I1:5L & --- & --- & $<$0.001\rlap{***} & $<$0.001\rlap{***} & 27.6 \\
+    F11 & PSO & I1:3L & --- & --- & $<$0.001\rlap{***} & $<$0.001\rlap{***} & 20.2 \\
+    F21 & FCS & I2:5L & $+$22.9 & $-$63.0 & 0.041\rlap{*}     & 0.955\,ns         & 3.6 \\
+    F22 & FCS & I1:3L & $+$6.5  & $-$58.7 & 0.824\,ns         & 0.034\rlap{*}     & 5.3 \\
+    F23 & FCS & I2:3L & $+$9.9  & $-$57.3 & 0.504\,ns         & 0.127\,ns         & 1.0 \\
     \bottomrule
     \end{tabular}
 \end{table}
@@ -432,11 +467,27 @@ The results differ markedly between unimodal and multimodal landscapes. On F1, F
 
 On the Shekel functions (F21--F23), the situation is reversed. The best PSO--FCS variant improves mean fitness by 6.5--22.9\% over the baseline and reduces standard deviation by 57--63\%, with negligible overhead (1.0--5.3\%). Here, the fuzzy controller detects premature convergence toward local optima and raises inertia to re-diversify the swarm. The 57--63\% drop in standard deviation across 31~runs indicates that the controller not only improves average quality but also makes the search considerably more repeatable.
 
-Statistical significance on the multimodal group is partial: only F21 reaches $p < 0.05$ ($p = 0.041$); F22 and F23 do not. The Shekel family has closely spaced deep optima, so small changes in initial positions can redirect the swarm to a different attractor, which inflates within-group variance and weakens the paired test.
+% [A7 / R1.4] Discusión de escalabilidad del overhead: el costo del FIS es O(1) por iteración e independiente de d.
+\new{The relative overhead of the fuzzy layer is a function of the per-iteration fitness cost, not of the problem dimensionality. The controller performs a fixed amount of work each iteration---two fuzzifications, a small lookup of at most 9~(or 25)~rules, and one centroid defuzzification---all of which are independent of~$d$. The high relative overhead on F1, F5 and F11 (20--28\%) reflects how cheap their fitness evaluations are, not a scaling problem of the FIS itself. On more computationally demanding problems---higher-dimensional landscapes, simulation-based fitness, or surrogate-assisted settings---the same fixed per-iteration cost is amortized over much larger evaluation budgets, so the overhead is expected to become negligible. This is consistent with the 1--5\% values observed on the Shekel functions, whose fitness is itself heavier than the unimodal ones.}
+
+% [A4 / R1.5] Discusión honesta de la no-significancia parcial en F22/F23; los dos tests se interpretan complementariamente.
+\new{Statistical significance on the multimodal group is partial and the two tests highlight different aspects of the data. The paired signed-rank test detects a significant per-run advantage of the fuzzy controller on F21 ($p_{\text{sr}} = 0.041$) but not on F22 or F23, while the rank-sum test---which ignores the pairing---finds a significant distributional difference on F22 ($p_{\text{rs}} = 0.034$) and none on F21 or F23. The disagreement is informative rather than contradictory: the Shekel family has closely spaced deep optima, so small changes in initial positions can redirect the swarm to a different attractor, inflating within-sample variance. When the paired structure is preserved (signed-rank), this variance is partially absorbed and a consistent per-seed improvement emerges on F21; when the samples are treated as independent (rank-sum), the broader distributional shift on F22 becomes detectable. In all three multimodal cases the fuzzy controller improves the mean and roughly halves the standard deviation, but these gains should be read as practically meaningful rather than uniformly significant in the strict statistical sense.}
+
+% [B2 / R2.4] Curvas de convergencia (fitness vs iter) para F21--F23: comportamiento online del controlador.
+\new{Fig.~\ref{fig:convergence_multimodal} reports the online behaviour of both algorithms on the multimodal benchmarks. Baseline PSO collapses toward its asymptotic mean within roughly 50~iterations but its wide standard-deviation band reveals a bimodal outcome: some runs reach the global optimum while others remain trapped near shallow local optima. The fuzzy controller descends more gradually yet converges to a lower mean with a markedly narrower band, which is the same pattern reported in Table~\ref{tab:pso_vs_fcs}: comparable best-case performance, substantially more consistent average behaviour across seeds.}
+
+{\color{red}
+\begin{figure*}[!htbp]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/b2_convergence_multimodal.pdf}
+    \caption{Convergence trajectories of the best fitness across 31 independent runs for the multimodal Shekel benchmarks. Solid lines show the mean over runs and shaded bands the $\pm 1$ standard deviation envelope. The dotted line marks the global optimum.}
+    \label{fig:convergence_multimodal}
+\end{figure*}
+}
 
 Fig.~\ref{fig:pso_vs_fcs_boxplot} shows the fitness distributions for all six functions. On the Shekel group, fuzzy variants produce tighter interquartile ranges and fewer extreme outliers than the baseline, while on unimodal functions the gap in favor of standard PSO is visually evident.
 
-\begin{figure*}[!ht]
+\begin{figure*}[!htbp]
     \centering
     \includegraphics[width=\linewidth]{figures/08_pso_vs_fcs_boxplot.png}
     \caption{Fitness distributions (31~runs) for PSO and the best PSO--FCS variant per function. On unimodal functions (F1, F5, F11), PSO dominates. On multimodal functions (F21--F23), the fuzzy-controlled variant achieves better medians and reduced dispersion.}
@@ -445,9 +496,9 @@ Fig.~\ref{fig:pso_vs_fcs_boxplot} shows the fitness distributions for all six fu
 
 Fig.~\ref{fig:scatter_fitness_std} plots mean fitness against standard deviation for all nine configurations on each function, adding a second perspective on the same data. On the Shekel functions the PSO baseline (star marker) sits in the high-variance region, while the FCS variants group toward lower standard deviations. On unimodal functions the picture is the opposite: every FCS configuration lands far from the PSO baseline, well into the worse-fitness region.
 
-\begin{figure*}[!ht]
+\begin{figure*}[p]
     \centering
-    \includegraphics[width=\linewidth]{figures/04_scatter_fitness_std.png}
+    \includegraphics[width=0.95\linewidth]{figures/04_scatter_fitness_std.png}
     \caption{Mean fitness vs.\ standard deviation for all configurations on each benchmark function. Colors encode input sets (I1--I4), markers distinguish granularity ($\circ$\,=\,3L, $\square$\,=\,5L), and the star denotes the PSO baseline. On multimodal functions, FCS variants achieve lower dispersion; on unimodal functions, all FCS variants are orders of magnitude worse than PSO.}
     \label{fig:scatter_fitness_std}
 \end{figure*}
@@ -455,45 +506,36 @@ Fig.~\ref{fig:scatter_fitness_std} plots mean fitness against standard deviation
 \subsection{Effect of Input Set Geometry}
 \label{subsec:input_geometry}
 
-To determine whether input partition geometry actually matters, Table~\ref{tab:input_ranking} reports the mean rank of each input set across all six benchmark functions, computed separately per granularity level. A rank of~1 corresponds to the best configuration on a given function; a lower average rank signals more consistent performance across the suite.
-
-\begin{table}[htbp]
-    \caption{Mean rank of each input set configuration across six benchmark functions ($1 =$ best). Ranks computed independently per granularity level.}
-    \label{tab:input_ranking}
-    \centering
-    \begin{tabular}{lcc}
-    \toprule
-    Input Set & 3-Label Rank & 5-Label Rank \\
-    \midrule
-    I1 (Standard) & \textbf{2.83} & 4.50 \\
-    I2 (Narrow)   & 3.67 & 5.17 \\
-    I4 (Shoulder) & 4.50 & 4.00 \\
-    I3 (Wide)     & 5.50 & 5.83 \\
-    \bottomrule
-    \end{tabular}
-\end{table}
-
-With three labels, I1~(Standard) obtains the best average rank at~2.83. I2~(Narrow) comes second at~3.67; its sharper label boundaries seem to help on the Shekel functions, where the controller needs to react quickly to diversity drops. I3~(Wide) is the worst at both granularity levels (5.50 and 5.83). The heavy overlap between its labels appears to blur the control signal: the controller cannot tell apart states that, from a search perspective, are meaningfully different.
+% [B1-aux] Tabla tab:input_ranking eliminada; los ranks se mueven inline para liberar espacio para la Fig. de activación de reglas (B1).
+\new{To determine whether input partition geometry actually matters, the mean rank of each input set across the six benchmark functions was computed separately per granularity level (rank~1 = best on a function; lower average~rank = more consistent performance across the suite). At three labels, I1~(Standard) attains the best average rank at~2.83, followed by I2~(Narrow) at~3.67, I4~(Shoulder) at~4.50, and I3~(Wide) at~5.50. At five labels the ordering is similar (I4~4.00, I1~4.50, I2~5.17, I3~5.83), with I3 again worst. I2's sharper boundaries help on the Shekel functions where the controller must react quickly to diversity drops, while Section~\ref{subsec:granularity} traces the poor performance of I3 to its rule activation pattern.}
 
 Fig.~\ref{fig:heatmap_multimodal} presents the fitness heatmap for the multimodal functions, where the effect of input set geometry is most pronounced. I1 and I2 consistently achieve the darkest (best) cells, while I3 and I4 show lighter (worse) values, particularly on F21 and F22.
 
-\begin{figure*}[ht]
+\begin{figure*}[p]
     \centering
-    \includegraphics[width=\linewidth]{figures/01b_heatmap_multimodal.png}
+    \includegraphics[width=0.95\linewidth]{figures/01b_heatmap_multimodal.png}
     \caption{Mean fitness heatmap for multimodal functions (F21--F23) across input sets and granularity levels. Darker cells indicate better fitness. I1 and I2 configurations consistently outperform I3 and I4.}
     \label{fig:heatmap_multimodal}
 \end{figure*}
 
-\subsection{Effect of Linguistic Granularity}
+% [B1 / R1.7] Diagnóstico de activación de reglas (exp H) que explica por qué 3L > 5L y por qué I3 (Wide) rinde peor.
+\subsection{Effect of Linguistic Granularity \new{and Rule Activation Diagnostics}}
 \label{subsec:granularity}
 
-Across the board, three-label partitions outrank their five-label counterparts. Table~\ref{tab:input_ranking} shows that three labels yield a better mean rank for three of the four input sets (I1, I2, I3); only I4~(Shoulder) benefits marginally from the finer partition.
+Across the board, three-label partitions outrank their five-label counterparts. Three labels yield a better mean rank for three of the four input sets (I1, I2, I3); only I4~(Shoulder) benefits marginally from the finer partition. The average Gap\% mirrors the trend at 23.7\% versus 24.1\%---a small but consistent margin pointing to over-segmentation when five labels are used.
 
-The average Gap\% confirms the trend: 23.7\% for three labels versus 24.1\% for five labels. The absolute difference is small, but the direction is the same across most configurations, pointing to over-segmentation of the input space when five labels are used.
+\new{To probe the mechanism, the recorded $(D(t), t_{\text{progress}})$ trajectories of every run were replayed through each FIS configuration and the effective number of simultaneously active rules per sample was computed as $\exp(H)$, where $H$ is the Shannon entropy of the normalised rule-firing distribution. Shannon entropy was chosen because it is parameter-free---unlike threshold-based rule counts, which require an arbitrary cut-off---and it weights each rule proportionally to its firing strength, so a rule with $\mu{=}0.01$ contributes far less than one with $\mu{=}0.5$. The exponential form maps the result to a natural scale: $\exp(H){=}1$ when exactly one rule fires, and larger values indicate increasingly diffuse firing. Fig.~\ref{fig:rule_activation} aggregates this diagnostic over the $93{,}186$ swarm-level samples per configuration and mirrors the performance ranking. I3~(Wide) attains the highest blending (1.40 at 3L, 1.83 at 5L), confirming that excessive overlap dilutes the control signal across competing rules. I2~(Narrow) sits exactly at~1.0 because its zero-overlap partition admits only one active rule per sample. I1~(Standard) lies in between (1.13 / 1.54), striking the balance that yields its leading mean rank. Moving from 3L to 5L raises the active-rule count for I1 and I3 by 31--36\%, evidence that the additional labels do not introduce finer-grained decisions but rather spread the firing mass over more rules without changing what the controller perceives.}
 
-A plausible explanation is that diversity and iteration progress, both bounded in $[0, 1]$, are coarse-grained signals by nature. Three labels per input already produce overlapping rule activations that smooth transient noise. Splitting the same domain into five labels creates narrower activation regions that amplify measurement noise instead of capturing genuinely different search states.
+{\color{red}
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.95\columnwidth]{figures/b1_rule_activation.pdf}
+    \caption{Effective number of simultaneously active rules ($\exp H$) per input set and granularity, over $93{,}186$ recorded $(D(t), t_{\text{progress}})$ samples per configuration. Higher values indicate a more blurred control signal.}
+    \label{fig:rule_activation}
+\end{figure}
+}
 
-
+% \newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%% SECTION %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -512,9 +554,13 @@ Finally, three-label partitions outperformed five-label partitions for three of 
 
 From a design standpoint, input membership function geometry should be treated as an explicit variable rather than left at a default setting---especially when the controller inputs are low-resolution signals such as normalized diversity and iteration progress. As a practical guideline, moderate-overlap triangular partitions with three linguistic labels offer a reasonable starting point for fuzzy inertia weight controllers.
 
-This study has limitations. Only triangular membership functions were tested; Gaussian or trapezoidal shapes may show different sensitivity patterns. The benchmark suite covers six functions and does not include high-dimensional multimodal problems, where the geometry--granularity interaction could behave differently. The output set and rule base were also held fixed; how they interact with the input partition is still an open question.
+This study has limitations. Only triangular membership functions were tested; Gaussian or trapezoidal shapes may show different sensitivity patterns. The benchmark suite covers six functions and does not include high-dimensional multimodal problems, where the geometry--granularity interaction could behave differently. The output set and rule base were also held fixed; how they interact with the input partition is still an open question. % [A8 / R1.6] Refuerzo de la limitación: solo w es adaptada; c1 y c2 permanecen fijos.
+\new{The fuzzy controller adapts only the inertia weight~$w$, leaving the cognitive and social coefficients ($c_1, c_2$) fixed at their canonical values, so the conclusions strictly apply to single-parameter fuzzy adaptation; richer architectures that fuzzify multiple PSO coefficients simultaneously~\cite{nobile2018fuzzy, xia2022particle, roy2024hyperparameter} may interact with the input partition in ways not captured here.}
 
 Future work will extend this analysis in two directions: evaluating the interaction between input and output partition designs in a full factorial framework, and applying the methodology to combinatorial optimization problems where diversity dynamics differ substantially from continuous benchmarks.
+
+% [Future work / R1.2, R1.3, R2.5, R2.7] Marco explorístico del estudio; difiere a future work la expansión dimensional (C1), la comparación contra SOTA (C2) y las formas de MF alternativas (R1.3).
+\new{Three additional axes are deliberately left for future work and frame the present study as exploratory rather than conclusive. First, the dimensional scope can be broadened by replicating the factorial design on additional dimensionalities (e.g., $d{=}30$ and $d{=}50$ on the unimodal group) and on richer multimodal suites such as CEC2017, to test whether the partition-geometry ordering observed here transfers to harder landscapes~\cite{nobile2018fuzzy, xia2022particle}. Second, the comparison baseline can be strengthened by benchmarking the best fuzzy variants against state-of-the-art adaptive PSO schemes---e.g., the feedback-based controller of Nickabadi et al.~\cite{nickabadi2011novel}---and against modern parameter-free algorithms such as JADE or CMA-ES, moving the assessment from a canonical baseline to a competitive frontier. Third, the membership-function shape was restricted to triangular by design: triangular partitions require only three parameters per label, which cleanly isolates the two geometric properties under study---support width and overlap---without conflating them with extra shape parameters such as the spread~$\sigma$ of a Gaussian or the plateau width of a trapezoid. This choice also follows the dominant convention in the fuzzy-PSO literature~\cite{shi2001fuzzy, olivas2014comparative, valdez2017comparative, nobile2018fuzzy}, ensuring comparability of the results. Replicating the same factorial under Gaussian and trapezoidal shapes is the natural next step to disentangle the effect of shape from that of partition geometry.}
 
 
 \section*{Acknowledgment}
@@ -522,6 +568,7 @@ José Barrera-García was supported by the National Agency for Research and Deve
 
 Felipe Cisternas-Caneo was supported by the National Agency for Research and Development ANID BECAS/DOCTORADO NACIONAL 21230203.
 
+Broderick Crawford is supported by Grant ANID/FONDECYT/REGULAR/1262511.
 
 % \section*{References}
 \bibliographystyle{IEEEtran}

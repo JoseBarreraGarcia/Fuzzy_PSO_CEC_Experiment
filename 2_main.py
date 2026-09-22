@@ -9,7 +9,7 @@ from Solver.solverSCP import solverSCP
 from BD.sqlite import BD
 
 from Util.log import log_experimento, log_error, log_final, log_fecha_hora
-from Util.util import parse_parametros, verificar_y_crear_carpetas
+from Util.util import parse_parametros, verificar_y_crear_carpetas, obtener_ruta_config
 
 def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
     """Ejecuta el problema tipo BEN."""
