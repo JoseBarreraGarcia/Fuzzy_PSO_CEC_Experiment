@@ -1,0 +1,50 @@
+{
+  "metric": "gap_final",
+  "alpha": 0.05,
+  "friedman": {
+    "chi2": 1051.278953799026,
+    "df": 32,
+    "p_value": 2.654877108974788e-200,
+    "n_instances": 62,
+    "n_configs": 33,
+    "reject_H0_no_difference": true
+  },
+  "critical_difference": {
+    "k": 33,
+    "N": 62,
+    "q_alpha_0.05": 3.795,
+    "CD": 6.590778840608024
+  },
+  "best_config_by_mean_rank": {
+    "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+    "mean_rank": 4.774193548387097
+  },
+  "worst_config_by_mean_rank": {
+    "mh_raw": "PSO_FCS:G9:I1:R2:O1",
+    "mean_rank": 26.54032258064516
+  },
+  "top5_mean_rank": [
+    {
+      "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+      "mean_rank": 4.774193548387097
+    },
+    {
+      "mh_raw": "PSO",
+      "mean_rank": 6.362903225806452
+    },
+    {
+      "mh_raw": "PSO_FCS:G5:I1:R1:O1",
+      "mean_rank": 6.975806451612903
+    },
+    {
+      "mh_raw": "PSO_FCS:G7:I1:R1:O1",
+      "mean_rank": 8.201612903225806
+    },
+    {
+      "mh_raw": "PSO_FCS:G9:I1:R1:O1",
+      "mean_rank": 8.42741935483871
+    }
+  ],
+  "significant_pairs_count": 272,
+  "H1_supported_by_friedman": true
+}

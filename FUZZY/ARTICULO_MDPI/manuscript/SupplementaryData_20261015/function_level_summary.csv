@@ -1,0 +1,24 @@
+function,problem_class,subgroup,n_instances,all_tied,best_fcs_x,best_n,best_rule,rank_pso_median,rank_best_fcs_median,fcs_wins,significant_wins_independent,a12_median,best_fcs_y,n_pso_independent,n_fcs_independent,pso_median_seconds,fcs_median_seconds,unpaired_ratio_of_medians_overhead_pct,method
+F1,unimodal,S1,4,False,FCS-3-R1,3,R1,3.0,1.0,4,4,0.9614984391259105,FCS-3-R1,124,124,9.404,12.3905,31.757762654189705,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F10,multimodal,S1,4,False,FCS-3-R1,3,R1,3.5,1.0,3,3,0.7700312174817898,FCS-3-R1,124,124,9.748000000000001,12.374,26.938859253180137,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F11,multimodal,S1,4,False,FCS-3-R1,3,R1,4.0,1.0,4,2,0.7466181061394381,FCS-3-R1,124,124,9.6585,12.620999999999999,30.67246466842677,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F12,multimodal,S1,4,False,FCS-3-R1,3,R1,2.0,1.0,3,3,0.7185223725286161,FCS-3-R1,124,124,10.6315,13.327,25.35390114283025,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F13,multimodal,S1,4,False,FCS-3-R1,3,R1,3.0,1.0,4,4,0.7440166493236212,FCS-3-R1,124,124,11.246,14.468,28.650186733060636,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F14,composed,S2,1,False,FCS-3-R1,3,R1,27.0,3.0,1,0,0.5848074921956296,FCS-3-R1,31,31,23.299,22.132,-5.008798660886726,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F15,composed,S2,1,False,FCS-3-R1,3,R1,11.0,1.0,1,1,0.7523413111342352,FCS-3-R1,31,31,2.152,4.022,86.89591078066914,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F16,composed,S2,1,False,FCS-3-R1,3,R1,17.0,17.0,0,0,0.5645161290322581,FCS-3-R1,31,31,1.074,2.955,175.13966480446928,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F17,composed,S2,1,False,FCS-3-R1,3,R1,17.0,17.0,0,0,0.5,FCS-3-R1,31,31,1.073,2.946,174.5573159366263,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F18,composed,S2,1,False,FCS-3-R1,3,R1,15.0,15.0,0,0,0.4547346514047867,FCS-3-R1,31,31,1.153,3.015,161.49176062445795,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F19,composed,S2,1,False,FCS-3-R1,3,R1,17.0,17.0,0,0,0.5624349635796045,FCS-3-R1,31,31,2.788,4.542,62.91248206599713,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F2,unimodal,S1,4,False,FCS-3-R1,3,R1,2.0,1.0,4,4,0.9802289281997918,FCS-3-R1,124,124,9.3475,12.535,34.100026745119,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F20,composed,S2,1,False,FCS-3-R1,3,R1,14.0,14.0,0,0,0.5499479708636836,FCS-3-R1,31,31,3.499,5.36,53.18662474992855,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F21,composed,S2,1,False,FCS-7-R1,7,R1,24.0,1.0,1,0,0.6139438085327783,FCS-7-R1,31,31,8.803,10.371,17.81210950812222,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F22,composed,S2,1,False,FCS-3-R6,3,R6,20.0,1.0,1,0,0.5650364203954215,FCS-3-R6,31,31,11.542,13.227,14.598856350719114,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F23,composed,S2,1,False,FCS-5-R6,5,R6,1.0,2.0,0,0,0.33610822060353795,FCS-5-R6,31,31,15.699,16.986,8.197974393273455,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F3,unimodal,S1,4,False,FCS-5-R5,5,R5,11.0,1.0,4,3,0.7351716961498439,FCS-5-R5,124,124,16.179,18.548,14.64243772791891,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F4,unimodal,S1,4,False,FCS-9-R5,9,R5,4.0,1.0,3,1,0.5598335067637876,FCS-9-R5,124,124,9.219000000000001,11.634,26.19589977220955,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F5,unimodal,S1,4,False,FCS-3-R1,3,R1,3.0,1.0,4,2,0.6399583766909469,FCS-3-R1,124,124,9.4375,12.232,29.610596026490054,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F6,unimodal,S1,4,False,FCS-3-R1,3,R1,2.0,1.0,4,4,0.9505723204994797,FCS-3-R1,124,124,9.042,12.106,33.88630833886308,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F7,unimodal,S1,4,False,FCS-5-R1,5,R1,3.0,1.0,3,0,0.5426638917793964,FCS-5-R1,124,124,9.705,12.494,28.737764039155067,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F8,multimodal,S1,4,False,FCS-9-R8,9,R8,3.5,1.5,2,0,0.5442247658688866,FCS-9-R8,124,124,9.2845,11.798,27.072001723302286,100*(median(FCS time)/median(PSO time)-1); no run_id join
+F9,multimodal,S1,4,False,FCS-5-R2,5,R2,9.0,1.0,4,1,0.603537981269511,FCS-5-R2,124,124,9.5805,12.013,25.390115338447885,100*(median(FCS time)/median(PSO time)-1); no run_id join

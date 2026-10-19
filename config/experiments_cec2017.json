@@ -1,0 +1,48 @@
+{
+    "_comentarios": {
+        "proposito": "CampaÃ±a CEC2017: 29 funciones oficiales (F2 excluida), D30/D50 y 31 replicas.",
+        "presupuesto": "500 iteraciones x 20 particulas = 10020 evaluaciones incluyendo la poblacion inicial. Usa funciones CEC2017, no el presupuesto oficial de la competicion.",
+        "semillas": "La politica de semillas pertenece al ejecutor y queda fuera del alcance de esta configuracion CEC2017."
+    },
+    "ben": true,
+    "scp": false,
+    "uscp": false,
+    "kp": false,
+    "mhs": ["PSO", "PSO_FCS"],
+    "DS_actions": [],
+    "dimensiones": {
+        "BEN": {
+            "F1CEC2017-F3CEC2017-F4CEC2017-F5CEC2017-F6CEC2017-F7CEC2017-F8CEC2017-F9CEC2017-F10CEC2017-F11CEC2017-F12CEC2017-F13CEC2017-F14CEC2017-F15CEC2017-F16CEC2017-F17CEC2017-F18CEC2017-F19CEC2017-F20CEC2017-F21CEC2017-F22CEC2017-F23CEC2017-F24CEC2017-F25CEC2017-F26CEC2017-F27CEC2017-F28CEC2017-F29CEC2017-F30CEC2017": [30, 50]
+        }
+    },
+    "experimentos": {
+        "BEN": {"iteraciones": 500, "poblacion": 20, "num_experimentos": 31},
+        "SCP": {},
+        "USCP": {},
+        "KP": {}
+    },
+    "use_seed": true,
+    "seed": 42,
+    "parallel_workers": 6,
+    "console_summary_only": true,
+    "instancias": {
+        "BEN": [
+            "F1CEC2017", "F3CEC2017", "F4CEC2017", "F5CEC2017",
+            "F6CEC2017", "F7CEC2017", "F8CEC2017", "F9CEC2017",
+            "F10CEC2017", "F11CEC2017", "F12CEC2017", "F13CEC2017",
+            "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017",
+            "F18CEC2017", "F19CEC2017", "F20CEC2017", "F21CEC2017",
+            "F22CEC2017", "F23CEC2017", "F24CEC2017", "F25CEC2017",
+            "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017",
+            "F30CEC2017"
+        ],
+        "SCP": [],
+        "USCP": [],
+        "KP": []
+    },
+    "mh_params": {
+        "PSO_FCS": [
+            {"w_set": "O1", "num_labels": 3, "input_set": "I1", "rule_set": "R1", "wMin": 0.1, "wMax": 0.9}
+        ]
+    }
+}

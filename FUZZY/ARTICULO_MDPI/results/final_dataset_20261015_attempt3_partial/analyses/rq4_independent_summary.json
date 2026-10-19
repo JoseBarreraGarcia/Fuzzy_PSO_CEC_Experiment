@@ -1,0 +1,30 @@
+{
+  "n_tests": 1984,
+  "alpha": 0.05,
+  "bonferroni_family": 1984,
+  "bonferroni_alpha": 2.5201612903225806e-05,
+  "historical_paired_nominal": {
+    "loss": 1260,
+    "tie": 658,
+    "win": 66
+  },
+  "independent_nominal": {
+    "loss": 1293,
+    "tie": 628,
+    "win": 63
+  },
+  "historical_paired_bonferroni": {
+    "loss": 1035,
+    "tie": 935,
+    "win": 14
+  },
+  "independent_bonferroni": {
+    "loss": 1056,
+    "tie": 906,
+    "win": 22
+  },
+  "nominal_classifications_changed": 82,
+  "bonferroni_classifications_changed": 49,
+  "a12_changes_after_f14_correction": 12,
+  "a12_max_abs_change_vs_historical": 0.008324661810613976
+}

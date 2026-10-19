@@ -2,23 +2,57 @@
 \section{Experimental Design}
 \label{sec:experimental_design}
 
-The experimental design follows a controlled factorial protocol. The benchmark contains the 23 classical functions F1--F23. Functions F1--F13 are evaluated at dimensions $d\in\{10,30,50,100\}$, whereas F14--F23 retain the dimensions imposed by their definitions. Each configuration is evaluated for 1000 iterations, with a population of 20 and 31 independent runs. The master seed is 42 and the run-specific seed is recorded for reproducibility.
+The experimental design follows a controlled factorial protocol. The benchmark contains the 23 classical functions F1--F23 \cite{Yao1999,Abualigah2021}. Functions F1--F13 are evaluated at dimensions $d\in\{10,30,50,100\}$, whereas F14--F23 retain the dimensions imposed by their definitions. Each configuration is evaluated for 1000 iterations with a population of 20 and 31 independent runs. The repeated runs account for the stochastic nature of PSO and allow performance variability to be characterized through measures of central tendency and dispersion. The use of 31 replications provides a common sample size for comparing configurations and estimating their run-to-run variability, without implying a formal guarantee of statistical power. Every run uses a distinct pseudorandom seed, defined as 42 plus its unique experiment identifier; seeds are not shared across configurations. Run identifiers therefore do not define cross-configuration pairing blocks. The resulting batch contains 62 benchmark instances and 63{,}426 completed runs.
+
 
 \subsection{Benchmark suite and dimensions}
 \label{subsec:benchmarks}
 
-The functions are grouped for analysis into unimodal functions, scalable multimodal functions, and fixed-dimensional multimodal or composite functions. The optimum associated with each function is used to compute normalized performance measures. Special care is required for functions whose documented optimum is expressed per dimension.
+The Classical Benchmark Suite F1--F23 was selected to evaluate the controller configurations across optimization problems with different characteristics under a common experimental protocol. The suite includes unimodal functions, scalable multimodal functions, and fixed-dimensional multimodal or composite functions, allowing the analysis to examine whether configuration rankings remain consistent across these problem groups. The scalable functions F1--F13 are evaluated at dimensions $d\in\{10,30,50,100\}$ to characterize performance across increasing dimensionality, while F14--F23 retain the dimensions imposed by their definitions. Table~\ref{tab:benchmark_scalable} reports the scalable functions, and Table~\ref{tab:benchmark_fixed} reports the fixed-dimensional functions; both provide the analytical definitions, search domains, and reference optima used by the solver. The study is restricted to the classical, unshifted and unrotated functions and does not include competition benchmark suites with additional transformations.
+
+
+The optimum associated with each function is used to compute normalized performance measures. Special care is required for functions whose documented optimum is expressed per dimension: the reference value of F8 is $-418.9829\,d$, and it is scaled accordingly at every dimension before the gap is computed. Function F7 contains an additive uniform noise term and is therefore stochastic even for a fixed candidate solution; its dispersion across runs is not attributable to the optimizer alone.
+
+\input{tables/tab_benchmark_scalable.tex}
+
+\input{tables/tab_benchmark_fixed.tex}
+
+Illustrative landscape plots are provided in Appendix~\ref{app:benchmark_landscapes}. For functions with $d>2$, these are two-coordinate slices with remaining coordinates fixed at the bounds midpoint; they provide visual context and are not quantitative landscape characterizations. Function definitions, dimensions, domains, and solver reference optima are reported in Tables~\ref{tab:benchmark_scalable}--\ref{tab:benchmark_fixed}.
 
 \subsection{Factorial configuration}
 \label{subsec:factorial}
 
-The principal factorial design contains four levels of granularity and eight rule patterns, producing $4\times 8=32$ PSO\_FCS configurations. The output and input partition families are fixed to O1 and I1, respectively; both use uniform triangular partitions with overlap one and shoulders. A classical PSO with a linear inertia schedule from 0.9 to 0.4 is the single baseline.
+The principal factorial design contains four levels of granularity and eight rule patterns, producing $4\times 8=32$ fuzzy configurations, denoted FCS-$n$-R$k$. The output and input partition families are fixed to O1 and I1, respectively; both use uniform triangular partitions with overlap one and shoulders. The single PSO baseline uses a linear inertia schedule from 0.9 to 0.1, as implemented in the solver.
 
-The resulting comparison has 33 algorithmic configurations per benchmark instance. A reduced smoke configuration is maintained separately to validate database population, execution, CSV generation, and bounds on $w$ before the full batch is launched.
+The resulting comparison has 33 algorithmic configurations per benchmark instance: 32 fuzzy configurations and the classical PSO baseline.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Summary of the executed factorial design and computational budget.}
+\label{tab:experimental_design_summary}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Design element} & \textbf{Specification} \\
+\midrule
+Benchmark & Classical F1--F23 suite; 62 function--dimension instances. F1--F13 use $d\in\{10,30,50,100\}$; F14--F23 use their fixed dimensions (Tables~\ref{tab:benchmark_scalable} and~\ref{tab:benchmark_fixed}). \\
+Factorial factors & Granularity $n\in\{3,5,7,9\}$ and rule-base pattern $R\in\{R1,\ldots,R8\}$, giving $4\times8=32$ FCS configurations. \\
+Algorithms & 32 FCS configurations plus classical PSO with a linear inertia schedule from 0.9 to 0.1; 33 configurations per instance. \\
+Controller controls & Input/output partitions I1/O1; uniform triangular Ruspini partitions with shoulders; effective inertia range $[0.1,0.9]$. \\
+Run budget & 1000 iterations with population size 20: 20,000 update evaluations plus 20 initial-population evaluations (20,020 total per run). \\
+Replication & 31 independently seeded runs per algorithm--instance pair; no seed is reused across configurations. \\
+Completed batch & $62\times33\times31=63{,}426$ runs; all planned records are present. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection{Metrics and statistical tests}
 \label{subsec:metrics}
 
-The primary response variables are final best fitness, normalized gap, execution time, and number of function evaluations. Secondary responses include convergence area, diversity statistics, and the mean, standard deviation, and empirical entropy of the inertia-weight trajectory. Configuration rankings are computed globally and by problem class.
+The primary outcomes are final best fitness and normalized gap; execution time and number of function evaluations are also recorded. The analyses address the five research questions (RQ1--RQ5), not confirmatory hypotheses. All 63,426 planned run records are present; no completed run was excluded.
 
-The planned inferential analysis uses Friedman tests with Nemenyi or Holm-adjusted post-hoc comparisons for repeated configuration rankings, Wilcoxon signed-rank tests for paired comparisons against PSO, and factorial effect analysis for granularity, rule pattern, and their interaction. Effect sizes and confidence intervals will accompany $p$-values. The exact tests and exclusion policy will be frozen before analyzing the full batch.
+For RQ1, each instance contributes the median normalized gap over 31 runs for each of the 33 configurations. A Friedman test uses the 62 instances as blocks; Nemenyi post-hoc comparisons use $\alpha=0.05$ and are summarized by the critical-difference diagram. RQ2 describes transfer across landscape classes and between the scalable and fixed-dimensional subsets using Kendall's $\tau$ between configuration rankings; the $S_1$--$S_2$ association is reported with its $p$-value. RQ3 asks descriptively whether observed performance differences among R1--R8 decrease consistently as $n$ increases. For ranks, the existing per-instance Friedman ranks are averaged over dimensions within each function and configuration before computing the sample standard deviation across the eight patterns at each function and $n$. For normalized gaps, the median over 31 runs is log-transformed as $\log_{10}(\max(\text{gap}_{\mathrm{median}},10^{-12})+10^{-12})$, averaged over dimensions within each function and configuration, and summarized by the same within-function standard deviation across patterns. We report the median of these function-level spreads across all 23 functions and separately for $S_1$ (F1--F13) and $S_2$ (F14--F23), giving each function equal weight. RQ3 therefore evaluates observed dispersion, not a formal factorial interaction. The run-level data are nested within function--dimension instances, and dimensions are nested within functions.
+
+For RQ4, each of the 32 FCS configurations is compared with PSO separately on each instance using a two-sided Mann--Whitney $U$ test on independent samples of 31 final-fitness values per configuration. The asymptotic test uses a continuity correction. Let $X=(x_1,\ldots,x_{31})$ and $Y=(y_1,\ldots,y_{31})$ denote the FCS and PSO samples. Vargha--Delaney $A_{12}$ is estimated as $\left[\#(x_r<y_s)+\tfrac12\#(x_r=y_s)\right]/31^2$; because lower fitness is better, $A_{12}>0.5$ favours FCS. Bonferroni correction covers all $32\times62=1984$ configuration--instance tests ($\alpha_{\mathrm{Bonferroni}}=0.05/1984$). Comparisons with adjusted $p<0.05$ are classified as wins or losses according to the direction of $A_{12}$; the remainder are non-significant, not evidence of equivalence.
+
+Table~\ref{tab:rule_pairs} compares the eight predefined rule-pattern pairs at each of four granularities and 62 instances, giving a separate family of $8\times4\times62=1984$ tests. Each contrast uses independent samples and a two-sided asymptotic Mann--Whitney $U$ test with continuity correction. Holm's step-down procedure is applied once across this complete family. The same $A_{12}$ convention identifies the direction of a significant difference; non-significant comparisons are not interpreted as ties or equivalence. RQ5 reports subgroup rank concordance and the best-ranked configuration for $S_1$ and $S_2$; Kendall's $\tau$ is interpreted descriptively without treating a fixed cutoff as a confirmatory decision rule. Statistical significance and effect magnitude are discussed separately.

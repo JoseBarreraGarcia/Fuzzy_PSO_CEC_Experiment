@@ -13,6 +13,7 @@ import os
 from functools import lru_cache
 
 import numpy as np
+from scipy.integrate import trapezoid
 
 
 # ---------------------------------------------------------------------------
@@ -230,9 +231,9 @@ class FuzzyInertiaController_Auto:
         centroids = []
         for (a, b, c) in self.w_mf.values():
             mf_vals = np.array([tri(val, a, b, c) for val in self.y], dtype=float)
-            den = np.trapz(mf_vals, self.y)
+            den = trapezoid(mf_vals, self.y)
             if den > 1e-12:
-                centroids.append(np.trapz(self.y * mf_vals, self.y) / den)
+                centroids.append(trapezoid(self.y * mf_vals, self.y) / den)
         if not centroids:
             return 0.0, 1.0
         return min(centroids), max(centroids)
@@ -254,11 +255,11 @@ class FuzzyInertiaController_Auto:
             mf_out = np.array([tri(val, a, b, c) for val in self.y], dtype=float)
             agg = np.maximum(agg, np.minimum(firing, mf_out))
 
-        den = np.trapz(agg, self.y)
+        den = trapezoid(agg, self.y)
         if den <= 1e-12:
             w_norm = 0.5
         else:
-            w_norm = np.trapz(self.y * agg, self.y) / den
+            w_norm = trapezoid(self.y * agg, self.y) / den
 
         span = self._w_norm_max - self._w_norm_min
         if span > 1e-12:

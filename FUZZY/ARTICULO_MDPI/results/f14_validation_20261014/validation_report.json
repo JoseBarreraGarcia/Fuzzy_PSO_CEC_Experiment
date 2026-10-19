@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "dataset": "validation",
+  "completed_runs": 6,
+  "configurations": 6,
+  "run_ids_per_configuration": [
+    1
+  ],
+  "unique_historical_ids": 6,
+  "unique_seeds": 6,
+  "corrected_source_hash_matches": true,
+  "config_sha256": "3c0942de3374a69ae58f51e56a89497349f059c9a14e85627e7fd4e0a7879dbc",
+  "f14_source_sha256": "c376b83d0075473bfd0f4aa9fc2c3f6a166a59434ee8588026aff4db3dfcd19a",
+  "runner_sha256": "81e6e441a7c78b53ed35264d96ccbfebe0c2be9e7b269f789101bbc83e973201"
+}

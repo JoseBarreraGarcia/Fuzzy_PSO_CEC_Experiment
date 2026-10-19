@@ -1,0 +1,46 @@
+{
+  "eps_success": 1e-06,
+  "n_experiments": 63426,
+  "n_configs": 33,
+  "n_instances": 62,
+  "n_functions": 23,
+  "dims_distinct": [
+    2,
+    3,
+    4,
+    6,
+    10,
+    30,
+    50,
+    100
+  ],
+  "runs_per_config_instance_unique": [
+    31
+  ],
+  "success_rate_by_family": {
+    "PSO": 0.2606659729448491,
+    "PSO_FCS": 0.15436394380853277
+  },
+  "gap_final_by_family": {
+    "PSO": {
+      "median": 0.10781933509911017,
+      "mean": 391.4100987377469,
+      "max": 33339.07034612879
+    },
+    "PSO_FCS": {
+      "median": 1.4387345358252963,
+      "mean": 43853.286947573455,
+      "max": 20160525.21202305
+    }
+  },
+  "best_config_by_mean_gap": {
+    "mh_raw": "PSO_FCS:G3:I1:R5:O1",
+    "gap_mean": 349.21693714404006,
+    "gap_median": 0.3910740292018656
+  },
+  "best_config_by_median_gap": {
+    "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+    "gap_mean": 353.45018091097955,
+    "gap_median": 0.04479003975049782
+  }
+}

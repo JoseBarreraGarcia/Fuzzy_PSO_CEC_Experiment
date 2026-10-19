@@ -1,0 +1,34 @@
+{
+  "supplements": "verification_report.json",
+  "purpose": "Preserve the final Table 11 source-version qualification discovered after the independent verification report was generated.",
+  "historical_table11_reproduction": {
+    "historical_csv_rows": 1984,
+    "historical_csv_a12_mismatches": 0,
+    "historical_csv_paired_p_mismatches": 0,
+    "historical_parquet_rows": 1984,
+    "historical_parquet_a12_mismatches": 40,
+    "historical_parquet_paired_p_mismatches": 53,
+    "historical_parquet_a12_mismatches_outside_f14": 37,
+    "historical_parquet_paired_p_mismatches_outside_f14": 52
+  },
+  "precision_and_snapshot_evidence": {
+    "historical_csv_modified": "2026-09-22T17:53:14+02:00",
+    "historical_parquet_modified": "2026-09-22T17:53:13+02:00",
+    "archived_table11_detail_modified": "2026-09-24T19:23:34+02:00",
+    "current_table11_script_modified": "2026-10-14T00:44:15+02:00",
+    "historical_parquet_vs_final_non_f14_score_differences": 0,
+    "historical_parquet_vs_final_f14_score_differences": 4,
+    "historical_csv_vs_parquet_non_f14_score_differences_over_1e_12": 1140,
+    "conclusion": "CSV float serialization is sufficient to account for the 37 non-F14 A12 and 52 non-F14 paired-p discrepancies. Small score deltas can change pairwise ties/ranks and Wilcoxon differences. F14 corrections separately account for current F14 differences."
+  },
+  "execution_version_limitation": "The Table 11 procedure implemented in the current script reproduces the archived results from the historical CSV exactly, but the current script's modification time is later than the archived output. No executed-script hash or versioned code snapshot was retained, so the exact historical script revision cannot be certified.",
+  "independent_verification": {
+    "rq4_tests": 1984,
+    "table11_tests": 1984,
+    "manual_rank_and_a12_checks_pass": true,
+    "scipy_mann_whitney_crosscheck_pass": true,
+    "maximum_absolute_p_or_a12_difference": 1.1102230246251565e-16
+  },
+  "rq3_h3": "Current RQ3 remains descriptive. Legacy H3 inferential outputs are not confirmed by current data; run_id does not define common-seed blocks because seeds came from historical global experiment IDs.",
+  "remaining_decision": "NOT READY for final manuscript updates until H3 is removed/reframed or recalculated under a defensible design and the unadjusted 1,984-test Table 11 multiplicity policy is explicitly decided."
+}

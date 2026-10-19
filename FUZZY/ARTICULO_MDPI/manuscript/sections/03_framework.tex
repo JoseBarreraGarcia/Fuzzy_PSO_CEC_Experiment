@@ -7,27 +7,216 @@ This section defines the static fuzzy-control component used by all PSO\_FCS var
 \subsection{Mamdani FIS design}
 \label{subsec:fis_design}
 
-The two inputs are the diversity ratio $d_t \in [0,1]$ and normalized progress $p_t \in [0,1]$. The output universe is normalized to $[0,1]$ and is linearly rescaled to $[w_{\min},w_{\max}]$ after defuzzification. For each evaluated granularity $n \in \{3,5,7,9\}$, the input and output universes use uniform triangular partitions with overlap one and shoulder functions at the boundaries. Thus, the partition satisfies the Ruspini condition $\sum_i \mu_i(x)=1$ over the normalized domain.
+The two inputs are the diversity ratio $d_t \in [0,1]$ and normalized progress $p_t \in [0,1]$. The output universe is normalized to $[0,1]$ and is linearly rescaled to $[w_{\min},w_{\max}]$ after defuzzification. For each evaluated granularity $n \in \{3,5,7,9\}$, let $\mathcal{L}_n=\{0,\ldots,n-1\}$ index the labels. Each input and output partition is uniform triangular with overlap one and shoulders at the boundaries, satisfying $\sum_{i\in\mathcal{L}_n}\mu_i(x)=1$ on $[0,1]$. The indices $i,j,k\in\mathcal{L}_n$ denote diversity, progress, and output labels; $\mu_i^D$, $\mu_j^P$, and $\mu_k^W$ are their membership functions. For selected pattern $R\in\{R1,\ldots,R8\}$, $k_R(i,j)\in\mathcal{L}_n$ is the consequent index assigned to antecedent pair $(i,j)$.
 
-For activated rules $r$, the aggregated output membership function is denoted by $\mu_{\mathrm{agg}}(z)$. The centroid is
+Figure~\ref{fig:mf_inputs} shows the two I1 input partitions and Figure~\ref{fig:mf_output} shows the O1 output partition for all four granularities. Increasing $n$ narrows the support of each label and refines the controller's resolution; the Ruspini property and boundary shoulders are preserved.
+
+\begin{figure}[H]
+\begin{adjustwidth}{-\extralength}{0cm}
+	\centering
+	\includegraphics[width=\fulllength]{figures/06_input_diversity_mf_panel_I1.png}
+	\par\smallskip
+	\includegraphics[width=\fulllength]{figures/07_input_progress_mf_panel_I1.png}
+\end{adjustwidth}
+	\caption{I1 input membership functions for $n\in\{3,5,7,9\}$. Top: normalized swarm diversity; bottom: iteration progress. Each panel shows all four granularities.}
+	\label{fig:mf_inputs}
+\end{figure}
+
+\begin{figure}[H]
+\begin{adjustwidth}{-\extralength}{0cm}
+	\centering
+	\includegraphics[width=\fulllength]{figures/08_output_w_mf_panel.png}
+\end{adjustwidth}
+	\caption{O1 output membership functions for $n\in\{3,5,7,9\}$ on the normalized universe $[0,1]$. The defuzzified centroid is rescaled to $[w_{\min},w_{\max}]=[0.1,0.9]$.}
+	\label{fig:mf_output}
+\end{figure}
+
+For antecedent pair $(i,j)$, the firing strength is
 \begin{equation}
-	z_t = \frac{\int_0^1 z\,\mu_{\mathrm{agg}}(z)\,dz}{\int_0^1 \mu_{\mathrm{agg}}(z)\,dz},
-	\qquad
-	w_t = w_{\min} + z_t(w_{\max}-w_{\min}).
+\alpha_{ij}=\min\{\mu_i^D(d_t),\mu_j^P(p_t)\}.
 \end{equation}
+Mamdani implication clips each consequent membership function and max aggregation gives
+\begin{equation}
+\mu_{\mathrm{agg}}(z)=\max_{i,j}\min\{\alpha_{ij},\mu^W_{k_R(i,j)}(z)\}.
+\end{equation}
+The aggregated membership function is defined over $z\in[0,1]$, and the raw output is its centroid. In the implementation, the integral is approximated by trapezoidal quadrature on a 501-point grid; the raw centroid is normalized using the minimum and maximum centroids of the output sets before affine rescaling:
+\begin{equation}
+\begin{aligned}
+\bar z_t &= \frac{\int_0^1 z\,\mu_{\mathrm{agg}}(z)\,dz}{\int_0^1 \mu_{\mathrm{agg}}(z)\,dz},\\
+\widetilde z_t &= \operatorname{clip}\!\left(\frac{\bar z_t-z^c_{\min}}{z^c_{\max}-z^c_{\min}},0,1\right),\\
+w_t &= w_{\min}+\widetilde z_t(w_{\max}-w_{\min}).
+\end{aligned}
+\end{equation}
+Here $z^c_{\min}$ and $z^c_{\max}$ are the smallest and largest centroids of the output membership functions. If the aggregated area is at most $10^{-12}$, the implementation uses raw centroid fallback $\bar z_t=0.5$ before applying the same centroid-bound normalization. For this experiment, $w_{\min}=0.1$ and $w_{\max}=0.9$.
 
 \subsection{Rule bank R1--R8}
 \label{subsec:rules}
 
 The rule bank contains eight fixed patterns representing the admissible directional relationships between diversity, progress, and the output inertia weight. Each pattern is generated algorithmically for arbitrary $n$; no rule matrix is manually rewritten for a particular granularity. A configuration is therefore identified by the pair $(n,R)$, with $n \in \{3,5,7,9\}$ and $R \in \{R1,\ldots,R8\}$.
 
-The rule generator produces $n^2$ consequents for every pattern. The resulting matrices are validated independently for cardinality, deterministic generation, and bounded output. The semantic descriptions of R1--R8 and their exact matrices will be added as a table once the final notation is frozen.
+The rule generator produces $n^2$ consequents for every pattern. The resulting matrices are validated for cardinality, deterministic generation, and bounded output. Figure~\ref{fig:rule_panel_3} shows all eight patterns at $n=3$; the complete matrices for $n=5,7,9$ are provided in Appendix~\ref{app:controller_configs}. Each cell reports the consequent label assigned to an antecedent pair.
+
+\begin{figure}[H]
+\begin{adjustwidth}{-\extralength}{0cm}
+	\centering
+	\includegraphics[width=\fulllength]{figures/04_fuzzy_rules_panel_3labels.png}
+\end{adjustwidth}
+	\caption{Rule bases R1--R8 at $n=3$. Rows index diversity and columns index progress; each cell gives the consequent inertia-weight label.}
+	\label{fig:rule_panel_3}
+\end{figure}
+
+\subsection{Formal characterization of the rule-base families}
+\label{subsec:formal_rules}
+
+\subsubsection{Granularity and rule cardinality}
+
+For an odd granularity $n$, the central label index is $c=(n-1)/2$. Index $0$ denotes the lowest label, index $n-1$ the highest, and index $c$ the central label. Only odd values are admitted in this study so that a symmetric central label exists; the evaluated set is $n\in\{3,5,7,9\}$, whose labels are declared in the configuration file and range from \textit{low, medium, high} at $n=3$ to \textit{very\_very\_low, \dots, very\_very\_high} at $n=9$. Here $c$ is a label-center index, distinct from the PSO acceleration coefficients $c_1$ and $c_2$.
+
+Because the controller has two inputs, a rule base assigns one consequent to every antecedent pair, so its cardinality is
+\begin{equation}
+|\mathcal{R}_n| = |\mathcal{L}_n|^2 = n^2 ,
+\end{equation}
+which grows from 9 rules at $n=3$ to 81 at $n=9$. Raising $n$ therefore increases the resolution with which the controller can distinguish swarm states, and increases at the same quadratic rate the number of decisions that a reader must inspect to understand the controller. Granularity is in this sense a resolution--interpretability trade-off, not a free parameter.
+
+\subsubsection{Rule generator}
+
+Let $i\in\mathcal{L}_n$ index the diversity label and $j\in\mathcal{L}_n$ the progress label of an antecedent pair; the selected pattern assigns consequent index $k_R(i,j)\in\mathcal{L}_n$. This consequent index is distinct from coordinate index $k$ in Equation~(\ref{eq:hussain_diversity}). Each pattern is determined by two ordinal effects, one per input:
+\begin{equation}
+\label{eq:axes}
+e_{\mathrm{prog}}(j) =
+\begin{cases}
+c - j, & \text{decreasing} \\
+0, & \text{neutral} \\
+j - c, & \text{increasing}
+\end{cases}
+\qquad
+e_{\mathrm{div}}(i) =
+\begin{cases}
+i - c, & \text{following} \\
+0, & \text{neutral} \\
+c - i, & \text{compensating.}
+\end{cases}
+\end{equation}
+
+The consequent is obtained from their sum under two regimes. When exactly one axis is non-neutral, the effect is transferred directly. When both are active, let $s=e_{\mathrm{prog}}(j)+e_{\mathrm{div}}(i)$ denote their combined ordinal effect; the sum is compressed into bands of two adjacent indices:
+\begin{equation}
+\label{eq:generator}
+k_R(i,j) =
+\begin{cases}
+c + e_{\mathrm{prog}}(j) + e_{\mathrm{div}}(i), & \text{one axis active} \\[2pt]
+\Phi_n\!\left(e_{\mathrm{prog}}(j) + e_{\mathrm{div}}(i)\right), & \text{both axes active,}
+\end{cases}
+\end{equation}
+where the band map $\Phi_n$ compresses the aggregate effect onto the label set,
+\begin{equation}
+\label{eq:bandmap}
+\Phi_n(s) = \min\!\Big(\max\big(c + \operatorname{sgn}(s)\,\lceil |s|/2 \rceil,\; 0\big),\; n-1\Big).
+\end{equation}
+
+In the one-axis regime the active effect satisfies $|e| \le c$, so $c + e$ always lies in $\mathcal{L}_n$ and no clipping occurs. In the two-axis regime the sum ranges over $[-2c, 2c]$, and $\Phi_n$ maps it onto $\mathcal{L}_n$ through bands of width two around a central band of width one, saturating at the extremes. Both regimes are deterministic and defined for every $n$, so the eight matrices are generated from the pair of semantic axes, including at granularities for which no rule base has been published.
+
+\subsubsection{Semantic axes}
+
+The two axes describe ordinal effects in the consequent table. A \emph{decreasing} progress direction assigns lower consequents as the progress label increases, while an \emph{increasing} direction assigns higher consequents; a neutral axis contributes zero to this mapping. A \emph{following} diversity reaction assigns higher consequents to higher diversity labels, whereas a \emph{compensating} reaction assigns lower consequents; a neutral diversity axis repeats the same consequent across diversity labels. This rule-table neutrality does not, by itself, make the effective output independent of that input, because every rule still includes both antecedents in its firing strength.
+
+For R1, the generator gives $k_{R1}(i,j)=n-1-j$ for every diversity index $i$. However, with the implemented minimum conjunction and maximum aggregation, the strongest firing strength associated with progress label $j$ is
+\begin{equation}
+\max_i \min\{\mu_i^d(d),\mu_j^p(p)\}
+=\min\{q_n(d),\mu_j^p(p)\},
+\qquad q_n(d)=\max_i\mu_i^d(d),
+\label{eq:r1_effective_firing}
+\end{equation}
+where $\mu_i^d$ and $\mu_j^p$ are the diversity and progress membership functions. Since $q_n(d)$ varies with diversity, the effective R1 control surface need not reduce to a function of progress alone. Table~\ref{tab:rule_axes} therefore describes the nominal consequent axes, not guaranteed independence of the effective inputs. The combination with both axes neutral is excluded because its consequent table is constant.
+
+\input{tables/tab_rule_axes.tex}
+
+\subsubsection{Mirror symmetry of the rule bank}
+
+The rule generator admits a formal symmetry that characterizes the relationship between structurally complementary fuzzy controllers. Two patterns form a \emph{mirror pair} when every non-neutral axis of one is the inverse of the corresponding axis of the other, while neutral axes remain unchanged. This includes the reversal of a single active axis, as in R1--R2 and R3--R4, and the simultaneous reversal of two active axes, as in R5--R8 and R6--R7. Under the specified Mamdani inference architecture, this relationship extends beyond the consequent tables to the resulting inertia-control surfaces, as established by the following proposition.
+
+
+\begin{Proposition}
+\label{prop:mirror}
+Let $R_a$ and $R_b$ be a mirror pair evaluated under the symmetric Ruspini partitions, min--max Mamdani inference, centroid defuzzification, and output rescaling defined in Section~\ref{subsec:fis_design}, with common inertia bounds $[w_{\min},w_{\max}]$. Then for every admissible $n$ and every antecedent pair,
+\begin{equation}
+k_b(i,j) = (n-1) - k_a(i,j),
+\end{equation}
+and the induced control surfaces satisfy
+\begin{equation}
+\label{eq:surface_symmetry}
+w_{R_a}(d,p) + w_{R_b}(d,p) = w_{\min} + w_{\max}
+\qquad \forall (d,p) \in [0,1]^2 .
+\end{equation}
+\end{Proposition}
+
+
+The argument is constructive. Inverting an active axis changes the sign of its effect in Equation~(\ref{eq:axes}), and a neutral axis contributes zero and is unaffected, so the aggregate effect of a mirror pair satisfies $e_b = -e_a$. Both branches of Equation~(\ref{eq:generator}) are odd around the centre, since $c + (-e) = 2c - (c+e)$ and $\Phi_n(-s) = 2c - \Phi_n(s)$, with $2c = n-1$; the saturation of $\Phi_n$ is symmetric and therefore preserves the relation. The output partition is a uniform Ruspini family with shoulders, so the membership function of label $k$ is the reflection about the midpoint of the output universe of the membership function of label $(n-1)-k$. Reflecting every activated consequent reflects the aggregated membership function, the centroid of a reflected set is the reflection of its centroid, and the affine rescaling onto $[w_{\min},w_{\max}]$ preserves reflections, which yields Equation~(\ref{eq:surface_symmetry}).
+
+The property is verified numerically as part of the controller test suite across the 28 unordered pairs of R1--R8 and the four linguistic granularities. Exactly four pairs satisfy the index-reflection condition, namely those identified above, and the complementary surface relation holds to machine precision. Proposition~\ref{prop:mirror} provides a formal characterization of how semantic reversal in the rule base is reflected in the resulting inertia-control surface under the specified Mamdani architecture. This relationship establishes a mathematical basis for comparing structurally complementary controllers without assuming equivalent optimization behavior. Accordingly, the mirror-pattern contrasts in Section~\ref{subsec:results_rules} examine whether these mathematically related control structures lead to different optimization outcomes, while the trajectories in Section~\ref{subsec:results_dynamics} illustrate their behavior during the search.
+
 
 \subsection{Integration with PSO}
 \label{subsec:pso_fcs}
 
-At iteration $t$, the controller is evaluated from the current population state and its output is used in the standard PSO velocity update:
+The FCS--PSO workflow is shown in Appendix~\ref{app:controller_configs}. At each iteration, both inputs determine one inertia weight shared by all particles.
+
+Let $f:\mathbb{R}^d\to\mathbb{R}$ be the objective to be minimized, $N$ the population size, and $d$ the problem dimension. Particle index $i\in\{1,\ldots,N\}$ and iteration index $t\in\{0,\ldots,T_{\max}\}$ identify each state; $\mathbf{x}_{i,t}$, $\mathbf{v}_{i,t}$, $\mathbf{p}_{i,t}$, and $\mathbf{g}_t$ belong to $\mathbb{R}^d$, and $\mathbf{L},\mathbf{U}\in\mathbb{R}^d$ are the coordinatewise search bounds. Initial positions are sampled coordinatewise uniformly within these bounds and initial velocities are zero. At each update iteration $t$, the controller is evaluated from the current population state and its output is used in the standard PSO velocity update:
 \begin{equation}
-	v_{i,t+1}=w_t v_{i,t}+c_1 r_1(p_{i,t}-x_{i,t})+c_2 r_2(g_t-x_{i,t}),
+\begin{aligned}
+\mathbf{v}_{i,t+1} &= \operatorname{clip}\!\Bigl(
+	w_t\mathbf{v}_{i,t}
+	+ c_1\mathbf{r}_{1,i,t}\odot(\mathbf{p}_{i,t}-\mathbf{x}_{i,t})\\
+	&\qquad + c_2\mathbf{r}_{2,i,t}\odot(\mathbf{g}_t-\mathbf{x}_{i,t}),
+	-V_{\max},V_{\max}\Bigr),\\
+\mathbf{x}_{i,t+1} &= \operatorname{clip}(\mathbf{x}_{i,t}+\mathbf{v}_{i,t+1},\mathbf{L},\mathbf{U}).
+\end{aligned}
+\label{eq:pso_update}
 \end{equation}
-where $p_{i,t}$ and $g_t$ denote the personal and global best positions. The implementation records $w_t$, diversity, progress, and fitness at every iteration, enabling the analysis of convergence and controller dynamics without changing the solver interface.
+Here $\odot$ denotes elementwise multiplication; components of $\mathbf{r}_{1,i,t}$ and $\mathbf{r}_{2,i,t}$ are generated separately as uniform draws from $[0,1)$. The acceleration coefficients are $c_1=c_2=2$. The operator $\operatorname{clip}$ acts componentwise: for coordinate $\ell$, it returns $\min(b_\ell,\max(a_\ell,z_\ell))$ for input $z_\ell$ and bounds $a_\ell,b_\ell$. The velocity bound is the scalar $V_{\max}=0.1U_1$, where $U_1$ is the upper bound of the first coordinate; this same bound applies to every velocity component. For position clipping, $\mathbf{L},\mathbf{U}$ supply coordinatewise bounds. The solver clips updated positions before objective evaluation. Progress scalar $p_t$ is distinct from personal-best vector $\mathbf{p}_{i,t}$.
+
+For the FCS input, swarm diversity is measured with the Hussain mean-absolute-deviation statistic. Let $\bar x_k(t)=N^{-1}\sum_{i=1}^N x_{i,k}(t)$ denote the mean position in coordinate $k$. Its value is the mean absolute deviation over all particles and coordinates, rounded to three decimal places:
+\begin{equation}
+\begin{aligned}
+D_t &= \operatorname{round}\!\left(\frac{1}{Nd}\sum_{k=1}^d\sum_{i=1}^N|x_{i,k}(t)-\bar x_k(t)|,3\right),\\
+D_t^{\max} &= \max_{0\leq s\leq t}D_s,\\
+d_t &= \begin{cases}
+	D_t/D_t^{\max},&D_t^{\max}>10^{-12},\\
+	0,&\text{otherwise,}
+\end{cases}
+\qquad p_t=\frac{t}{T_{\max}}.
+\end{aligned}
+\label{eq:hussain_diversity}
+\end{equation}
+The running maximum $D_t^{\max}$ includes the initial population; $s$ in its definition is a dummy iteration index. The controller clips $d_t$ and $p_t$ to $[10^{-12},1-10^{-12}]$ before fuzzification. The same scalar $w_t$ is shared by all particles. The baseline records $w_0=0.9$ at initialization, but velocity updates use $t=1,\ldots,T_{\max}$ in $w_t=0.9-0.8t/T_{\max}$. Thus, for $T_{\max}=1000$, the first applied value is $0.8992$ and the final applied value is $0.1$. Under FCS mode, $w_t$ is returned by the Mamdani controller defined above.
+
+The combined effect of the partitions and rule base is the control surface $(d_t,p_t)\mapsto w_t$. Figure~\ref{fig:surface_panel_5} shows all eight effective surfaces at $n=5$; surfaces at $n=3,7,9$ are in Appendix~\ref{app:controller_configs}. These displays show the actual Mamdani outputs, including diversity sensitivity induced by antecedent firing even when a consequent axis is nominally neutral.
+
+\begin{figure}[p]
+	\centering
+	\includegraphics[width=0.92\textwidth,height=0.82\textheight,keepaspectratio]{figures/11_3d_surface_panel_5labels_I1.png}
+	\caption{Effective Mamdani inertia-weight surfaces for R1--R8 at $n=5$, over diversity and progress; $w\in[0.1,0.9]$.}
+	\label{fig:surface_panel_5}
+\end{figure}
+
+The remaining effective surfaces are provided in Appendix~\ref{app:controller_configs}. Algorithm~\ref{alg:pso_fcs} gives the iteration procedure using the diversity and PSO update equations defined above; the baseline schedule is specified separately.
+
+\begin{algorithm}[H]
+\caption{Fuzzy-controlled PSO iteration}
+\label{alg:pso_fcs}
+\small
+\begin{algorithmic}[1]
+\Require Objective $f$, population size $N$, bounds $\mathbf{L},\mathbf{U}$, iteration limit $T_{\max}$, granularity $n$, rule pattern $R\in\{R1,\ldots,R8\}$
+\Ensure Best-so-far position $\mathbf{g}$ and its objective value $f(\mathbf{g})$ are recorded
+\State Sample initial positions within $[\mathbf{L},\mathbf{U}]$, set velocities to zero, evaluate the swarm, and set personal/global bests; initialize $D^{\max}$
+\For{$t=1,\ldots,T_{\max}$}
+	\State Compute $(d_t,p_t)$ from the current swarm using Equation~(\ref{eq:hussain_diversity})
+	\State $w_t\gets\operatorname{FIS}_{n,R}(d_t,p_t)$ \Comment{one weight shared by all particles}
+	\For{$i=1,\ldots,N$}
+		\State Update velocity and position using Equation~(\ref{eq:pso_update})
+		\State Evaluate $f(\mathbf{x}_i)$ and update the personal best if improved
+	\EndFor
+	\State Update the global best from the personal bests
+\EndFor
+\State Record $(\mathbf{g},f(\mathbf{g}))$ as the result
+\end{algorithmic}
+\end{algorithm}

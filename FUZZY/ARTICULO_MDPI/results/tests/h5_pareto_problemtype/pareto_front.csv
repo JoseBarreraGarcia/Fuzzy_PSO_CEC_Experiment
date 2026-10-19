@@ -1,0 +1,4 @@
+mh_raw,S1,S2,mh_family,n_labels,rule_set
+PSO_FCS:G3:I1:R5:O1,1.0,11.0,PSO_FCS,3.0,R5
+PSO_FCS:G3:I1:R1:O1,2.0,3.0,PSO_FCS,3.0,R1
+PSO_FCS:G5:I1:R6:O1,13.0,1.0,PSO_FCS,5.0,R6

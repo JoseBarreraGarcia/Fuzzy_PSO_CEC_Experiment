@@ -7,6 +7,8 @@ from BD.sqlite import BD
 
 # Crear diccionario de funciones CEC2017
 cec2017_functions = {func.__name__.upper() + 'CEC2017': func for func in all_functions}
+CEC2017_SUPPORTED_DIMENSIONS = frozenset((10, 30, 50, 100))
+CEC2017_DEPRECATED_FUNCTIONS = frozenset(('F2CEC2017',))
 
 def fitness(problem, individual):
     """
@@ -24,6 +26,21 @@ def fitness(problem, individual):
     
     def cec2017_function(x):
         """Evalúa funciones CEC2017."""
+        if problem in CEC2017_DEPRECATED_FUNCTIONS:
+            raise ValueError(
+                "F2CEC2017 fue retirada de la suite oficial y no se admite "
+                "en campanas experimentales."
+            )
+        x = np.asarray(x, dtype=float)
+        if x.ndim != 1:
+            raise ValueError("CEC2017 requiere un individuo unidimensional.")
+        if x.size not in CEC2017_SUPPORTED_DIMENSIONS:
+            supported = sorted(CEC2017_SUPPORTED_DIMENSIONS)
+            raise ValueError(
+                f"Dimension CEC2017 no admitida: {x.size}. Use una de {supported}."
+            )
+        if not np.all(np.isfinite(x)):
+            raise ValueError("CEC2017 no admite coordenadas NaN o infinitas.")
         func = cec2017_functions[problem]
         # cec2017 espera shape (n_samples, dim), entonces reshape
         if x.ndim == 1:
@@ -32,7 +49,13 @@ def fitness(problem, individual):
             x_reshaped = x
         result = func(x_reshaped)
         # Retornar solo el primer valor si es array
-        return result[0] if isinstance(result, np.ndarray) else result
+        value = result[0] if isinstance(result, np.ndarray) else result
+        value = float(value)
+        if not np.isfinite(value):
+            raise FloatingPointError(
+                f"{problem} produjo un fitness no finito para una entrada finita."
+            )
+        return value
 
     # Asegurar que `problem` sea un string válido
     if isinstance(problem, str):
@@ -172,6 +195,9 @@ def F13(x): #Generalized Penalized Function No.02
     
     return o
 
+_F14_WEIGHTS = tuple(range(1, 26))
+
+
 def F14(x): #Shekel's Foxholes Function
     aS = [
         [
@@ -198,10 +224,7 @@ def F14(x): #Shekel's Foxholes Function
         H = v - aS[:, i]
         bS[i] = np.sum((np.power(H, 6)))
         
-    w = [i for i in range(25)]
-    
-    for i in range(0, 24):
-        w[i] = i + 1
+    w = np.asarray(_F14_WEIGHTS)
     
     o = ((1.0 / 500) + np.sum(1.0 / (w + bS))) ** (-1)
     

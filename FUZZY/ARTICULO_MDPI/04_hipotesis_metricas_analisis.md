@@ -1,258 +1,66 @@
-# Hipótesis, métricas y plan de análisis — Paper MDPI
+# Preguntas de investigación, métricas y análisis final
 
-> **Propósito.** Definir antes de generar resultados qué hipótesis se prueban, con qué métricas se cuantifican y con qué tests estadísticos se contrastan. Este documento es la base de la sección *Results* y *Discussion* del manuscrito y la guía operativa para Fase 5.
+**Estado: 15 de octubre de 2026.** Este documento resume el diseño ejecutado y los análisis que respaldan la versión final del artículo *Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure*. Los criterios históricos y análisis exploratorios anteriores se preservan en `archive/project_status_history_20261015/04_hipotesis_metricas_analisis_pre_final.md`; no constituyen la metodología inferencial vigente.
 
-> **Pregunta de investigación principal** (ver `03_decisiones_metodologicas.md::D0`): *¿existe una configuración estática del FCS Mamdani (granularidad + reglas) que domine globalmente sobre el Classical Benchmark Suite F1–F23, o el desempeño óptimo depende del tipo de problema?* La respuesta a esta pregunta (sintetizada en **H5**) condiciona la viabilidad de la línea de adaptación semántica de la tesis doctoral.
+## 1. Diseño y datos
 
-> **Vocabulario.** Se habla de **"configuración del FCS Mamdani"** ó **"parametrización del FIS"** — una configuración = `(n, R)` con `n ∈ {3,5,7,9}` y `R ∈ {R1,…,R8}`. Los términos *fuzzy scheme* y *AFCS* están reservados para *Discussion / Future Work*.
+- **Benchmark:** funciones clásicas F1–F23 en 62 instancias función–dimensión. F1–F13 se evaluaron en dimensiones 10, 30, 50 y 100; F14–F23, en sus dimensiones fijas.
+- **Configuraciones:** PSO clásico y 32 controladores PSO-FCS, formados por granularidad $n\in\{3,5,7,9\}$ y patrón de consecuentes R1–R8. Identificador de lectura: `FCS-n-Rk`.
+- **Presupuesto:** población de 20, 1000 iteraciones y 31 corridas por configuración–instancia; 63 426 registros completados.
+- **F14:** los resultados finales usan la función de Shekel Foxholes con los pesos canónicos $1,\ldots,25$.
+- **Semillas:** cada corrida tiene una semilla distinta, calculada como $42+$ identificador global del experimento. Las semillas no se comparten entre configuraciones; `run_id` no se usa como bloque de pareamiento.
 
-**Última actualización:** 2026-06-27
-**Estado:** propuesta inicial. **A revisar/aprobar por el autor antes de Fase 2.**
+El gap normalizado es $(f_{\mathrm{best}}-f^*)/\max(|f^*|,1)$, con valores negativos truncados a cero. Los empates de ranking se asignan con rangos promedio. La unidad de bloque de Friedman para RQ1 es la instancia, no la corrida individual.
 
----
+## 2. Preguntas y análisis
 
-## 1. Variables y notación común
+### RQ1. ¿Cómo difieren los rankings de las configuraciones?
 
-### Factores controlados (del diseño experimental)
+Por instancia se calcula la mediana del gap normalizado sobre 31 corridas y se ordenan las 33 configuraciones. Friedman se aplica a los 62 bloques de instancia y Nemenyi a los pares posteriores.
 
-| Factor | Niveles | Notación |
-|---|---|---|
-| Granularidad de la partición | n ∈ {3, 5, 7, 9} | n |
-| Patrón de reglas | R ∈ {R1, R2, R3, R4, R5, R6, R7, R8} | R |
-| Algoritmo base | {PSO clásico, PSO_FCS(n, R)} | A |
-| Función objetivo | F1, …, F23 (Classical Benchmark Suite, Abualigah et al. 2021) | f |
-| Dimensión | d ∈ {10, 30, 50, 100} (cuando aplica) | d |
+**Resultado final:** $\chi^2(32)=1052.38$, $p=1.56\times10^{-200}$; CD $=6.591$. FCS-3-R1 ocupa el primer lugar (rango medio 4.774) y PSO el segundo (6.363); ambos quedan en el mismo grupo de diferencia crítica. Se identifican 272 pares Nemenyi significativos de 528.
 
-Configuración de un experimento: tupla `(A, n, R, f, d, run_id)`. Para PSO clásico solo `(PSO, f, d, run_id)` (n y R no aplican).
+### RQ2. ¿Cómo varían los rankings entre clases de paisaje?
 
-### Métricas primarias (por run)
+Las clases descriptivas son unimodal (F1–F7), multimodal escalable (F8–F13) y multimodal de dimensión fija (F14–F23). Los rangos de cada configuración se promedian dentro de cada clase; Kendall $\tau$ describe la concordancia entre rankings.
 
-| Métrica | Definición |
-|---|---|
-| `fitness_best` | Mejor fitness alcanzado en la corrida (al final de las maxIter) |
-| `nfe_to_target` | Número de evaluaciones de fitness para alcanzar `f_opt + ε` (NA si no llega) |
-| `t_exec` | Tiempo de ejecución en segundos |
+**Resultado final:** $\tau=0.867$ entre unimodal y multimodal escalable; $\tau=0.083$ entre unimodal y dimensión fija; $\tau=0.080$ entre multimodal escalable y dimensión fija. Los mejores por gap mediano son FCS-3-R5, FCS-3-R1 y FCS-5-R6, respectivamente. Estos grupos difieren simultáneamente en más de una característica del benchmark; las diferencias no aíslan efectos causales de modalidad o dimensionalidad.
 
-### Métricas secundarias (por iteración, agregadas)
+### RQ3. ¿Disminuye consistentemente la dispersión entre patrones al aumentar $n$?
 
-| Métrica | Definición |
-|---|---|
-| `convergence_auc` | Área bajo la curva `log(fitness − f_opt)` vs iteración |
-| `diversity_mean` | Diversidad media de la población a lo largo de la corrida |
-| `diversity_decay_rate` | Pendiente del decaimiento de diversidad (regresión log-lineal) |
-| `w_mean`, `w_std` | Media y desviación del peso de inercia a lo largo de la corrida |
-| `w_trajectory_entropy` | Entropía de la distribución empírica de `w` (qué tanto explora el FIS el rango [wMin, wMax]) |
+RQ3 es **descriptiva**; no estima una interacción factorial ni aplica una prueba inferencial de interacción. Para cada función y granularidad se calcula la desviación estándar entre los ocho patrones, por separado para rangos y para log-gap. Los rangos por instancia se promedian sobre dimensiones dentro de función y configuración; para log-gap se usa la mediana de 31 corridas, la transformación $\log_{10}(\max(g,10^{-12})+10^{-12})$ y la misma agregación por dimensión. Cada función recibe igual peso al resumir las dispersiones.
 
-### Métricas derivadas (por configuración (n, R, f, d))
+**Resultado final, medianas entre 23 funciones para $n=3/5/7/9$:** dispersión de rangos 8.884/8.366/8.715/9.374; dispersión de log-gap 0.912/1.170/1.173/0.901. Entre $n=3$ y $n=9$, el spread disminuye en 6/23 funciones para rangos y 11/23 para log-gap; solo 3/23 funciones son no crecientes a través de los cuatro niveles para cada medida. No hay una disminución consistente.
 
-| Métrica | Definición |
-|---|---|
-| `mean_best`, `median_best`, `std_best`, `IQR_best` | Estadísticos de `fitness_best` sobre los 31 runs |
-| `success_rate` | % de runs que alcanzan `f_opt + ε` |
-| `rank_friedman` | Posición ordinal media sobre el conjunto de funciones (Friedman) |
-| `wins_vs_PSO` | # de funciones donde la configuración supera a PSO clásico con p < 0.05 (Wilcoxon) |
+No se asume que `run_id` identifique semillas comunes entre configuraciones. Por tanto, un bootstrap factorial bloqueado por `run_id` no forma parte de la evidencia final de RQ3.
 
----
+### RQ4. ¿Cómo se compara cada FCS fija con PSO?
 
-## 2. Hipótesis de trabajo
+Cada FCS se contrasta con PSO por instancia usando muestras independientes de 31 valores de fitness final y una prueba Mann–Whitney $U$ bilateral, asintótica y con corrección de continuidad. El tamaño de efecto es Vargha–Delaney:
 
-### H1 — Granularidad y retornos decrecientes
+$$A_{12}=\frac{\#(x_r<y_s)+\tfrac12\#(x_r=y_s)}{31^2},$$
 
-**Claim.** Aumentar la granularidad `n` mejora la calidad de la solución hasta un punto de retornos decrecientes; después se estabiliza o degrada por exceso de fragmentación de reglas (n² consecuentes, más sensibilidad al ruido inferencial).
+donde $A_{12}>0.5$ favorece FCS porque se minimiza el fitness. Bonferroni se aplica sobre los 1 984 contrastes (32 configuraciones $\times$ 62 instancias), con $\alpha=0.05/1984=2.5202\times10^{-5}$. Las comparaciones que no alcanzan el umbral son no significativas, no empates ni evidencia de equivalencia.
 
-**Variables.**
-- Factor: `n ∈ {3, 5, 7, 9}`.
-- Controles: R fijo (analizar por R), f variado, d variado.
-- Respuesta: `mean_best`, `rank_friedman`.
+**Resultado final agregado, W/NS/L:** 22/906/1056 después de Bonferroni. Para FCS-3-R1: 30/30/2 nominal y 16/46/0 tras corrección.
 
-**Test estadístico.**
-- **Friedman + post-hoc Nemenyi** sobre `rank_friedman(n)` cruzando todas las funciones × dimensiones.
-- Diagrama de **Critical Difference (CD)** para mostrar grupos no significativamente distintos.
+### RQ5. ¿Concuerdan los rankings de los subconjuntos dimensionales?
 
-**Criterio de rechazo.**
-- H1 se sostiene si existe al menos un `n* ∈ {3,5,7,9}` tal que:
-  - `n*` está significativamente mejor que `n = 3` (p < 0.05 Nemenyi), y
-  - No existe `n' > n*` que mejore significativamente a `n*` (retornos decrecientes).
-- H1 se rechaza si la relación es estrictamente monótona (más n siempre mejor) o si no hay diferencias significativas en ningún sentido.
+$S_1$ comprende F1–F13 y $S_2$ F14–F23. La concordancia de Kendall entre los rankings inducidos por gap mediano se presenta descriptivamente.
 
-**Hipótesis nula complementaria:** `n` no afecta el desempeño (rankings indistinguibles entre n=3,5,7,9).
+**Resultado final:** $\tau(S_1,S_2)=0.0947$, $p=0.4507$. Los mejores por gap mediano son FCS-3-R5 en $S_1$ y FCS-5-R6 en $S_2$. El resultado no significativo no establece independencia ni transferibilidad.
 
----
+## 3. Tabla 11: contrastes entre patrones
 
-### H2 — Sensibilidad al patrón de reglas según la naturaleza del problema
+Los ocho pares de patrones se comparan, para cada granularidad e instancia, con pruebas Mann–Whitney $U$ bilaterales sobre muestras independientes. Esta familia es distinta de RQ4: $8\times4\times62=1984$ pruebas. Holm se aplica una sola vez sobre toda la familia, con $\alpha=0.05$. La dirección se determina con $A_{12}$; los resultados no significativos se etiquetan como tales.
 
-**Claim.** El patrón de reglas óptimo depende de la **naturaleza** del problema:
-- Funciones unimodales / convexas (F1–F4 del Classical Suite) tienden a favorecer **R1, R5, R6** (progress decreasing → más explotación al final).
-- Funciones multimodales (F5–F10) tienden a favorecer **R3, R5, R7** (diversity following → cooperan con la dinámica natural del enjambre).
-- Funciones compuestas / híbridas (F11–F23) son más sensibles a la combinación R5/R6/R7/R8 (efectos duales).
+**Resultado final:** 1450 pruebas son significativas con $p<0.05$ nominal y 1200 permanecen significativas después de Holm. Los ocho patrones dominantes conservan más victorias significativas que derrotas. La clase donde R4 supera más claramente a R3 es multimodal escalable bajo el criterio Holm.
 
-**Variables.**
-- Factor: `R ∈ {R1, …, R8}`.
-- Estratificación: clase del problema {unimodal, multimodal, híbrida, compuesta}.
-- Respuesta: `mean_best`, `rank_friedman`.
+## 4. Runtime y dinámica
 
-**Test estadístico.**
-- **Heatmap de win rates** (R × f) con tonalidad por `rank_friedman`.
-- **Friedman + Nemenyi** por clase de problema (4 tests separados).
+- **Runtime:** overhead calculado como $100[\mathrm{median}(t_{FCS})/\mathrm{median}(t_{PSO})-1]$ a partir de medianas de muestras independientes por configuración–instancia; no se emparejan registros por `run_id`. En los 1984 cocientes, la mediana es 27.75% (IQR 19.81–50.94%).
+- **Dinámica:** se describen las trayectorias de $w(t)$ y XPL, la convergencia representativa y la dispersión. La asociación entre caída temprana–tardía de $w$ y rango medio es Spearman $\rho=-0.786$, $p=0.021$; es descriptiva y no identifica un mecanismo causal.
 
-**Criterio de rechazo.**
-- H2 se sostiene si las matrices de ranking por clase de problema son **estadísticamente distintas** (Kendall's τ entre rankings < 0.5 ó test de homogeneidad rechaza).
-- H2 se rechaza si un único R domina en todas las clases.
+## 5. Estado de reproducibilidad
 
----
-
-### H3 — Interacción granularidad × reglas
-
-**Claim.** A mayor granularidad `n`, la sensibilidad al patrón de reglas **disminuye** (la inferencia se vuelve más "suave" y absorbe diferencias entre Rk). Equivalentemente: la varianza del desempeño entre R1–R8 es decreciente en n.
-
-**Variables.**
-- Factores: `n × R` (4 × 8 = 32 configuraciones).
-- Respuesta: `mean_best` agregado sobre f y d.
-
-**Test estadístico.**
-- **ANOVA de dos vías** (n × R) o, si no se cumplen supuestos, **Scheirer–Ray–Hare** (no paramétrico).
-- **Variance partition:** estimar fracción de varianza explicada por n, R y la interacción n×R.
-- **Plot:** desviación estándar de `mean_best` entre R1–R8 vs n (esperado: pendiente negativa).
-
-**Criterio de rechazo.**
-- H3 se sostiene si:
-  - El efecto principal de R es significativo (p < 0.05), y
-  - `std(mean_best | R) | n=9 < std(mean_best | R) | n=3` (pendiente negativa en el plot).
-- H3 se rechaza si la interacción n×R no es significativa o la pendiente es positiva.
-
----
-
-### H4 — PSO_FCS supera a PSO clásico en la mayoría de funciones
-
-**Claim.** Existe al menos una configuración `(n*, R*)` que supera estadísticamente a PSO clásico en **≥ 50% de las funciones × dimensiones** del Classical Benchmark Suite F1–F23.
-
-**Variables.**
-- Comparación pareada: PSO_FCS(n*, R*) vs PSO en cada (f, d).
-- Respuesta: `fitness_best` distribuido sobre 31 runs.
-
-**Test estadístico.**
-- **Wilcoxon signed-rank** pareado (PSO_FCS vs PSO) por cada (f, d), con corrección de Bonferroni para múltiples comparaciones.
-- Tabla **wins / ties / losses** y `success_rate` por configuración.
-
-**Criterio de rechazo.**
-- H4 se sostiene si `wins_vs_PSO(n*, R*) ≥ 0.5 × |F| × |D|` con p_global < 0.05.
-- H4 se rechaza si ninguna configuración llega a la mitad del benchmark.
-
----
-
-### H5 — No existe una configuración estática del FCS óptima global  **[HIPÓTESIS CLAVE DEL PAPER]**
-
-**Claim.** No existe una sola configuración `(n*, R*)` del FCS Mamdani que sea óptima simultáneamente sobre toda la familia F1–F23 del Classical Benchmark Suite. Equivalentemente: el ranking de configuraciones varía significativamente entre subgrupos del benchmark.
-
-Subgrupos:
-- **S1**: F1–F13 (clásicas escalables, dim ∈ {10,30,50,100}).
-- **S2**: F14–F23 (compuestas/híbridas, dimensiones fijas).
-- Opcionalmente: refinar por modalidad (unimodal F1–F4, multimodal F5–F13, compuesta F21–F23).
-
-**Variables.**
-- `rank_friedman` global y por subgrupo.
-
-**Test estadístico.**
-- Comparar `argmin(rank_friedman)` global vs por subgrupo.
-- **Kendall's τ** entre rankings S1 y S2 (medida de concordancia).
-- Test de homogeneidad sobre los rankings (chi-cuadrado o test de Cochran si aplica).
-
-**Criterio de rechazo.**
-- H5 se sostiene si `(n*, R*)_global ≠ (n*, R*)_S1` o `≠ (n*, R*)_S2`, y `τ(S1, S2) < 0.7`.
-- H5 se rechaza si una sola configuración domina en ambos subgrupos.
-
-**Implicación para la tesis** (CRUCIAL).
-- **Si H5 se sostiene:** la heterogeneidad de óptimos del FCS estático evidencia que un FCS con configuración fija es insuficiente para abordar la variabilidad del benchmark. Este resultado **motiva empíricamente** la línea de investigación posterior de la tesis: diseño de mecanismos que adapten la semántica del FCS al tipo de problema (en la tesis: definición formal de fuzzy schemes + selector dinámico).
-- **Si H5 se rechaza:** una sola configuración estática del FCS dominaría globalmente, lo que **debilitaría** la motivación de la tesis y exigiría replantear su propuesta central. (Resultado posible pero improbable según trabajos previos OLA/CLEI/WEA.)
-
-*En la conclusión del paper, esta implicación se redacta como motivación de trabajo futuro sin nombrar AFCS explícitamente — esto se mantiene bajo perfil hasta tener AFCS implementado.*
-
----
-
-## 3. Diseño experimental (resumen ejecutivo)
-
-| Parámetro | Valor |
-|---|---|
-| Funciones | F1–F23 (Classical Benchmark Suite, Abualigah et al. 2021) |
-| Dimensiones | F1–F13: {10, 30, 50, 100}; F14–F23: fijas (4–20) |
-| Configuraciones del FCS (PSO_FCS) | 4 (n) × 8 (R) = **32** |
-| Baseline | PSO clásico (1 configuración) |
-| Runs independientes | **31** por configuración × función × dimensión |
-| Iteraciones por run | 1000 |
-| Tamaño de población | 20 |
-| Semilla maestra | 42 (semilla por run = `42 × run_id`) |
-
-**Total experimentos full ≈ 63.500** (smoke ≈ 100).
-
-Detalles en `02_setup_experimental.md`.
-
----
-
-## 4. Tests estadísticos y supuestos
-
-| Test | Cuándo se usa | Supuestos | Alternativa no paramétrica |
-|---|---|---|---|
-| Wilcoxon signed-rank | Pareado: PSO_FCS vs PSO por (f, d) | Distribución simétrica de diferencias | — (es la alternativa NP) |
-| Friedman | Múltiples (≥3) configuraciones sobre múltiples problemas | Bloques pareados | — |
-| Nemenyi post-hoc | Tras Friedman significativo | Mismas k muestras por bloque | — |
-| Scheirer–Ray–Hare | ANOVA 2 factores no paramétrica | Diseño factorial | — |
-| Kendall's τ | Concordancia entre rankings | — | — |
-| Bonferroni correction | Múltiples comparaciones simultáneas | Conservador | Holm |
-
-**Corrección global por familia de tests:** Bonferroni con `α/m` donde `m` es el número total de tests dentro de cada hipótesis.
-
-**Tamaño de efecto.** Reportar siempre:
-- Diferencia mediana (`Δ_median`).
-- `Vargha–Delaney A12` para comparaciones pareadas (interpretación: A12 > 0.71 = efecto grande, > 0.64 = mediano, > 0.56 = pequeño).
-
----
-
-## 5. Visualizaciones obligatorias del paper
-
-| Figura | Propósito | Sección |
-|---|---|---|
-| Particiones I1/O1 para n=3,5,7,9 | Mostrar el espacio de diseño | Methods |
-| Heatmap reglas (R × granularidad) | Mostrar el espacio de patrones | Methods |
-| Convergence curves por configuración | Visualizar dinámica | Results — H4 |
-| Boxplots `fitness_best` por n (agregado) | H1 — granularidad | Results — H1 |
-| CD diagram (Friedman+Nemenyi) por n | H1 — significancia | Results — H1 |
-| Heatmap `rank(R, f)` por clase de problema | H2 — interacción problema×regla | Results — H2 |
-| `std(R) vs n` plot | H3 — sensibilidad | Results — H3 |
-| Tabla wins/ties/losses (mejor config vs PSO) | H4 — efectividad | Results — H4 |
-| Comparación rankings S1 vs S2 | H5 — transferibilidad | Discussion — H5 |
-| Trayectoria de `w` para 4 configuraciones representativas | Interpretabilidad FIS | Discussion |
-
----
-
-## 6. Reproducibilidad
-
-| Elemento | Mecanismo |
-|---|---|
-| Semillas | `seed = 42 × run_id`, reportadas en CSV |
-| Versión de software | `requirements.txt` congelado al inicio de Fase 2 |
-| Configuración del FIS | `config/fuzzy_partitions.json` (JSON declarativo) |
-| Configuración de experimentos | `config/experiments_mdpi_*.json` |
-| Datos crudos | `Resultados/resumen/level1_raw/` (un CSV por run) |
-| Datos agregados | `Resultados/resumen/level2_aggregated/` |
-| Datos disgregados (rankings) | `Resultados/resumen/level3_disaggregated/` |
-| Scripts de análisis | `analysis_modules_cec/` |
-| Branch git del paper | `Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI` (tag por release) |
-
----
-
-## 7. Lo que este documento NO decide (pendiente)
-
-1. **Tamaño exacto de la muestra de runs** (31 = estándar IEEE/CEC, podría ajustarse).
-2. **Criterio operacional para `nfe_to_target`** (qué ε se usa).
-3. **Reglas de exclusión** de runs anómalos (¿se eliminan outliers?, ¿qué definición?).
-4. **Política de presentación de tiempos de ejecución** (¿agregado o por configuración?).
-
-Decisiones a tomar al inicio de Fase 5 con resultados preliminares.
-
----
-
-## Apéndice — Historial de cambios
-
-| Fecha | Cambio |
-|---|---|
-| 2026-06-27 | Creación inicial: H1–H5, métricas y plan de análisis. |
+El artículo principal compila a 62 páginas y el Supplementary Information a 43. El paquete suplementario fechado contiene los 63 426 resultados de corrida, semillas, tablas de análisis y figuras. No se ha hecho un depósito público independiente ni se ha asignado un DOI; cualquier declaración de disponibilidad externa requiere aprobación de los autores.

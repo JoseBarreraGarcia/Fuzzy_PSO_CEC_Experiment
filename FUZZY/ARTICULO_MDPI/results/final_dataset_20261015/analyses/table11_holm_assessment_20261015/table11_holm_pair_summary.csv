@@ -1,0 +1,9 @@
+pair,family,rule_a,rule_b,comparisons,nominal_wins_for_dominant,nominal_nonsignificant,nominal_losses_for_dominant,holm_wins_for_dominant,holm_nonsignificant,holm_losses_for_dominant,nominal_wins_rule_a,nominal_wins_rule_b,holm_wins_rule_a,holm_wins_rule_b,nominal_dominant_rule,holm_dominant_rule,direction_survives_holm,strongest_class_by_holm_win_rate,median_A12_rule_a_vs_rule_b
+R1 vs R2,mirror,R1,R2,248,192,56,0,175,73,0,192,0,175,0,R1,R1,True,unimodal,0.9864724245577524
+R3 vs R4,mirror,R3,R4,248,118,59,71,104,98,46,71,118,46,104,R4,R4,True,multimodal,0.4136316337148803
+R5 vs R8,mirror,R5,R8,248,173,73,2,142,106,0,173,2,142,0,R5,R5,True,unimodal,0.9084287200832466
+R6 vs R7,mirror,R6,R7,248,173,57,18,152,91,5,173,18,152,5,R6,R6,True,multimodal,0.9510926118626433
+R5 vs R7,single-axis,R5,R7,248,172,75,1,152,96,0,172,1,152,0,R5,R5,True,multimodal,0.9573361082206036
+R6 vs R8,single-axis,R6,R8,248,176,65,7,156,92,0,176,7,156,0,R6,R6,True,unimodal,0.9172736732570239
+R5 vs R6,single-axis,R5,R6,248,132,81,35,99,130,19,132,35,99,19,R5,R5,True,unimodal,0.6620707596253902
+R7 vs R8,single-axis,R7,R8,248,154,68,26,137,98,13,26,154,13,137,R8,R8,True,multimodal,0.08844953173777309

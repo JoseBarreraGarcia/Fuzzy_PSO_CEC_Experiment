@@ -1,0 +1,56 @@
+1. ¿Qué debería contener un buen caption?
+La práctica editorial científica recomienda que una tabla o figura pueda comprenderse sin necesidad de leer todo el artículo. Sin embargo, eso no significa repetir en el caption la explicación completa del experimento.
+Yo distinguiría tres niveles:
+Elemento	Contenido apropiado
+Caption	Qué muestra la tabla o figura, variables, unidades y aclaraciones indispensables para interpretarla
+Notas de tabla o figura	Abreviaturas, símbolos, criterios estadísticos o excepciones específicas
+Texto principal	Por qué se presenta, qué resultados son relevantes, cómo se interpretan y qué implicaciones tienen
+Una precisión: la autosuficiencia no implica que todos los detalles metodológicos deban aparecer en cada caption. Basta con proporcionar la información necesaria para interpretar correctamente la evidencia representada.
+2. Ejemplo concreto de tu artículo
+En la versión del 13 de octubre, el caption de la Figura 21 describe el diagrama de diferencia crítica, el número de configuraciones, el procedimiento Friedman/Nemenyi, el nivel de significancia, el ordenamiento, la banda de diferencia crítica y la identificación del baseline.
+Buena parte de esa información está justificada, pero puede redactarse de forma mucho más compacta.
+Versión recomendada
+Figure 21. Critical difference diagram of 33 algorithmic configurations across 62 benchmark instances (Friedman/Nemenyi, α = 0.05). Lower mean ranks indicate better performance; the shaded region identifies configurations within one critical difference (CD = 6.59) of the leader.
+
+
+En el párrafo que presenta la figura puedes explicar que FCS-3-R1 encabeza el ranking, que PSO ocupa la segunda posición y que ambos se encuentran dentro de la misma banda de diferencia crítica.
+Eso evita que el caption anticipe o repita la interpretación del resultado.
+3. Otro caso: Figure 28
+El caption actual de la Figura 28 explica la media del gap, su desviación estándar, las 31 corridas, los ejes logarítmicos, el tratamiento de ceros, los colores, los marcadores, el baseline, la mejor configuración y la ubicación del atlas completo.
+Es bastante información para un solo caption.
+Podría quedar así:
+Figure 28. Mean normalized gap versus standard deviation across 31 runs for four representative benchmark instances. Both axes use logarithmic scales. Colors distinguish rule patterns, marker shapes indicate granularity, and the star denotes classical PSO.
+
+El tratamiento de los valores nulos debería mantenerse en una nota breve o en el caption si es indispensable para comprender la escala. El resto de la explicación sobre la interpretación de las configuraciones y el atlas completo puede ir en el texto principal.
+4. ¿Qué haría con las tablas?
+En tablas aplicaría una regla similar, aunque hay una diferencia importante: las tablas suelen necesitar más notas explicativas que las figuras.
+Por ejemplo, la Tabla 11 contiene comparaciones Wilcoxon, victorias, empates, derrotas, corrección Bonferroni y tamaño de efecto A12.
+Una versión compacta sería:
+Table 11. Paired Wilcoxon comparisons of ten FCS configurations against classical PSO across 62 benchmark instances. Wins, ties, and losses are reported before and after Bonferroni correction; A12 denotes the Vargha–Delaney effect size.
+
+Después, una nota puede aclarar que A12 mayor que 0,5 favorece FCS y que la corrección considera 1.984 comparaciones.
+Ese detalle es importante, pero no necesita integrarse en una sola oración extensa.
+5. Extensión recomendada
+No existe un número universal de palabras que determine si un caption es correcto. Como criterio editorial práctico para tu manuscrito, utilizaría lo siguiente:
+Elemento	Extensión orientativa
+Figura sencilla	15–30 palabras
+Figura con varios paneles	25–50 palabras
+Figura estadística compleja	35–65 palabras
+Tabla sencilla	15–30 palabras
+Tabla estadística compleja	25–50 palabras, más notas cuando sean necesarias
+Estas cifras son recomendaciones de edición, no límites oficiales de Mathematics. Un caption puede superar esos rangos si necesita especificar información esencial para interpretar correctamente una figura compleja.
+6. Una precaución metodológica importante
+No recomendaría eliminar información necesaria únicamente para obtener captions más cortos.
+Por ejemplo, en tu manuscrito deben mantenerse explícitos, en el caption o en notas próximas, aspectos como:
+- Si los valores son medias, medianas o rangos calculados sobre las 31 corridas.
+- Si el ranking se calcula sobre 62 instancias o mediante agregación por función.
+- Qué significa una diferencia estadísticamente significativa o una configuración empatada.
+- Si los ejes utilizan transformaciones logarítmicas.
+- Qué representan los colores y símbolos cuando no resulta evidente en la leyenda.
+La longitud del caption es secundaria respecto de la precisión científica.
+7. Mi recomendación para tu manuscrito
+Haría una revisión editorial específica de todas las tablas y figuras siguiendo tres reglas:
+Regla 1. El caption identifica el contenido y permite interpretar las variables representadas.
+Regla 2. El párrafo que presenta la figura explica el resultado relevante, sin repetir toda la información del caption.
+Regla 3. La discusión interpreta las implicaciones científicas del resultado, evitando repetir su descripción numérica.
+También reduciría las repeticiones de expresiones como "Configurations follow the FCS-n-Rk notation" o las explicaciones completas del significado de A12 en tablas consecutivas. Estas definiciones pueden establecerse en metodología y recordarse brevemente cuando sea necesario.

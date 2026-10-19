@@ -1,0 +1,9 @@
+kind,pair,n_comparisons,archived_first_wins,archived_ties,archived_second_wins,independent_first_wins,independent_ties,independent_second_wins,independent_dominant,archived_a12_median,independent_a12_median,archived_strongest_class,independent_strongest_class,archived_a12_mismatches,archived_p_mismatches_vs_paired_recalc
+mirror,R1 vs R2,248,187,61,0,192,56,0,R1,0.9864724245577524,0.9864724245577523,unimodal,unimodal,5,9
+mirror,R3 vs R4,248,42,83,123,71,59,118,R4,0.4136316337148803,0.4136316337148803,unimodal,multimodal,2,1
+mirror,R5 vs R8,248,160,86,2,173,73,2,R5,0.9084287200832466,0.9084287200832466,unimodal,unimodal,7,11
+mirror,R6 vs R7,248,174,64,10,173,57,18,R6,0.951092611862643,0.951092611862643,multimodal,multimodal,7,10
+single-axis,R5 vs R7,248,170,77,1,172,75,1,R5,0.9573361082206036,0.9573361082206036,multimodal,multimodal,4,3
+single-axis,R6 vs R8,248,171,72,5,176,65,7,R6,0.917273673257024,0.9172736732570239,unimodal,unimodal,10,12
+single-axis,R5 vs R6,248,113,98,37,132,81,35,R5,0.6620707596253902,0.6620707596253902,unimodal,unimodal,7,10
+single-axis,R7 vs R8,248,15,73,160,26,68,154,R8,0.0884495317377731,0.08844953173777315,multimodal,multimodal,8,10

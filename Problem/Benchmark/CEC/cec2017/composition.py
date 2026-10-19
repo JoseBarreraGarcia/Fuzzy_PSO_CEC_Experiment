@@ -11,11 +11,38 @@ import numpy as np
 
 def _calc_w(x, sigma):
     nx = x.shape[1]
-    w = np.sum(x*x, axis=1)
-    nzmask = w != 0
-    w[nzmask] = ((1.0/w)**0.5)[nzmask] * np.exp(-w / (2.0*nx*sigma*sigma))[nzmask]
-    w[~nzmask] = float('inf')
-    return w
+    squared_distance = np.sum(x*x, axis=1)
+    nonzero = squared_distance != 0.0
+    weights = np.full(squared_distance.shape, np.inf, dtype=float)
+    distance = squared_distance[nonzero]
+    weights[nonzero] = np.sqrt(1.0 / distance) * np.exp(
+        -distance / (2.0 * nx * sigma * sigma)
+    )
+    return weights
+
+
+def _normalise_weights(w):
+    """Normalise CEC composition weights without ever forming ``inf / inf``."""
+    normalised = np.zeros_like(w, dtype=float)
+    exact = np.isinf(w)
+    exact_count = np.sum(exact, axis=1)
+    exact_rows = exact_count > 0
+
+    if np.any(exact_rows):
+        # The limiting weight at an exact centre is one. If duplicated centres
+        # ever occur, share the mass rather than selecting one arbitrarily.
+        normalised[exact_rows] = exact[exact_rows] / exact_count[exact_rows, None]
+
+    regular_rows = ~exact_rows
+    if np.any(regular_rows):
+        regular = w[regular_rows]
+        totals = np.sum(regular, axis=1)
+        nonzero = totals > 0.0
+        regular_normalised = np.full_like(regular, 1.0 / w.shape[1])
+        regular_normalised[nonzero] = regular[nonzero] / totals[nonzero, None]
+        normalised[regular_rows] = regular_normalised
+
+    return normalised
 
 
 def _composition(x, rotations, shifts, funcs, sigmas, lambdas, biases):
@@ -30,11 +57,7 @@ def _composition(x, rotations, shifts, funcs, sigmas, lambdas, biases):
         x_t = transforms.shift_rotate(x, shifts[i][:nx], rotations[i])
         vals[:, i] = funcs[i](x_t)
         w[:, i] = _calc_w(x_shifted, sigmas[i])
-    w_sm = np.sum(w, axis=1)
-
-    nz_mask = w_sm != 0.0
-    w[nz_mask, :] /= w_sm[nz_mask, None]
-    w[~nz_mask, :] = 1/N
+    w = _normalise_weights(w)
 
     return np.sum(w * (lambdas*vals + biases), axis=1)
 
@@ -50,11 +73,7 @@ def _compose_hybrids(x, rotations, shifts, shuffles, funcs, sigmas, offsets, bia
         x_shifted = x - np.expand_dims(shifts[i][:nx], 0)
         vals[:, i] = funcs[i](x, rotation=rotations[i], shift=shifts[i][:nx], shuffle=shuffles[i]) - offsets[i]
         w[:, i] = _calc_w(x_shifted, sigmas[i])
-    w_sm = np.sum(w, axis=1)
-
-    nz_mask = w_sm != 0.0
-    w[nz_mask, :] /= w_sm[nz_mask, None]
-    w[~nz_mask, :] = 1/N
+    w = _normalise_weights(w)
 
     return np.sum(w * (vals + biases), axis=1)
 

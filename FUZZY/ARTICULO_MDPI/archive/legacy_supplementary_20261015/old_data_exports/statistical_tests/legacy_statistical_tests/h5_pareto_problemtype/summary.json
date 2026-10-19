@@ -1,0 +1,91 @@
+{
+  "metric": "gap_median",
+  "n_configs": 33,
+  "kendall_tau_S1_vs_S2": 0.09469696969696971,
+  "kendall_p_S1_vs_S2": 0.45073160411871227,
+  "kendall_by_class": {
+    "composed": {
+      "composed": 1.0,
+      "multimodal": 0.07954545454545454,
+      "unimodal": 0.08333333333333333
+    },
+    "multimodal": {
+      "composed": 0.07954545454545454,
+      "multimodal": 1.0,
+      "unimodal": 0.8674242424242423
+    },
+    "unimodal": {
+      "composed": 0.08333333333333333,
+      "multimodal": 0.8674242424242423,
+      "unimodal": 1.0
+    }
+  },
+  "best_global": {
+    "mh_raw": "PSO_FCS:G3:I1:R5:O1",
+    "gap_median": 318.6481682811688
+  },
+  "best_by_subgroup": {
+    "S1": {
+      "mh_raw": "PSO_FCS:G3:I1:R5:O1",
+      "gap_median": 379.85675855704636
+    },
+    "S2": {
+      "mh_raw": "PSO_FCS:G5:I1:R6:O1",
+      "gap_median": 0.20005969656910993
+    }
+  },
+  "H5_supported": true,
+  "H5_criteria": {
+    "argmin_S1_differs_from_S2": true,
+    "tau_S1_S2_below_0.7": true
+  },
+  "winners_by_class": [
+    {
+      "problem_class": "composed",
+      "mh_raw": "PSO_FCS:G5:I1:R6:O1",
+      "rule_set": "R6",
+      "n_labels": 5.0,
+      "gap_median": 0.20005969656910993
+    },
+    {
+      "problem_class": "multimodal",
+      "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+      "rule_set": "R1",
+      "n_labels": 3.0,
+      "gap_median": 10.88348847662121
+    },
+    {
+      "problem_class": "unimodal",
+      "mh_raw": "PSO_FCS:G3:I1:R5:O1",
+      "rule_set": "R5",
+      "n_labels": 3.0,
+      "gap_median": 695.1568322419906
+    }
+  ],
+  "pareto_front_configs": [
+    {
+      "mh_raw": "PSO_FCS:G3:I1:R5:O1",
+      "S1": 1.0,
+      "S2": 11.0,
+      "mh_family": "PSO_FCS",
+      "n_labels": 3.0,
+      "rule_set": "R5"
+    },
+    {
+      "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+      "S1": 2.0,
+      "S2": 3.0,
+      "mh_family": "PSO_FCS",
+      "n_labels": 3.0,
+      "rule_set": "R1"
+    },
+    {
+      "mh_raw": "PSO_FCS:G5:I1:R6:O1",
+      "S1": 13.0,
+      "S2": 1.0,
+      "mh_family": "PSO_FCS",
+      "n_labels": 5.0,
+      "rule_set": "R6"
+    }
+  ]
+}

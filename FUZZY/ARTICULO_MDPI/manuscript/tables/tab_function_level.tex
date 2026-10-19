@@ -1,0 +1,42 @@
+\startlandscape
+\begin{table}[H]
+\centering
+\small
+\caption{Function-level summary of the FCS configuration with the most per-instance rank wins, its ranks, Bonferroni-significant outcomes, effect size, and unpaired runtime overhead.}
+\label{tab:function_level}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}l p{2.8cm} p{1.9cm} p{2.1cm} c c c c c c}
+\toprule
+\textbf{Function} & \textbf{Landscape} & \textbf{Dimensions} & \textbf{Best FCS} & \textbf{PSO rank} & \textbf{FCS rank} & \textbf{Rank wins} & \textbf{Bonferroni wins} & \boldmath$A_{12}$ & \textbf{Overhead (\%)} \\
+\midrule
+F1 & Unimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 3.0 & 1.0 & 4/4 & 3/4 & 0.96 & 31.8 \\
+F2 & Unimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 2.0 & 1.0 & 4/4 & 4/4 & 0.98 & 34.1 \\
+F3 & Unimodal & 10, 30, 50, 100 & \texttt{FCS-5-R5} & 11.0 & 1.0 & 4/4 & 1/4 & 0.74 & 14.6 \\
+F4 & Unimodal & 10, 30, 50, 100 & \texttt{FCS-9-R5} & 4.0 & 1.0 & 3/4 & 1/4 & 0.56 & 26.2 \\
+F5 & Unimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 3.0 & 1.0 & 4/4 & 0/4 & 0.64 & 29.6 \\
+F6 & Unimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 2.0 & 1.0 & 4/4 & 4/4 & 0.95 & 33.9 \\
+F7 & Unimodal & 10, 30, 50, 100 & \texttt{FCS-5-R1} & 3.0 & 1.0 & 3/4 & 0/4 & 0.54 & 28.7 \\
+\midrule
+F8 & Scalable multimodal & 10, 30, 50, 100 & \texttt{FCS-9-R8} & 3.5 & 1.5 & 2/4 & 0/4 & 0.54 & 27.1 \\
+F9 & Scalable multimodal & 10, 30, 50, 100 & \texttt{FCS-5-R2} & 9.0 & 1.0 & 4/4 & 0/4 & 0.60 & 25.4 \\
+F10 & Scalable multimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 3.5 & 1.0 & 3/4 & 1/4 & 0.77 & 26.9 \\
+F11 & Scalable multimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 4.0 & 1.0 & 4/4 & 2/4 & 0.75 & 30.7 \\
+F12 & Scalable multimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 2.0 & 1.0 & 3/4 & 0/4 & 0.72 & 25.4 \\
+F13 & Scalable multimodal & 10, 30, 50, 100 & \texttt{FCS-3-R1} & 3.0 & 1.0 & 4/4 & 0/4 & 0.74 & 28.7 \\
+\midrule
+F14 & Fixed-dimensional & 2 & \texttt{FCS-3-R1} & 27.0 & 3.0 & 1/1 & 0/1 & 0.58 & -5.0 \\
+F15 & Fixed-dimensional & 4 & \texttt{FCS-3-R1} & 11.0 & 1.0 & 1/1 & 0/1 & 0.75 & 86.9 \\
+F16 & Fixed-dimensional & 2 & -- & 17.0 & 17.0 & 0/1 & 0/1 & 0.56 & -- \\
+F17 & Fixed-dimensional & 2 & -- & 17.0 & 17.0 & 0/1 & 0/1 & 0.50 & -- \\
+F18 & Fixed-dimensional & 2 & \texttt{FCS-3-R1} & 15.0 & 15.0 & 0/1 & 0/1 & 0.45 & 161.5 \\
+F19 & Fixed-dimensional & 3 & -- & 17.0 & 17.0 & 0/1 & 0/1 & 0.56 & -- \\
+F20 & Fixed-dimensional & 6 & \texttt{FCS-3-R1} & 14.0 & 14.0 & 0/1 & 0/1 & 0.55 & 53.2 \\
+F21 & Fixed-dimensional & 4 & \texttt{FCS-7-R1} & 24.0 & 1.0 & 1/1 & 0/1 & 0.61 & 17.8 \\
+F22 & Fixed-dimensional & 4 & \texttt{FCS-3-R6} & 20.0 & 1.0 & 1/1 & 0/1 & 0.57 & 14.6 \\
+F23 & Fixed-dimensional & 4 & \texttt{FCS-5-R6} & 1.0 & 2.0 & 0/1 & 0/1 & 0.34 & 8.2 \\
+\bottomrule
+\end{tabular*}
+\noindent\footnotesize
+Ranks are medians of per-instance ranks on median normalized gap (lower is better). Rank wins count instances where the selected FCS has a lower rank than PSO. Bonferroni wins use independent-sample Mann--Whitney tests adjusted over all 1,984 RQ4 comparisons. $A_{12}$ is the median effect size; $A_{12}>0.5$ favours FCS. Overhead is $100(\mathrm{median}(t_{\mathrm{FCS}})/\mathrm{median}(t_{\mathrm{PSO}})-1)$ using independent run samples. A dash marks functions where all FCS configurations share the best median-gap rank.
+\end{table}
+\finishlandscape

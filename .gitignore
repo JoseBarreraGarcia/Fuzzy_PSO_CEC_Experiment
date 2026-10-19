@@ -5,6 +5,8 @@ __pycache__/
 
 *.db
 BD/*.db
+BD/*.db-shm
+BD/*.db-wal
 BD/*.bak*
 BD/*.db.bak*
 Resultados/
@@ -16,6 +18,12 @@ __pycache__/
 FUZZY/ARTICULO_MDPI/results/level1_raw/*.parquet
 FUZZY/ARTICULO_MDPI/results/level1_raw/*.csv
 _tmp_*.py
+
+# Regenerated plots/figures — huge binary churn on every run, source scripts stay tracked
+FUZZY/plots/*.png
+FUZZY/ARTICULO_MDPI/manuscript/figures/*.png
+FUZZY/ARTICULO_MDPI/manuscript/figures/*.pdf
+!FUZZY/ARTICULO_MDPI/manuscript/figures/.gitkeep
 
 # LaTeX build artifacts
 *.aux

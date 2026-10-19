@@ -1,9 +1,17 @@
 %=================================================================
-% MDPI Biomimetics — Fuzzy PSO factorial study on F1--F23
-% Entry point. Uses the MDPI class shipped in Definitions/.
-% Body split into sections/*.tex; figures under figures/; tables under tables/.
+% MDPI Mathematics — Fuzzy PSO factorial study on F1--F23
 %=================================================================
-\documentclass[journal=biomimetics,article,submit,pdftex,moreauthors]{Definitions/mdpi}
+\documentclass[mathematics,article,submit,pdftex,moreauthors]{Definitions/mdpi}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{afterpage}
+\makeatletter
+\newcommand{\restoreportraitheight}{
+	\global\@colht=\textheight
+	\global\@colroom=\textheight
+	\global\vsize=\textheight
+}
+\makeatother
 
 %=================================================================
 % MDPI internal commands — do not modify without reason
@@ -23,25 +31,46 @@
 \hreflink{https://doi.org/}
 
 %=================================================================
-% Title / Authors - update before submission
-\Title{Joint Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure: A Factorial Study on F1--F23}
-\TitleCitation{Joint Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure}
+% Title / Authors
+\Title{Structural Sensitivity Analysis of Fuzzy Inertia-Weight Control in Bio-Inspired Particle Swarm Optimization}
+\TitleCitation{Structural Sensitivity Analysis of Fuzzy Inertia-Weight Control in Bio-Inspired Particle Swarm Optimization}
 
-\newcommand{\orcidauthorA}{0000-0000-0000-000X}
+\newcommand{\orcidauthorA}{0009-0007-9934-5250} % José Barrera-García
+\newcommand{\orcidauthorB}{0000-0001-5500-0188} % Broderick Crawford
+\newcommand{\orcidauthorC}{0000-0002-6897-8262} % José Gómez-Pulido
+\newcommand{\orcidauthorD}{0000-0001-7723-7012} % Felipe Cisternas-Caneo
+\newcommand{\orcidauthorE}{0009-0000-4986-5900} % Yoslandy Lazo
+\newcommand{\orcidauthorF}{0000-0002-2380-623X} % Alex Paz
+\newcommand{\orcidauthorG}{0000-0003-2018-1972} % Álvaro Peña Fritz
+\newcommand{\orcidauthorH}{0000-0002-5755-6929} % Ricardo Soto
 
-\Author{Firstname Lastname $^{1,}$*\orcidA{}}
-\AuthorNames{Firstname Lastname}
-\AuthorCitation{Lastname, F.}
+\Author{José Barrera-García $^{1,2,3,*}$\orcidA{},
+Broderick Crawford $^{1,*}$\orcidB{},
+José Gómez-Pulido $^{2,4,5}$\orcidC{},
+Felipe Cisternas-Caneo $^{4,6}$\orcidD{},
+Yoslandy Lazo $^{1}$\orcidE{},
+Alex Paz $^{7}$\orcidF{},
+Álvaro Peña Fritz $^{7}$\orcidG{}, and
+Ricardo Soto $^{1}$\orcidH{}}
+\AuthorNames{José Barrera-García, Broderick Crawford, José Gómez-Pulido, Felipe Cisternas-Caneo, Yoslandy Lazo, Alex Paz, Álvaro Peña Fritz, Ricardo Soto}
+\AuthorCitation{Barrera-García, J.; Crawford, B.; Gómez-Pulido, J.; Cisternas-Caneo, F.; Lazo, Y.; Paz, A.; Peña Fritz, Á.; Soto, R.}
 
 \address{%
-$^{1}$ \quad Affiliation 1; e-mail@e-mail.com}
+$^{1}$ \quad Escuela de Ingeniería Informática, Pontificia Universidad Católica de Valparaíso, Avenida Brasil 2241, Valparaíso 2362807, Chile; jose.barrera@pucv.cl (J.B.-G.); broderick.crawford@pucv.cl (B.C.); yoslandy.lazo@pucv.cl (Y.L.); ricardo.soto@pucv.cl (R.S.)\\
+$^{2}$ \quad Department of Computer Science, Universidad de Alcalá, 28805 Alcalá de Henares, Spain; jose.gomez@uah.es (J.G.-P.)\\
+$^{3}$ \quad Escuela de Negocios y Economía, Pontificia Universidad Católica de Valparaíso, Amunátegui 1838, Viña del Mar 2580129, Chile\\
+$^{4}$ \quad Health Computing and Intelligent Systems Research Group (HCIS), Universidad de Alcalá, 28805 Alcalá de Henares, Madrid, Spain\\
+$^{5}$ \quad Ramón y Cajal Institute for Health Research (IRYCIS), Madrid, Spain\\
+$^{6}$ \quad Departamento de Ingeniería Industrial, Facultad de Ingeniería, Universidad del Bío-Bío, Avda. Collao 1202, Casilla 5-C, Concepción 4051381, Región del Biobío, Chile; fcisternas@ubiobio.cl (F.C.-C.)\\
+$^{7}$ \quad Escuela de Ingeniería en Construcción y Transporte, Pontificia Universidad Católica de Valparaíso, Avenida Brasil 2147, Valparaíso 2362804, Chile; alex.paz@pucv.cl (A.P.); alvaro.pena@ucv.cl (Á.P.F.)}
 
-\corres{Correspondence: e-mail@e-mail.com}
+\corres{Correspondence: Broderick Crawford (broderick.crawford@pucv.cl); José Barrera-García (jose.barrera@pucv.cl)}
 
 %=================================================================
 % Abstract & keywords
-\abstract{Fuzzy control of the inertia weight is a common way to adapt the exploration--exploitation balance in particle swarm optimization (PSO). However, it remains unclear whether one static Mamdani fuzzy-control configuration is reliable across problems with different landscapes. This study establishes a controlled factorial framework to evaluate that question on the classical F1--F23 benchmark suite. The evaluated PSO\_FCS configurations combine four linguistic granularities (3, 5, 7, and 9 labels) with eight rule-base patterns, while a classical PSO implementation provides the baseline. The fuzzy controller uses uniform triangular Ruspini partitions, shoulder membership functions, centroid defuzzification, and a declarative configuration that makes the experiment reproducible. Performance is assessed using final fitness, normalized gap, convergence behavior, and rank-based statistical comparisons over 31 independent runs. The results section will report the effects of granularity, rule structure, their interaction, and the dependence of the best configuration on the problem class. The study is designed to determine whether a globally dominant static configuration exists, and to establish the empirical basis for future mechanisms that adapt the semantics of fuzzy control to the optimization problem.}
-\keyword{particle swarm optimization; fuzzy inertia weight; Mamdani fuzzy system; linguistic granularity; rule base; benchmark functions}
+\abstract{The performance of fuzzy-controlled particle swarm optimization (PSO\_FCS) depends on the structure of its inference system, yet the influence of linguistic granularity and rule-base design remains insufficiently characterized. This study investigates the sensitivity of inertia-weight control to these structural choices using a static Mamdani fuzzy controller. A factorial comparison considers four linguistic granularities and eight systematically generated rule-base patterns, yielding 32 fuzzy configurations evaluated against classical PSO. Experiments comprise 63,426 independent runs across 62 function--dimension instances from the classical F1--F23 benchmark suite. The results reveal substantial differences among rule-base patterns, whereas increasing linguistic granularity does not consistently improve performance or reduce the dispersion between patterns. The best-ranked configuration, FCS-3-R1, achieves a mean Friedman rank of 4.77, compared with 6.36 for classical PSO, although both belong to the same Nemenyi critical-difference group. Performance rankings also differ between scalable and fixed-dimensional benchmark subsets, indicating that the preferred configuration depends on the evaluated problem set. A formal characterization establishes that four pairs of rule bases generate complementary inertia-control surfaces under the specified Mamdani inference architecture, without implying equivalent optimization performance. These findings demonstrate the importance of rule-base structure in fuzzy inertia control and provide a mathematical and empirical basis for examining structural configuration choices in PSO.}
+
+\keyword{fuzzy control; swarm intelligence; particle swarm optimization; linguistic granularity; rule-base structure; Mamdani inference}
 
 % Compatibility shim for the MDPI marginfix package with older LaTeX kernels.
 \providecommand{\UseTaggingSocket}[1]{}
@@ -57,26 +86,98 @@ $^{1}$ \quad Affiliation 1; e-mail@e-mail.com}
 \input{sections/06_discussion.tex}
 \input{sections/07_conclusion.tex}
 
-%=================================================================
-\vspace{6pt}
+\appendixtitles{yes}
+\appendixstart
+\appendix
 
-\authorcontributions{Conceptualization, methodology, software, formal analysis, and writing will be completed by the authors before submission.}
+\section{Complete Experimental Results and Ranking Diagnostics}
+\label{app:instance_results}
+The table lists the best-ranked FCS and its comparison with PSO for each of the 62 function--dimension instances. It complements the function-level summary and aggregate RQ4 results in Section~\ref{sec:results}.
+
+\input{tables/tab_function_level_full.tex}
+
+\begin{figure}[!htbp]
+	\begin{adjustwidth}{-\extralength}{0cm}
+	\centering
+	\includegraphics[width=\fulllength,height=0.90\textheight,keepaspectratio]{figures/fig_function_heatmap.png}
+	\end{adjustwidth}
+	\caption{Per-instance Friedman ranks of 33 configurations across 62 instances, computed on median normalized gap (rank 1 = best). Columns are ordered by mean rank; vertical rules bracket PSO and the horizontal rule separates S1 and S2. Green denotes better ranks.}
+	\label{fig:fig_function_heatmap}
+\end{figure}
+
+\begin{figure}[p]
+	\begin{adjustwidth}{-\extralength}{0cm}
+	\centering
+	\includegraphics[width=0.90\fulllength,height=0.86\textheight,keepaspectratio]{figures/fig_h4_independent_outcomes.pdf}
+	\end{adjustwidth}
+	\caption{Nominal independent-sample Mann--Whitney outcomes against PSO for the ten configurations ranked by Bonferroni-significant wins. Bars cover 62 instances; green, grey, and red denote wins, non-significant comparisons, and losses at $p<0.05$.}
+	\label{fig:fig_h4_independent_outcomes}
+\end{figure}
+
+\clearpage
+
+\section{Extended Performance and Dispersion Diagnostics}
+\label{app:dispersion_atlas}
+Figure~\ref{fig:fig_mean_dispersion} shows four representative instances; the atlas that follows covers all 62 function--dimension instances. Each point is one fixed configuration, lower-left indicates lower mean gap and variability, both axes are logarithmic, and zero gaps use a $10^{-12}$ floor. The scalable functions share axis limits across their four dimensions. The representative cases are interpreted in Section~\ref{subsec:results_robustness}.
+
+\begin{figure}[!htbp]
+	\begin{adjustwidth}{-\extralength}{0cm}
+	\centering
+	\includegraphics[width=0.90\fulllength,height=0.82\textheight,keepaspectratio]{figures/fig_mean_dispersion_representative.pdf}
+	\end{adjustwidth}
+	\caption{Mean normalized gap versus run-to-run standard deviation over 31 runs for four instances. Both axes are logarithmic; zero gaps use a $10^{-12}$ display floor. Colour denotes pattern, marker shape granularity, the star PSO, and the open circle the function's best FCS.}
+	\label{fig:fig_mean_dispersion}
+\end{figure}
+
+\input{figures/appendices/dispersion_atlas_figures.tex}
+
+\section{Fuzzy Controller Configurations and Control Surfaces}
+\label{app:controller_configs}
+This appendix provides the remaining rule-consequent matrices, effective Mamdani control surfaces, and workflow diagram referenced in Section~\ref{sec:framework}. All configurations use the common two-input architecture and inference procedure defined in the main text.
+
+\input{figures/controller_appendix_figures.tex}
+
+\clearpage
+
+\section{Benchmark Landscape Visualizations}
+\label{app:benchmark_landscapes}
+The panels below are illustrative objective landscapes and two-coordinate slices; the benchmark functions, dimensions, domains, and solver reference optima are defined in Tables~\ref{tab:benchmark_scalable}--\ref{tab:benchmark_fixed} in Section~\ref{subsec:benchmarks}. They do not constitute quantitative landscape characterization.
+
+\input{figures/landscape_figures.tex}
+
+\authorcontributions{Conceptualization, J.B.-G., B.C., F.C.-C., 
+Methodology, J.B.-G., B.C., J.G.-P., Software, J.B.-G., F.C.-C., Y.L., 
+Validation, J.B.-G., B.C., J.G.-P.,F.C.-C., Y.L., A.P., Á.P.F., R.S., 
+Formal analysis, J.B.-G., F.C.-C., Y.L., A.P., Á.P.F., 
+Investigation, J.B.-G., F.C.-C., Y.L., 
+Resources, B.C., A.P., Á.P.F., 
+Data curation, J.B.-G., F.C.-C., Y.L., 
+Writing -- original draft, J.B.-G., F.C.-C., Y.L., 
+Writing -- review \& editing, J.B.-G., B.C., J.G.-P.,F.C.-C., Y.L., A.P., Á.P.F., R.S., 
+Visualization, J.B.-G., F.C.-C., Y.L., A.P., Á.P.F., 
+Supervision, B.C., J.G.-P.,R.S., 
+Project administration, B.C., J.G.-P.,R.S.}
+
 \funding{This research received no external funding.}
-\dataavailability{The experimental configurations and analysis scripts are maintained in the associated repository. The SQLite database and generated CSV artefacts will be deposited in a persistent repository before submission.}
-\acknowledgments{The authors acknowledge the maintainers of the benchmark implementations and the open-source scientific Python ecosystem.}
+\dataavailability{The consolidated run-level dataset, including the verified run seeds, and the machine-readable statistical summaries supporting the findings are provided in the Supplementary Materials.}
+
+% DO NOT CHANGE THE ACKNOWLEDGMENTS SECTION
+\acknowledgments{José Barrera-García is supported by the National Agency for Research and Development (ANID)/Scholarship Program/DOCTORADO NACIONAL/2024-21242516. Broderick Crawford is supported by Grant ANID/FONDECYT/REGULAR/1262511.
+}
+
 \conflictsofinterest{The authors declare no conflicts of interest.}
 
-\abbreviations{Abbreviations}{
-The following abbreviations are used in this manuscript:\\
+% \abbreviations{Abbreviations}{
+% The following abbreviations are used in this manuscript:\\
 
-\noindent
-\begin{tabular}{@{}ll}
-PSO & Particle Swarm Optimization\\
-FCS & Fuzzy Control System\\
-FIS & Fuzzy Inference System\\
-MF  & Membership Function\\
-\end{tabular}
-}
+% \noindent
+% \begin{tabular}{@{}ll}
+% PSO & Particle Swarm Optimization\\
+% FCS & Fuzzy Control System\\
+% FIS & Fuzzy Inference System\\
+% XPL & Exploration percentage (current diversity relative to its running maximum)\\
+% \end{tabular}
+% }
 
 %=================================================================
 \begin{adjustwidth}{-\extralength}{0cm}

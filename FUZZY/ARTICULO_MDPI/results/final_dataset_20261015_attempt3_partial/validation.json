@@ -1,0 +1,44 @@
+{
+  "output_version": "final_dataset_20261015",
+  "historical_source_rows_total": 63426,
+  "historical_non_F14_rows_used": 62403,
+  "corrected_F14_rows_used": 1023,
+  "consolidated_rows": 63426,
+  "unique_historical_exp_ids": 63426,
+  "benchmark_instances": 62,
+  "configurations": 33,
+  "configuration_instance_groups": 2046,
+  "runs_per_group": [
+    31
+  ],
+  "missing_actual_seeds_historical": 0,
+  "historical_actual_seeds_persisted": 0,
+  "historical_actual_seeds_reconstructed_from_verified_runner": 62403,
+  "F14_actual_seeds": 1023,
+  "historical_synthetic_seed_values_preserved": 62403,
+  "original_RQ4_rows": 1984,
+  "original_rule_pair_rows": 1984,
+  "F14_validation_report": {
+    "passed": true,
+    "dataset": "full",
+    "completed_runs": 1023,
+    "configurations": 33,
+    "run_ids_per_configuration": [
+      31
+    ],
+    "unique_historical_ids": 1023,
+    "unique_seeds": 1023,
+    "corrected_source_hash_matches": true,
+    "config_sha256": "3c0942de3374a69ae58f51e56a89497349f059c9a14e85627e7fd4e0a7879dbc",
+    "f14_source_sha256": "c376b83d0075473bfd0f4aa9fc2c3f6a166a59434ee8588026aff4db3dfcd19a",
+    "runner_sha256": "81e6e441a7c78b53ed35264d96ccbfebe0c2be9e7b269f789101bbc83e973201"
+  },
+  "source_sha256": {
+    "historical_level1_parquet": "cd810aa733bca4a81d8213995e3bde68553c6e491e2119bbe55173890151ec62",
+    "corrected_F14_level1_csv": "89145c3d9f6eff077279261a32a1f8272f037dbe2d10131711d051057efc7dc9",
+    "historical_iterations_parquet": "005084fa458b192fc8d3596dd0cdb043c8efc1954d280aadde03bbcb0cfa62e3",
+    "original_rule_outputs": "70c7833e74a13a1a7a0a21e15c1516ac3b7af58e15d156856930aeea064fc629",
+    "original_H4_outputs": "c81c7daf7f6faad9d609b74b391868298a8f82a4047d435a4e6fc65625543c06"
+  },
+  "pairing_policy": "Run-level comparisons use independent samples; historical actual seeds are reconstructed only where the verified runner formula and global IDs permit. No run_id pairing is treated as common-seed pairing."
+}

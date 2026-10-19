@@ -1,0 +1,49 @@
+{
+  "dims_distinct": [
+    2,
+    3,
+    4,
+    6,
+    10,
+    30,
+    50,
+    100
+  ],
+  "estados": {
+    "terminado": 63426
+  },
+  "families": {
+    "PSO": 1922,
+    "PSO_FCS": 61504
+  },
+  "fitness_best_nan_count": 0,
+  "gap_final_stats": {
+    "max": 20160525.21202305,
+    "median": 1.297336387895085,
+    "min": 0.0
+  },
+  "iterations_experiments_written": 63426,
+  "iterations_rows_total": 63489426,
+  "n_configs": 33,
+  "n_experiments": 63426,
+  "n_functions": 23,
+  "n_instances": 62,
+  "n_labels_distinct": [
+    3,
+    5,
+    7,
+    9
+  ],
+  "rule_sets_distinct": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8"
+  ],
+  "runs_per_config_instance_max": 31,
+  "runs_per_config_instance_min": 31
+}

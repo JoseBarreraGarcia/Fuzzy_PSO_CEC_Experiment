@@ -1,0 +1,30 @@
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Independent-sample comparisons of rule-pattern pairs at equal granularity and instance (248 tests per pair). Holm adjustment is applied once across the complete family of 1,984 comparisons.}
+\label{tab:rule_pairs}
+\begin{adjustwidth}{-\extralength}{0cm}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\renewcommand{\tabularxcolumn}[1]{m{#1}}
+\begin{tabularx}{\fulllength}{@{}l>{\raggedright\arraybackslash}X c c c c l@{}}
+\toprule
+\textbf{Pair} & \textbf{Axis changed} & \textbf{Nominal W/NS/L} & \textbf{Holm W/NS/L} & \textbf{Dominant} & \boldmath$A_{12}$ & \textbf{Strongest in} \\
+\midrule
+\multicolumn{7}{l}{\emph{Mirror pairs}} \\
+R1 vs R2 & progress direction & 192/56/0 & 175/73/0 & \textbf{R1} & 0.99 & Unimodal \\
+R3 vs R4 & diversity reaction & 118/59/71 & 104/98/46 & \textbf{R4} & 0.41 & Scalable multimodal \\
+R5 vs R8 & progress direction + diversity reaction & 173/73/2 & 142/106/0 & \textbf{R5} & 0.91 & Unimodal \\
+R6 vs R7 & progress direction + diversity reaction & 173/57/18 & 152/91/5 & \textbf{R6} & 0.95 & Scalable multimodal \\
+\midrule
+\multicolumn{7}{l}{\emph{Single-axis pairs}} \\
+R5 vs R7 & progress direction & 172/75/1 & 152/96/0 & \textbf{R5} & 0.96 & Scalable multimodal \\
+R6 vs R8 & progress direction & 176/65/7 & 156/92/0 & \textbf{R6} & 0.92 & Unimodal \\
+R5 vs R6 & diversity reaction & 132/81/35 & 99/130/19 & \textbf{R5} & 0.66 & Unimodal \\
+R7 vs R8 & diversity reaction & 154/68/26 & 137/98/13 & \textbf{R8} & 0.09 & Scalable multimodal \\
+\bottomrule
+\end{tabularx}
+\noindent\footnotesize
+W/NS/L denotes significant wins for the dominant pattern, non-significant comparisons, and significant losses. Nominal counts use $p<0.05$; Holm counts use adjusted $p<0.05$ across all 1,984 tests. $A_{12}$ is the median effect for the first pattern; values above 0.5 favour it. These contrasts compare implemented rule tables and do not isolate causal input effects.
+\end{adjustwidth}
+\end{table}

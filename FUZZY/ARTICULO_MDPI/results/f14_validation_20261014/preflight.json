@@ -1,0 +1,25 @@
+{
+  "dataset": "validation",
+  "planned_runs": 6,
+  "expected_runs": 6,
+  "configurations": 6,
+  "runs_per_configuration": {
+    "PSO": 1,
+    "PSO_FCS:O1:3:I1:R1": 1,
+    "PSO_FCS:O1:3:I1:R8": 1,
+    "PSO_FCS:O1:5:I1:R1": 1,
+    "PSO_FCS:O1:7:I1:R4": 1,
+    "PSO_FCS:O1:9:I1:R8": 1
+  },
+  "seed_formula": "42 + historical_exp_id",
+  "seed_min": 53239,
+  "seed_max": 54231,
+  "workers": 6,
+  "iterations": 1000,
+  "population": 20,
+  "config_sha256": "3c0942de3374a69ae58f51e56a89497349f059c9a14e85627e7fd4e0a7879dbc",
+  "f14_source_sha256": "c376b83d0075473bfd0f4aa9fc2c3f6a166a59434ee8588026aff4db3dfcd19a",
+  "runner_sha256": "81e6e441a7c78b53ed35264d96ccbfebe0c2be9e7b269f789101bbc83e973201",
+  "historical_database": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\BD\\resultados.db",
+  "isolated_database": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\f14_validation_20261014\\BD\\resultados.db"
+}

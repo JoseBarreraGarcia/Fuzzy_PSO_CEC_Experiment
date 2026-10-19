@@ -1,0 +1,9 @@
+{
+  "shapiro_stat": 0.8400775955672453,
+  "shapiro_p": 1.939787406578511e-57,
+  "shapiro_sample_size": 5000,
+  "levene_stat": 35.43722570642583,
+  "levene_p": 4.5948748870186916e-209,
+  "residual_mean": 1.5547281348798653e-14,
+  "residual_std": 4.576946140061425
+}

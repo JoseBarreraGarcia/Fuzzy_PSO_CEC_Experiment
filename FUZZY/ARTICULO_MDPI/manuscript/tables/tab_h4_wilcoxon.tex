@@ -1,21 +1,26 @@
 \begin{table}[h]
 \centering
-\caption{Wilcoxon signed-rank comparison of top-10 PSO\_FCS configurations against classical PSO (paired by run). Columns marked * apply Bonferroni correction over the full 32x62 grid.}
+\small
+\caption{Ten configurations with the most Bonferroni-significant wins against PSO, based on independent-sample Mann--Whitney tests over 62 instances.}
 \label{tab:h4_wilcoxon}
-\begin{tabular}{llllllllll}
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}Xcccc}
 \toprule
-Config. & n & R & Wins & Ties & Losses & Wins* & Ties* & Losses* & A12 mean \\
+\textbf{Configuration} & \textbf{Nominal W/NS/L} & \textbf{Bonferroni W/NS/L} & \boldmath$A_{12}$ \textbf{mean} & \textbf{$n$} \\
 \midrule
-PSO\_FCS:O1:3:I1:R1 & 3.000 & R1 & 27 & 33 & 2 & 13 & 49 & 0 & 0.669 \\
-PSO\_FCS:O1:7:I1:R5 & 7.000 & R5 & 6 & 28 & 28 & 1 & 43 & 18 & 0.363 \\
-PSO\_FCS:O1:9:I1:R5 & 9.000 & R5 & 5 & 31 & 26 & 0 & 47 & 15 & 0.383 \\
-PSO\_FCS:O1:5:I1:R5 & 5.000 & R5 & 5 & 24 & 33 & 0 & 38 & 24 & 0.304 \\
-PSO\_FCS:O1:5:I1:R1 & 5.000 & R1 & 4 & 51 & 7 & 0 & 62 & 0 & 0.463 \\
-PSO\_FCS:O1:3:I1:R5 & 3.000 & R5 & 4 & 27 & 31 & 0 & 48 & 14 & 0.358 \\
-PSO\_FCS:O1:9:I1:R1 & 9.000 & R1 & 2 & 53 & 7 & 0 & 62 & 0 & 0.444 \\
-PSO\_FCS:O1:7:I1:R7 & 7.000 & R7 & 2 & 14 & 46 & 0 & 23 & 39 & 0.173 \\
-PSO\_FCS:O1:7:I1:R1 & 7.000 & R1 & 1 & 55 & 6 & 0 & 62 & 0 & 0.447 \\
-PSO\_FCS:O1:3:I1:R6 & 3.000 & R6 & 1 & 23 & 38 & 0 & 35 & 27 & 0.225 \\
+FCS-3-R1 & 30/30/2 & 16/46/0 & 0.669 & 3 \\
+FCS-9-R5 & 6/30/26 & 2/44/16 & 0.383 & 9 \\
+FCS-5-R5 & 5/24/33 & 2/36/24 & 0.304 & 5 \\
+FCS-7-R5 & 5/28/29 & 1/43/18 & 0.363 & 7 \\
+FCS-9-R7 & 1/13/48 & 1/22/39 & 0.176 & 9 \\
+FCS-3-R5 & 4/28/30 & 0/48/14 & 0.358 & 3 \\
+FCS-5-R7 & 2/15/45 & 0/24/38 & 0.177 & 5 \\
+FCS-7-R7 & 2/13/47 & 0/22/40 & 0.173 & 7 \\
+FCS-5-R1 & 1/54/7 & 0/62/0 & 0.463 & 5 \\
+FCS-3-R2 & 1/15/46 & 0/23/39 & 0.183 & 3 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\noindent\footnotesize
+W/NS/L denotes FCS wins, non-significant comparisons, and FCS losses. Bonferroni adjustment covers all $32\times62=1,984$ tests ($\alpha=2.52\times10^{-5}$). Non-significance does not establish equivalence. Lower fitness favours FCS when $A_{12}>0.5$.
 \end{table}

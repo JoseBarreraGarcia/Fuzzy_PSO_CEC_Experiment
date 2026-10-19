@@ -1,0 +1,8 @@
+{
+  "chi2": 1051.278953799026,
+  "df": 32,
+  "p_value": 2.654877108974788e-200,
+  "n_instances": 62,
+  "n_configs": 33,
+  "reject_H0_no_difference": true
+}

@@ -1,16 +1,26 @@
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
-\caption{Summary of hypotheses H1--H5 with their governing statistic and verdict.}
+\small
+\caption{Research questions RQ1--RQ5, principal evidence, observed findings, and scope. RQ3 is descriptive; non-significance is not interpreted as equivalence or independence.}
 \label{tab:hypothesis_summary}
-\begin{tabular}{llll}
+\begin{adjustwidth}{-\extralength}{0cm}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\renewcommand{\tabularxcolumn}[1]{m{#1}}
+\begin{tabularx}{\fulllength}{@{}>{\raggedright\arraybackslash}m{0.20\fulllength}>{\raggedright\arraybackslash}m{0.27\fulllength}>{\raggedright\arraybackslash}m{0.23\fulllength}>{\raggedright\arraybackslash}X@{}}
 \toprule
-Hypothesis & Statement & Key statistic & Verdict \\
+\textbf{Research question} & \textbf{Main evidence} & \textbf{Observed finding} & \textbf{Interpretation and scope} \\
 \midrule
-H1 & Granularity has diminishing returns & Friedman chi2 p=2.65e-200 & H0 rejected globally; within R1 the effect of n is \textless{} CD (not sig.) \\
-H2 & Best R depends on problem class & tau(composed, unimodal)=0.08 & supported \\
-H3 & Sensitivity to R decreases with n & n x R SRH p=0.34; peta\textasciicircum{}2(R)=0.063, peta\textasciicircum{}2(n)=0.0007 & rejected \\
-H4 & PSO\_FCS beats PSO on \textgreater{}=50\% of instances & best config: 27 wins / 33 ties / 2 losses (of 62) & rejected under strict \textgreater{}=50\% criterion; supported = False \\
-H5 & No static (n*, R*) dominates both S1 and S2 & tau(S1, S2)=0.09; argmin(S1)=PSO\_FCS:O1:3:I1:R5, argmin(S2)=PSO\_FCS:O1:5:I1:R6 & supported \\
+\textbf{RQ1.} Does higher granularity improve configuration ranks? & Friedman $p=1.56\times10^{-200}$; Nemenyi CD $=6.59$. Best mean rank at $n=3/5/7/9$: 4.77/6.97/8.20/8.43. & Configuration ranks differ overall; the best mean rank worsens as $n$ increases. FCS-3-R1 and PSO share a Nemenyi group. & The omnibus test compares complete configurations and does not isolate an independent granularity effect. \\
+\addlinespace[5pt]
+\textbf{RQ2.} How do rankings vary across classes and dimensional regimes? & Class-level Kendall $\tau$: 0.867 (unimodal/scalable), 0.083 (unimodal/fixed), and 0.080 (scalable/fixed). & Concordance is high between the two scalable classes and weak between either and the fixed-dimensional group. & These comparisons describe the evaluated benchmark groups; they do not establish causal class effects or general transferability. \\
+\addlinespace[5pt]
+\textbf{RQ3.} Does granularity consistently reduce differences among rule patterns? & Function-level median SD across R1--R8 at $n=3/5/7/9$: ranks 8.884/8.366/8.715/9.374; log-gap 0.912/1.170/1.173/0.901. & Neither dispersion measure decreases consistently with granularity. & Descriptive evidence only; no factorial interaction test is reported. \\
+\addlinespace[5pt]
+\textbf{RQ4.} How does each fixed FCS configuration compare with PSO? & FCS-3-R1: 30/30/2 nominal wins/non-significant/losses; 16/46/0 after Bonferroni correction over 1,984 tests. & Across all configurations, 22 wins, 906 non-significant comparisons, and 1,056 losses remain after correction. & Non-significance does not establish equivalence. Choosing the best FCS separately for each instance is an oracle comparison. \\
+\addlinespace[5pt]
+\textbf{RQ5.} Do the best-ranked configurations transfer between $S_1$ and $S_2$? & $\tau(S_1,S_2)=0.095$, $p=0.451$; mean-gap leaders: $S_1$ FCS-3-R5, $S_2$ FCS-5-R6. & The subset leaders differ and observed rank concordance is weak. & The non-significant association is not evidence of independence and applies only to this evaluated split. \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\end{adjustwidth}
 \end{table}

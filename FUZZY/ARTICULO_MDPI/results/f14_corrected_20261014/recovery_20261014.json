@@ -1,0 +1,39 @@
+{
+  "recovered_at": "2026-10-14",
+  "requeued_historical_ids": [
+    53887,
+    53888,
+    53889,
+    53890,
+    53891,
+    53892
+  ],
+  "actual_seeds": [
+    53929,
+    53930,
+    53931,
+    53932,
+    53933,
+    53934
+  ],
+  "rows_with_prior_result_or_blob": 0,
+  "finished_rows_preserved": 690,
+  "pending_rows_before_recovery": 327,
+  "rows_requeued": 6,
+  "pre_resume_database_backup": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\f14_corrected_20261014\\BD\\resultados_pre_resume_20261014.db",
+  "partial_transient_files_copied": [
+    "PSO_FCS_F14_53887.csv",
+    "PSO_FCS_F14_53887_divj.csv",
+    "PSO_FCS_F14_53888.csv",
+    "PSO_FCS_F14_53888_divj.csv",
+    "PSO_FCS_F14_53889.csv",
+    "PSO_FCS_F14_53889_divj.csv",
+    "PSO_FCS_F14_53890.csv",
+    "PSO_FCS_F14_53890_divj.csv",
+    "PSO_FCS_F14_53891.csv",
+    "PSO_FCS_F14_53891_divj.csv",
+    "PSO_FCS_F14_53892.csv",
+    "PSO_FCS_F14_53892_divj.csv"
+  ],
+  "partial_file_archive": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\f14_corrected_20261014\\partial_attempt_1"
+}

@@ -1,0 +1,4 @@
+configuration_id,mh_family,n_labels,rule_set,problem_class,gap_median_mean,rank
+FCS-5-R6,PSO_FCS,5.0,R6,composed,0.20005969656910993,1.0
+FCS-3-R1,PSO_FCS,3.0,R1,multimodal,10.88348847662121,1.0
+FCS-3-R5,PSO_FCS,3.0,R5,unimodal,695.1568322419907,1.0

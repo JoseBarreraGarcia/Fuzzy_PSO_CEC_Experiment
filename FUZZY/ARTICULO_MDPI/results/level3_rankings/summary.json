@@ -1,0 +1,67 @@
+{
+  "rank_metric": "gap_median",
+  "n_instances": 62,
+  "n_configs": 33,
+  "instances_with_ties_at_rank1": 8,
+  "total_first_place_records": 225,
+  "top5_configs": [
+    {
+      "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+      "mh_family": "PSO_FCS",
+      "n_labels": 3.0,
+      "rule_set": "R1",
+      "wins": 36,
+      "fractional_wins": 29.470629944767875
+    },
+    {
+      "mh_raw": "PSO",
+      "mh_family": "PSO",
+      "n_labels": NaN,
+      "rule_set": "-",
+      "wins": 12,
+      "fractional_wins": 6.303963278101209
+    },
+    {
+      "mh_raw": "PSO_FCS:G5:I1:R1:O1",
+      "mh_family": "PSO_FCS",
+      "n_labels": 5.0,
+      "rule_set": "R1",
+      "wins": 9,
+      "fractional_wins": 3.303963278101209
+    },
+    {
+      "mh_raw": "PSO_FCS:G5:I1:R5:O1",
+      "mh_family": "PSO_FCS",
+      "n_labels": 5.0,
+      "rule_set": "R5",
+      "wins": 8,
+      "fractional_wins": 2.303963278101209
+    },
+    {
+      "mh_raw": "PSO_FCS:G7:I1:R5:O1",
+      "mh_family": "PSO_FCS",
+      "n_labels": 7.0,
+      "rule_set": "R5",
+      "wins": 8,
+      "fractional_wins": 2.303963278101209
+    }
+  ],
+  "config_with_best_mean_rank": {
+    "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+    "mh_family": "PSO_FCS",
+    "n_labels": 3.0,
+    "rule_set": "R1",
+    "mean_rank": 3.2580645161290325,
+    "median_rank": 1.0,
+    "rank_1_count": 36
+  },
+  "config_with_worst_mean_rank": {
+    "mh_raw": "PSO_FCS:G9:I1:R2:O1",
+    "mh_family": "PSO_FCS",
+    "n_labels": 9.0,
+    "rule_set": "R2",
+    "mean_rank": 24.903225806451612,
+    "median_rank": 28.0,
+    "rank_1_count": 5
+  }
+}

@@ -1,0 +1,33 @@
+{
+    // Reduce file-watcher/indexer/SCM memory pressure from generated & vendored folders.
+    "files.watcherExclude": {
+        "**/env/**": true,
+        "**/.venv/**": true,
+        "**/__pycache__/**": true,
+        "**/*.pyc": true,
+        "**/Resultados/**": true,
+        "**/FUZZY/plots/**": true,
+        "**/FUZZY/ARTICULO_MDPI/manuscript/figures/**": true,
+        "**/BD/*.db": true,
+        "**/BD/*.bak*": true,
+        "**/.git/objects/**": true
+    },
+    "search.exclude": {
+        "**/env": true,
+        "**/.venv": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/Resultados": true,
+        "**/FUZZY/plots": true,
+        "**/FUZZY/ARTICULO_MDPI/manuscript/figures": true,
+        "**/BD/*.db": true,
+        "**/BD/*.bak*": true
+    },
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    },
+    "git.decorations.enabled": true,
+    "git.autorefresh": true,
+    "git.ignoreLimitWarning": true
+}

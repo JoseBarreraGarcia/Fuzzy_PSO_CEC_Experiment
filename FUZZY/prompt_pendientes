@@ -1,0 +1,106 @@
+Antes de avanzar con Discussion, agrega el análisis pendiente de robustez por función y deja cerrada la cobertura visual de granularidades.
+
+Tareas obligatorias:
+
+1. Generar un performance–robustness map para §5.6.
+   - Objetivo: mostrar desempeño versus dispersión por función o por instancia.
+   - Eje x: mediana o media del normalized gap final.
+   - Eje y: desviación estándar, IQR o coefficient of variation del normalized gap o final fitness.
+   - Puntos: configuraciones FCS-n-Rk y PSO.
+   - Color: regla R1–R8.
+   - Marcador o forma: granularidad n = 3, 5, 7, 9.
+   - PSO debe aparecer claramente como referencia.
+   - Hacer una versión principal con funciones representativas y dejar la versión completa para suplemento si la figura completa queda ilegible.
+
+2. El texto de §5.6 debe explicar qué aporta este gráfico:
+   - qué configuraciones mejoran desempeño y robustez al mismo tiempo;
+   - cuáles reducen dispersión sin mejorar el desempeño;
+   - cuáles son inestables o dominadas;
+   - si FCS-3-R1 destaca por media, robustez o ambas;
+   - si hay funciones donde PSO sigue siendo más estable.
+
+3. Revisar la cobertura visual de granularidades.
+   - Mantener en el cuerpo principal la Figura 4 y Figura 5 para n = 5 como representación visual legible.
+   - Añadir una frase metodológica clara: n = 5 se muestra como caso representativo de la familia generativa, mientras que las matrices y superficies para n = 3, 7 y 9 se entregan como material suplementario.
+   - Generar o verificar que existan las matrices de reglas y superficies de control para n = 3, 7 y 9 en suplemento.
+   - No insertar todas esas figuras en el cuerpo principal salvo que sea estrictamente necesario.
+
+4. Si el suplemento aún no existe, crear una sección o carpeta suplementaria con:
+   - rule matrices para n = 3, 7, 9;
+   - control surfaces para n = 3, 7, 9;
+   - performance–robustness maps completos por función/instancia;
+   - curvas completas si ya están generadas.
+
+5. No cambiar todavía el abstract, Discussion, Conclusions, Author Contributions ni Data Availability.
+
+6. Mantener nomenclatura FCS-n-Rk / PSO en figuras, captions y texto.
+
+7. No introducir lenguaje prospectivo visible. Todo pendiente debe quedar como comentario LaTeX con %.
+
+
+
+-----------------------------
+Procede ahora con §6 Discussion.
+
+El objetivo de §6 es interpretar los resultados ya obtenidos, no agregar nuevos análisis, tablas ni figuras. La discusión debe sintetizar la evidencia de §3.4 y §5.1–§5.7 en torno a la pregunta central del paper: si existe una configuración estática universalmente dominante del controlador difuso o si el desempeño depende de la regla, la granularidad y el paisaje de optimización.
+
+Estructura obligatoria:
+
+6.1 Why rule-base structure outweighs linguistic granularity
+- Explicar que la estructura de reglas domina a la granularidad.
+- Usar como evidencia:
+  - la banda CD de §5.1;
+  - la grilla semántica de §5.4;
+  - la comparación de pares espejo;
+  - el efecto parcial de la regla frente a n e interacción en §5.5.
+- La idea central debe ser que la regla define la política temporal de control, mientras que la granularidad solo cambia la resolución con que esa política se expresa.
+- Mencionar que aumentar n no mejora sistemáticamente: en promedio penaliza levemente y luego satura.
+
+6.2 Landscape dependence of the best configuration
+- Explicar que los resultados no apoyan una configuración universalmente dominante.
+- Integrar:
+  - 16 configuraciones ganan al menos una instancia;
+  - FCS-3-R1 domina muchas instancias escalables, pero no todas;
+  - FCS-3-R5 es especialista de S1;
+  - FCS-5-R6 es especialista de S2;
+  - F23 favorece al baseline PSO por ranking y A12, aunque sin significancia estadística.
+- Ser cuidadoso con τ(S1,S2)=0.095, p=0.451:
+  - no presentarlo como evidencia confirmatoria significativa;
+  - redactarlo como evidencia descriptiva de baja transferencia entre rankings escalables y fixed-dimensional.
+- No volver a decir que la discordancia principal es unimodal vs multimodal; la lectura correcta es escalable vs fixed-dimensional.
+
+6.3 Implications for adaptive fuzzy control
+- Conectar los hallazgos con la motivación doctoral:
+  - si ninguna configuración estática domina todos los paisajes, entonces tiene sentido estudiar selección adaptativa de esquemas difusos.
+- No presentar todavía un nuevo algoritmo.
+- Redactar como implicación metodológica:
+  - los futuros meta-controladores no deberían seleccionar solo valores de parámetros, sino también estructuras semánticas del FCS;
+  - la selección debería considerar regla, granularidad y clase de paisaje;
+  - las trayectorias de w(t) pueden servir como señal interpretativa para decidir cuándo una política está replicando el baseline o cuándo se está desviando de forma útil.
+- Usar §5.7:
+  - R1 reconstruye una trayectoria cercana al schedule lineal;
+  - los pares espejo producen trayectorias complementarias;
+  - lo relevante no es solo preservar exploración, sino abandonarla a tiempo.
+
+6.4 Threats to validity and limitations
+- Organizar limitaciones de forma clara:
+  - benchmark clásico F1–F23, sin versiones shifted/rotated;
+  - funciones continuas, no combinatorias;
+  - PSO base fijo;
+  - población, iteraciones y parámetros c1/c2 fijos;
+  - solo Mamdani tipo 1;
+  - particiones triangulares Ruspini uniformes;
+  - solo I1/O1;
+  - solo salida w, sin adaptar c1, c2 ni vmax;
+  - DIV crudo no comparable entre funciones y RDP no utilizable en el lote actual;
+  - resultados de escalamiento deben interpretarse con cuidado porque una pendiente suave no implica mejor desempeño absoluto.
+- Presentar estas limitaciones como decisiones de control experimental, no como fallas del estudio.
+- Cerrar indicando que estas restricciones delimitan extensiones futuras, pero sin convertir la sección en Future Work largo.
+
+Reglas editoriales:
+- No introducir nuevos resultados numéricos no presentes en §5.
+- No agregar nuevas figuras ni tablas.
+- No usar lenguaje prospectivo visible del tipo “will show”, “will assess”, “planned analysis”, “future results”.
+- Mantener todo pendiente como comentario LaTeX con %.
+- Usar siempre FCS-n-Rk / PSO.
+- No tocar todavía abstract, conclusions, author contributions ni data availability.

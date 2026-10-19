@@ -1,21 +1,22 @@
 \begin{table}[h]
 \centering
-\caption{Log-log slope of median gap vs dimension for the five best- and five worst-scaling configurations.}
+\caption{Log-log slope of the median normalized gap against dimension over the scalable subset S1 (F1-F13). The table lists the five configurations with the lowest and highest median fitted slopes; a lower slope describes less relative degradation but does not necessarily indicate better absolute performance.}
 \label{tab:scaling_slopes}
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lllllll}
 \toprule
 Status & Config. & n & R & Mean slope & Median slope & Mean R\textasciicircum{}2 \\
 \midrule
-best-scaling & PSO\_FCS:O1:5:I1:R4 & 5.000 & R4 & 2.390 & 2.328 & 0.977 \\
-best-scaling & PSO\_FCS:O1:9:I1:R4 & 9.000 & R4 & 2.238 & 2.385 & 0.985 \\
-best-scaling & PSO\_FCS:O1:3:I1:R4 & 3.000 & R4 & 2.565 & 2.432 & 0.977 \\
-best-scaling & PSO\_FCS:O1:7:I1:R4 & 7.000 & R4 & 2.348 & 2.435 & 0.982 \\
-best-scaling & PSO\_FCS:O1:9:I1:R7 & 9.000 & R7 & 3.237 & 2.590 & 0.867 \\
-worst-scaling & PSO\_FCS:O1:5:I1:R1 & 5.000 & R1 & 8.321 & 12.447 & 0.894 \\
-worst-scaling & PSO\_FCS:O1:7:I1:R5 & 7.000 & R5 & 8.738 & 12.488 & 0.865 \\
-worst-scaling & PSO\_FCS:O1:5:I1:R5 & 5.000 & R5 & 8.815 & 12.511 & 0.853 \\
-worst-scaling & PSO\_FCS:O1:3:I1:R5 & 3.000 & R5 & 8.527 & 12.651 & 0.881 \\
-worst-scaling & PSO\_FCS:O1:9:I1:R5 & 9.000 & R5 & 8.789 & 12.723 & 0.873 \\
+lowest-median-slope & FCS-5-R4 & 5 & R4 & 2.390 & 2.328 & 0.977 \\
+lowest-median-slope & FCS-9-R4 & 9 & R4 & 2.238 & 2.385 & 0.985 \\
+lowest-median-slope & FCS-3-R4 & 3 & R4 & 2.565 & 2.432 & 0.977 \\
+lowest-median-slope & FCS-7-R4 & 7 & R4 & 2.348 & 2.435 & 0.982 \\
+lowest-median-slope & FCS-9-R7 & 9 & R7 & 3.237 & 2.590 & 0.867 \\
+highest-median-slope & FCS-5-R1 & 5 & R1 & 8.321 & 12.447 & 0.894 \\
+highest-median-slope & FCS-7-R5 & 7 & R5 & 8.738 & 12.488 & 0.865 \\
+highest-median-slope & FCS-5-R5 & 5 & R5 & 8.815 & 12.511 & 0.853 \\
+highest-median-slope & FCS-3-R5 & 3 & R5 & 8.527 & 12.651 & 0.881 \\
+highest-median-slope & FCS-9-R5 & 9 & R5 & 8.789 & 12.723 & 0.873 \\
 \bottomrule
 \end{tabular}
 \end{table}

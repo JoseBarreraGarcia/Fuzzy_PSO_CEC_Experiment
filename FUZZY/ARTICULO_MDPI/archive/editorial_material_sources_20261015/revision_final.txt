@@ -1,0 +1,262 @@
+# TASK: Final editorial harmonization of research questions and methodological language
+
+We are preparing the manuscript *Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure* for submission to *Mathematics*.
+
+The manuscript has completed its experimental analyses, statistical verification, scientific strengthening, and integration of the revised literature.
+
+The objective of this task is to conduct a focused editorial review to improve terminological consistency, inferential precision, and academic readability.
+
+**This is not a methodological reanalysis. Do not modify experiments, numerical results, statistical methods, or established scientific conclusions.**
+
+The author has already revised Section 6.4, *Study Limitations*. Preserve that section without rewriting it.
+
+## 1. Harmonize H1–H5 as RQ1–RQ5
+
+The manuscript currently labels five research questions as H1–H5, reflecting an earlier stage in which they were treated as hypotheses.
+
+Their present formulations are interrogative and are explicitly described as research questions.
+
+Replace their visible identifiers consistently:
+
+- H1 → RQ1
+- H2 → RQ2
+- H3 → RQ3
+- H4 → RQ4
+- H5 → RQ5
+
+Apply this change throughout:
+
+- Introduction, if applicable.
+- Experimental Design.
+- Results.
+- Table 6.
+- Table captions and notes.
+- Discussion.
+- Conclusions.
+- Appendices, where applicable.
+
+Use the term *research questions* consistently.
+
+Do not rename historical Python scripts, archived CSV files, computational outputs, internal experiment identifiers, or dataset keys.
+
+Preserve existing LaTeX labels when renaming them could disrupt references or reproducibility.
+
+If a table generator contains hardcoded H1–H5 labels, update only the displayed terminology, without modifying its calculations.
+
+## 2. Consolidate the treatment of RQ3
+
+RQ3 examines whether increasing linguistic granularity consistently reduces performance dispersion among rule-base consequent patterns.
+
+Its descriptive analysis is scientifically valid within the evaluated configurations and benchmark.
+
+The manuscript currently contains repeated explanations of why earlier interaction tests were not treated as confirmatory.
+
+Reduce unnecessary repetitions while preserving methodological transparency.
+
+Apply these principles:
+
+**Experimental Design, Section 4.3**
+
+Retain the complete description of the descriptive aggregation procedure, including its unit of analysis, dimensions nested within functions, ranks, log-gap, and dispersion measures.
+
+Explicitly state once that RQ3 evaluates observed dispersion rather than estimating a formal factorial interaction.
+
+Retain essential information needed to reproduce and interpret the analysis.
+
+Avoid narrating the entire history of discarded statistical procedures unless necessary for methodological transparency.
+
+**Results, Sections 5.1 and 5.5**
+
+Present the observed findings directly.
+
+Preserve all dispersion values, comparisons, and function-level counts.
+
+Avoid repeatedly describing RQ3 as exploratory or non-confirmatory when the descriptive nature of the analysis is already established.
+
+Retain qualifications necessary to prevent interpreting descriptive differences as statistical equivalence or a confirmed interaction.
+
+**Discussion**
+
+Focus on the scientific interpretation of the observed patterns.
+
+Do not introduce extended explanations of unsuccessful historical statistical analyses.
+
+Avoid portraying RQ3 as an unresolved methodological problem.
+
+**Conclusions**
+
+Present the substantive result directly: increasing granularity did not consistently reduce observed dispersion among the evaluated rule patterns.
+
+Use at most one concise qualification concerning the absence of formal interaction inference, if needed.
+
+Do not repeat the historical statistical-calibration discussion.
+
+## 3. Preserve the author's revised Study Limitations
+
+Section 6.4, *Study Limitations*, has already been manually revised and approved by the author.
+
+**Do not rewrite, replace, expand, or reorganize this section.**
+
+Read it only to identify unnecessary repetitions elsewhere in the manuscript.
+
+Do not restore previously removed discussions of exploratory statistical procedures.
+
+If you identify a serious inconsistency involving Section 6.4, report it separately instead of editing that section.
+
+## 4. Review excessively defensive or categorical language
+
+Inspect the manuscript for repeated constructions such as:
+
+- "does not establish"
+- "does not demonstrate"
+- "is not evidence that"
+- "cannot be interpreted as"
+- "remains exploratory"
+- "is not confirmatory"
+- "does not imply"
+
+These expressions are not inherently incorrect and must not be removed indiscriminately.
+
+Retain them where they prevent a genuine inferential overclaim.
+
+However, where the same qualification appears repeatedly across consecutive sections, consolidate it.
+
+Prefer a clear presentation of what the evidence supports, followed by the necessary qualification.
+
+Do not strengthen a claim merely to make the prose more assertive.
+
+## 5. Review section headings and terminology
+
+Assess whether the heading:
+
+"6.1. Why rule-base structure outweighs linguistic granularity"
+
+overstates the strength of the available evidence.
+
+If appropriate, replace it with:
+
+"6.1. Rule-Base Structure and Linguistic Granularity"
+
+Review other headings for similar problems.
+
+Preserve the existing section structure and numbering.
+
+Avoid creating additional subsections.
+
+## 6. Correct ambiguous descriptions of experimental independence
+
+Search for expressions such as:
+
+"63,426 independent executions"
+
+The experiments include matched run identifiers and seeds, while multiple dimensions are nested within benchmark functions.
+
+Where the context describes computational execution rather than statistical independence, use wording such as:
+
+"63,426 completed runs"
+
+or an equivalent precise formulation.
+
+Do not imply that all runs are independent inferential units.
+
+Preserve descriptions of independent stochastic replications where that independence is actually justified.
+
+## 7. Remove unnecessary rhetorical formulations
+
+Review expressions that are unusually rhetorical or informal for an experimental mathematics journal.
+
+In particular, consider replacing:
+
+"This is a pattern of diminishing returns with the sign reversed: the returns are not merely diminishing, they are slightly negative and they saturate."
+
+with a concise description of the observed rank progression.
+
+Preserve the underlying numerical findings and scientific interpretation.
+
+Do not perform broad stylistic rewriting.
+
+## 8. Maintain scientific and editorial consistency
+
+Verify that the revised terminology remains coherent across:
+
+- Abstract.
+- Introduction.
+- Related Work.
+- Experimental Design.
+- Results and Tables 5–14.
+- Discussion.
+- Conclusions.
+- Appendices.
+
+Preserve the established interpretation of R1: diversity-neutral nominal consequents do not imply an effective output independent of diversity.
+
+Preserve the descriptive status of RQ3 without treating it as a failed hypothesis.
+
+Maintain the distinction between:
+
+- Global configuration ranking and pairwise significance.
+- Absence of significance and equivalence.
+- Nominal and multiplicity-corrected outcomes.
+- Descriptive association and causal inference.
+- Oracle selection and implementable adaptive selection.
+- Structural symmetry and performance equivalence.
+
+Do not alter the scientific contribution established in the revised Introduction and Related Work.
+
+## 9. Restrictions
+
+- Do not rerun PSO.
+- Do not modify experimental data.
+- Do not modify statistical calculations or numerical results.
+- Do not introduce new tests or analyses.
+- Do not reopen R1 or RQ3.
+- Do not rewrite Section 6.4.
+- Do not modify the bibliography.
+- Do not change the title or abstract unless an actual terminological inconsistency requires correction; report such changes first.
+- Do not move figures, tables, or appendices.
+- Do not create Supplementary Materials files.
+- Do not modify CRediT or Data Availability.
+- Do not change repository configuration.
+- Do not replace valid scientific explanations with generic statements.
+- Do not introduce unsupported claims or additional literature.
+
+## 10. Final verification
+
+After making the authorized editorial changes:
+
+1. Search the compiled manuscript for residual visible H1–H5 identifiers.
+2. Verify that all scientific questions are consistently identified as RQ1–RQ5.
+3. Confirm that no statistical results or numerical values have changed.
+4. Confirm that Section 6.4 remains unchanged.
+5. Check that RQ3 retains a clear descriptive methodological definition.
+6. Verify internal references, table captions, and LaTeX labels.
+7. Compile the complete manuscript.
+8. Inspect the affected PDF pages.
+9. Report the final page count and relevant warnings.
+
+## 11. Required report
+
+Provide:
+
+**A. Terminological harmonization:** Confirm replacement of H1–H5 with RQ1–RQ5.
+
+**B. RQ3 editorial consolidation:** Identify where repetitive statements were reduced while preserving inferential accuracy.
+
+**C. Academic language:** List the most relevant changes to excessive qualifications, categorical headings, or rhetorical formulations.
+
+**D. Scientific integrity:** Confirm that all results, statistical procedures, mathematical formulations, and substantive conclusions remain unchanged.
+
+**E. Files modified:** Provide the exact file list, including any display-only changes to table generators.
+
+**F. Compilation:** Report the final PDF page count, unresolved references, and layout warnings.
+
+**G. Outstanding issues:** Report only specific issues that require author decisions.
+
+## Final objective
+
+Produce a concise, coherent, and methodologically precise academic manuscript in which the research questions are consistently identified, descriptive findings are presented confidently but accurately, and methodological limitations are addressed without unnecessary repetition.
+
+Preserve the scientific content and the author's revised Section 6.4.
+
+
+Additional restriction: The mathematical contribution of Proposition 1 has already been incorporated and approved in Abstract and Conclusions. Preserve both statements. Do not reopen the scientific strengthening plan, modify bibliographic references, or introduce new literature. Section 6.4, Study Limitations, has also been manually revised and must remain unchanged.

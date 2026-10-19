@@ -1,0 +1,109 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=22mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage{hyperref}
+\usepackage{caption}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\graphicspath{{SupplementaryData/figures/}}
+
+\title{Supplementary Information\\[0.4em]
+\large Sensitivity of Fuzzy-PSO Inertia Control to Linguistic Granularity and Rule-Base Structure}
+\author{}
+\date{15 October 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\clearpage
+
+\section{Fuzzy-controller configuration space}
+
+The main article shows representative panels. This section documents the full set of evaluated membership partitions, rule patterns, and induced control surfaces for all four granularities, $n\in\{3,5,7,9\}$. The input and output partition families are I1 and O1 throughout.
+
+\subsection{Diversity input partition}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.72\textheight,keepaspectratio]{06_input_diversity_mf_panel_I1.png}
+  \captionof{figure}{Diversity-input membership functions for all evaluated granularities.}
+\end{figure}
+
+\subsection{Progress input partition}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.72\textheight,keepaspectratio]{07_input_progress_mf_panel_I1.png}
+  \captionof{figure}{Progress-input membership functions for all evaluated granularities.}
+\end{figure}
+
+\subsection{Inertia-weight output partition}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.72\textheight,keepaspectratio]{08_output_w_mf_panel.png}
+  \captionof{figure}{Output membership functions for the inertia weight, $w\in[0.1,0.9]$, for all evaluated granularities.}
+\end{figure}
+
+\subsection{Rule-base matrices}
+Each panel contains R1--R8 for the indicated granularity. Cell abbreviations and the shared colour scale are defined in the corresponding figure.
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{04_fuzzy_rules_panel_3labels.png}
+  \captionof{figure}{Rule-base matrix panel for $n=3$.}
+\end{figure}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{04_fuzzy_rules_panel_5labels.png}
+  \captionof{figure}{Rule-base matrix panel for $n=5$.}
+\end{figure}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{04_fuzzy_rules_panel_7labels.png}
+  \captionof{figure}{Rule-base matrix panel for $n=7$.}
+\end{figure}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{04_fuzzy_rules_panel_9labels.png}
+  \captionof{figure}{Rule-base matrix panel for $n=9$.}
+\end{figure}
+
+\subsection{Control surfaces}
+Each panel contains the eight rule-induced surfaces for the indicated granularity. Diversity and progress vary over $[0,1]^2$; the output is the defuzzified inertia weight.
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{11_3d_surface_panel_3labels_I1.png}
+  \captionof{figure}{Control surfaces for R1--R8 at $n=3$.}
+\end{figure}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{11_3d_surface_panel_5labels_I1.png}
+  \captionof{figure}{Control surfaces for R1--R8 at $n=5$.}
+\end{figure}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{11_3d_surface_panel_7labels_I1.png}
+  \captionof{figure}{Control surfaces for R1--R8 at $n=7$.}
+\end{figure}
+\begin{figure}[H]\centering
+  \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{11_3d_surface_panel_9labels_I1.png}
+  \captionof{figure}{Control surfaces for R1--R8 at $n=9$.}
+\end{figure}
+
+\section{Complete function-level results}
+
+Table rows correspond to 62 function--dimension instances. Ranks use median normalized gap over all 33 configurations. Each $p$-value is from a two-sided Mann--Whitney $U$ test on independent samples and is Bonferroni-adjusted across the 1,984 RQ4 comparisons. Since fitness is minimized, $A_{12}>0.5$ favours the listed FCS configuration.
+
+\input{SupplementaryData/tables/tab_function_level_full.tex}
+
+\section{Performance versus run-to-run dispersion}
+
+The 23-page atlas shows one page per benchmark function. Scalable functions include one panel per tested dimension with shared axis limits. Each point gives the mean and standard deviation of normalized gap over 31 runs for one configuration--instance pair. Logarithmic axes display zero at $10^{-12}$. Colour identifies rule-base pattern, marker shape identifies granularity, the star marks PSO, and the open circle marks the selected FCS. Overlapping points denote equal summaries; axis ranges vary by function.
+
+\includepdf[pages=-,scale=0.97,pagecommand={\thispagestyle{plain}}]{SupplementaryData/figures/fig_mean_dispersion_by_function.pdf}
+
+\section{Benchmark-function landscape slices}
+
+Each page pairs a contour with a 3-D view of the same two-dimensional slice. Coordinates use the benchmark bounds; dimensions beyond two are fixed at the bounds midpoint. Elevation and colour show $\log_{10}(1+\max(f(x)-f^*,0))$. F8 uses its dimension-scaled optimum, and F7 shows the expected objective with uniform-noise mean $0.5$.
+
+\includepdf[pages=-,pagecommand={\thispagestyle{plain}}]{SupplementaryData/figures/benchmark_landscape_slices.pdf}
+
+\section{Supporting data}
+
+The Supplementary Materials provide consolidated run-level outcomes and machine-readable summaries for the rankings, independent-sample tests, effect sizes, runtime estimates, granularity profiles, and controller trajectories. RQ3 is descriptive and does not estimate a factorial interaction.
+
+\end{document}

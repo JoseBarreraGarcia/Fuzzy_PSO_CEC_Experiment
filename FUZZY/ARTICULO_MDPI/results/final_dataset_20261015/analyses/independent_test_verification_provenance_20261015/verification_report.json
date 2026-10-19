@@ -1,0 +1,148 @@
+{
+  "audit": "Final independent-test verification; all checks use final_dataset_20261015 consolidated samples.",
+  "independent_test_verification": {
+    "RQ4": {
+      "tests": 1984,
+      "tests_with_saved_U_omitted": 28,
+      "manual_vs_saved_max_abs_U": 0.0,
+      "manual_vs_saved_max_abs_p": 1.1102230246251565e-16,
+      "manual_vs_saved_max_abs_A12": 1.1102230246251565e-16,
+      "scipy_vs_manual_max_abs_p": 0.0,
+      "U_matches": true,
+      "p_matches": true,
+      "A12_matches": true,
+      "scipy_p_matches_manual": true
+    },
+    "Table 11": {
+      "tests": 1984,
+      "tests_with_saved_U_omitted": 29,
+      "manual_vs_saved_max_abs_U": 0.0,
+      "manual_vs_saved_max_abs_p": 1.1102230246251565e-16,
+      "manual_vs_saved_max_abs_A12": 1.1102230246251565e-16,
+      "scipy_vs_manual_max_abs_p": 0.0,
+      "U_matches": true,
+      "p_matches": true,
+      "A12_matches": true,
+      "scipy_p_matches_manual": true
+    }
+  },
+  "RQ4_family": {
+    "tests": 1984,
+    "Bonferroni_alpha": 2.5201612903225806e-05,
+    "two_sided": true,
+    "sample_sizes": [
+      31,
+      31
+    ]
+  },
+  "Table11_family": {
+    "tests": 1984,
+    "alpha": 0.05,
+    "adjustment": "none in the original Table 11 family policy",
+    "sample_sizes": [
+      31,
+      31
+    ]
+  },
+  "historical_Table11_discrepancies": {
+    "a12_mismatch_rows": 50,
+    "paired_p_mismatch_rows_vs_current_consolidated_samples": 66,
+    "rows_with_either_discrepancy": 80,
+    "A12_mismatches_outside_F14": 37,
+    "p_mismatches_outside_F14": 52,
+    "by_function_csv": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\analyses\\independent_test_verification_provenance_20261015\\archived_table11_discrepancies_by_function.csv"
+  },
+  "historical_Table11_reproduction": {
+    "historical_csv_rows": 1984,
+    "historical_csv_A12_mismatches": 0,
+    "historical_csv_paired_p_mismatches": 0,
+    "historical_parquet_rows": 1984,
+    "historical_parquet_A12_mismatches": 40,
+    "historical_parquet_paired_p_mismatches": 53
+  },
+  "root_cause_assessment": "Established: code/12_analyze_rule_structure.py calculated Table 11 from experiments_meta.csv, and the archived output reproduces exactly from that CSV (0/1,984 A12 and 0/1,984 paired-p mismatches). The surviving experiments_meta.parquet matches the consolidated PSO_FCS scores exactly outside corrected F14; recomputing archived-style tests from Parquet yields 37 non-F14 A12 and 52 non-F14 paired-p mismatches. This isolates CSV float serialization/round-trip precision as the root cause of the non-F14 discrepancies, where tiny score differences can change pairwise ties/ranks and Wilcoxon differences. F14 correction separately changes F14 comparisons. The new independent Mann\u2013Whitney p-values/A12 are independently verified against the consolidated full-precision samples.",
+  "manuscript_update_readiness": "NOT READY for final manuscript updates until H3 inference is explicitly removed/reframed or recalculated under a defensible design, and the unadjusted 1,984-test Table 11 interpretation/multiplicity policy is stated and approved. The consolidated data and independent Table 11 recalculation are ready for that decision.",
+  "remaining_methodological_issues": [
+    "Final RQ3 is descriptive; historical H3 factorial inference is stale and the run_id bootstrap is invalid as common-seed blocking because run_id does not identify a shared seed.",
+    "Table 11 reports 1,984 two-sided tests without multiplicity adjustment under the archived policy; treat significance counts as exploratory unless a family-wise or false-discovery policy is adopted and reported.",
+    "Use full-precision consolidated/Parquet values for final statistics; do not reproduce Table 11 from the rounded CSV serialization used by the legacy script."
+  ],
+  "RQ3_H3_audit": {
+    "final_RQ3_is_descriptive_only": true,
+    "final_RQ3_uses_run_id_as_inferential_block": false,
+    "new_interaction_test_introduced": false,
+    "historical_common_seed_blocks_established": false,
+    "legacy_artifact_rows": [
+      {
+        "artifact_or_script": "21_recalculate_final_dataset.py / tables/rq3_function_dispersion.csv",
+        "use": "Function-level rank/log-gap dispersion from consolidated scores; descriptive only; no run_id blocking.",
+        "status": "Current versioned RQ3 output; valid for descriptive reporting."
+      },
+      {
+        "artifact_or_script": "code/03_run_factorial_anova.py -> results/tests/h3_factorial_anova/{anova_table,srh_table,summary}.csv/json",
+        "use": "Legacy ANOVA/Scheirer\u2013Ray\u2013Hare factorial H3 inference and partial eta-squared from the earlier dataset.",
+        "status": "Archived legacy inference; not recalculated or used as confirmatory evidence in this package."
+      },
+      {
+        "artifact_or_script": "code/17_reanalyze_h3_blocked.py -> results/tests/h3_blocked/summary.json",
+        "use": "Exploratory two-way function \u00d7 run_id cluster bootstrap; assumes run_id clusters are shared across configurations.",
+        "status": "Archived exploratory output; not valid as common-seed blocking because seed assignment was based on global exp_id."
+      },
+      {
+        "artifact_or_script": "code/06_generate_paper_figures.py -> results/tests/h3_factorial_anova/std_across_R_vs_n.csv -> fig_std_R_vs_n",
+        "use": "Reads the old factorial H3 output to generate the std-across-rules figure.",
+        "status": "Stale dependency if that script is run; replace its input with the consolidated descriptive RQ3 table. Current TeX search finds only the generated-input manifest comment for this figure."
+      },
+      {
+        "artifact_or_script": "code/13_analyze_granularity.py -> results/tests/h3_factorial_anova/summary.json",
+        "use": "Requires the old H3 summary and prints partial_eta_squared and h3_std_R_decreasing_with_n after creating granularity tables/figure.",
+        "status": "Do not use its H3 console claims for final reporting; its descriptive rank/gap outputs should be regenerated from the consolidated inputs."
+      },
+      {
+        "artifact_or_script": "code/18_h3_function_dispersion.py and code/07_generate_paper_tables.py -> results/tests/h3_function_dispersion/function_dispersion.csv",
+        "use": "Descriptive function-level dispersion; no run_id pairing or bootstrap in script 18.",
+        "status": "Method is descriptive, but the old file is superseded by tables/rq3_function_dispersion.csv and must be replaced before paper-table regeneration."
+      }
+    ]
+  },
+  "source_files": {
+    "FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\consolidated_level1.parquet": {
+      "sha256": "d74c1c3e1ad7b208289e15fa89b6cf477f6561146389e163d4b6adda8a499930",
+      "modified": "2026-10-15T09:29:26.278494+02:00",
+      "bytes": 2855313
+    },
+    "FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\tables\\rq4_independent_mann_whitney_details.csv": {
+      "sha256": "cf45b4f7dcc513a68ce52e67c974211c9c0895c10f81d0a624662df9c2723bfe",
+      "modified": "2026-10-15T09:29:38.744951+02:00",
+      "bytes": 316803
+    },
+    "FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\tables\\table11_independent_mann_whitney_details.csv": {
+      "sha256": "589c32e9be3e18a506e3861817bccb9d7e703ca7f3d09c60c51cbc57f6a16d47",
+      "modified": "2026-10-15T09:30:17.971087+02:00",
+      "bytes": 326830
+    },
+    "FUZZY\\ARTICULO_MDPI\\results\\level3_rankings\\rule_pair_per_instance.csv": {
+      "sha256": "70c7833e74a13a1a7a0a21e15c1516ac3b7af58e15d156856930aeea064fc629",
+      "modified": "2026-09-24T19:23:34.200587+02:00",
+      "bytes": 170876
+    },
+    "FUZZY\\ARTICULO_MDPI\\results\\level1_raw\\experiments_meta.csv": {
+      "sha256": "44dbbe1ed96a1c3c1c5d3cc24b69e86f463223afdbf6f7ef0b77cf3fc75f51f7",
+      "modified": "2026-09-22T17:53:14.100148+02:00",
+      "bytes": 7882869
+    },
+    "FUZZY\\ARTICULO_MDPI\\results\\level1_raw\\experiments_meta.parquet": {
+      "sha256": "cd810aa733bca4a81d8213995e3bde68553c6e491e2119bbe55173890151ec62",
+      "modified": "2026-09-22T17:53:13.487773+02:00",
+      "bytes": 1705511
+    },
+    "FUZZY\\ARTICULO_MDPI\\code\\12_analyze_rule_structure.py": {
+      "sha256": "40750ad61542940940fb5b951f0cb09c784283eac469536d36f80610ef420a74",
+      "modified": "2026-10-14T00:44:15.265607+02:00",
+      "bytes": 14509
+    }
+  },
+  "no_PSO_rerun": true,
+  "no_historical_outputs_overwritten": true,
+  "manuscript_or_database_modified": false
+}

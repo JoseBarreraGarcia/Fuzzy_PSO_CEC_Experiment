@@ -1,0 +1,112 @@
+{
+  "dataset": {
+    "runs": 63426,
+    "instances": 62,
+    "configurations": 33,
+    "runs_per_configuration_instance": 31
+  },
+  "rq1": {
+    "friedman_chi2": 1052.3755743397287,
+    "degrees_of_freedom": 32,
+    "p_value": 1.5584572715520894e-200,
+    "nemenyi_significant_pairs": 272,
+    "critical_difference": 6.590778840608024,
+    "leader": {
+      "configuration_id": "FCS-3-R1",
+      "mean_rank": 4.774193548387097
+    }
+  },
+  "rq2": {
+    "class_rank_concordance": [
+      {
+        "class_a": "composed",
+        "class_b": "multimodal",
+        "kendall_tau": 0.0795454545454545,
+        "p_value": 0.5281940726293002
+      },
+      {
+        "class_a": "composed",
+        "class_b": "unimodal",
+        "kendall_tau": 0.0833333333333333,
+        "p_value": 0.508223286899977
+      },
+      {
+        "class_a": "multimodal",
+        "class_b": "unimodal",
+        "kendall_tau": 0.8674242424242423,
+        "p_value": 1.6683212072228442e-18
+      }
+    ],
+    "S1_S2_tau": 0.09469696969696971,
+    "S1_S2_p_value": 0.45073160411871227,
+    "subgroup_leaders": [
+      {
+        "subgroup": "S2",
+        "configuration_id": "FCS-5-R6",
+        "gap_median_mean": 0.20005969656910993,
+        "rank": 1.0
+      },
+      {
+        "subgroup": "S1",
+        "configuration_id": "FCS-3-R5",
+        "gap_median_mean": 379.85675855704636,
+        "rank": 1.0
+      }
+    ]
+  },
+  "rq3": {
+    "is_descriptive": true,
+    "rank_dispersion_median_by_n": {
+      "3": 8.883924084708127,
+      "5": 8.365533028871672,
+      "7": 8.715173037377317,
+      "9": 9.373928510197084
+    },
+    "loggap_dispersion_median_by_n": {
+      "3": 0.9117183128328573,
+      "5": 1.1704778038594803,
+      "7": 1.1730150465504168,
+      "9": 0.9010951920971162
+    },
+    "endpoint_decreases_rank": 6,
+    "endpoint_decreases_loggap": 11
+  },
+  "rq4": {
+    "test": "two-sided independent-sample Mann-Whitney U",
+    "comparisons": 1984,
+    "correction": "Bonferroni",
+    "adjusted_alpha": 2.5201612903225806e-05,
+    "overall_bonferroni": {
+      "wins": 22,
+      "non_significant": 906,
+      "losses": 1056
+    },
+    "FCS_3_R1": {
+      "nominal": {
+        "wins": 30,
+        "non_significant": 30,
+        "losses": 2
+      },
+      "bonferroni": {
+        "wins": 16,
+        "non_significant": 46,
+        "losses": 0
+      }
+    }
+  },
+  "table11": {
+    "test": "two-sided independent-sample Mann-Whitney U",
+    "comparisons": 1984,
+    "correction": "Holm across the complete family",
+    "alpha": 0.05,
+    "nominal_significant": 1450,
+    "holm_significant": 1200,
+    "all_eight_dominant_directions_survive": true
+  },
+  "runtime": {
+    "method": "ratio of independent sample medians",
+    "median_overhead_percent": 28.737764039155067,
+    "q1_percent": 25.37200824063907,
+    "q3_percent": 43.643325747523775
+  }
+}

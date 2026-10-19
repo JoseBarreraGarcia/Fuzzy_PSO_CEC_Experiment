@@ -1,0 +1,9 @@
+kind,pair,axis_inverted,n_comparisons,wins_a,wins_b,ties,dominant,a12_median,best_class,best_class_rate
+mirror,R1 vs R2,progress direction,248,187,0,61,R1,0.9864724245577523,unimodal,0.9553571428571429
+mirror,R3 vs R4,diversity reaction,248,42,123,83,R4,0.4136316337148803,unimodal,0.5982142857142857
+mirror,R5 vs R8,progress direction + diversity reaction,248,160,2,86,R5,0.9084287200832466,unimodal,0.8571428571428571
+mirror,R6 vs R7,progress direction + diversity reaction,248,174,10,64,R6,0.951092611862643,multimodal,0.8229166666666666
+single-axis,R5 vs R7,progress direction,248,170,1,77,R5,0.9573361082206036,multimodal,0.8125
+single-axis,R6 vs R8,progress direction,248,171,5,72,R6,0.9172736732570239,unimodal,0.9107142857142857
+single-axis,R5 vs R6,diversity reaction,248,113,37,98,R5,0.6620707596253902,unimodal,0.6875
+single-axis,R7 vs R8,diversity reaction,248,15,160,73,R8,0.08844953173777315,multimodal,0.8125

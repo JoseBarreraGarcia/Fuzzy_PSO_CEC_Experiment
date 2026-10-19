@@ -2,19 +2,37 @@
 \section{Related Work}
 \label{sec:related_work}
 
-\subsection{Fuzzy control of PSO}
-\label{subsec:fuzzy_pso_related}
+\subsection{Inertia-Weight Control in Particle Swarm Optimization}
+\label{subsec:pso_inertia}
 
-Previous studies have used fuzzy inference to adapt PSO parameters, most commonly the inertia weight, from indicators of swarm diversity and search progress. This line of work is motivated by the fact that a fixed schedule cannot react directly to the state of the population. The design of the fuzzy controller nevertheless introduces additional choices involving membership functions, linguistic resolution, rule semantics, and defuzzification.
+PSO is a population-based stochastic optimizer in which each particle combines inertia with cognitive and social attraction terms \cite{KennedyEberhart1995}. The inertia weight $w$ directly scales the previous velocity; it is therefore a principal mechanism for controlling the exploration--exploitation balance. The original and early variants used a constant coefficient, whereas the widely used linearly decreasing inertia-weight schedule explicitly changes search behavior over the optimization horizon \cite{ShiEberhart1998}. Subsequent work has investigated nonlinear schedules \cite{Chatterjee2006}, feedback from swarm success \cite{Nickabadi2011}, stability-aware adaptation \cite{Taherkhani2015}, and joint adaptation of inertia and acceleration coefficients \cite{Duan2022,Han2024}.
 
-\subsection{Sensitivity of fuzzy-controller design}
-\label{subsec:fcs_sensitivity_related}
+This body of work establishes an important distinction. A time-indexed schedule changes $w$ but does not observe the current search state. State-dependent controllers instead use quantities such as diversity, improvement, distance, or stagnation to react to the population trajectory \cite{Nickabadi2011,Taherkhani2015}. Such feedback is particularly relevant because benchmark landscapes differ substantially in modality and conditioning; a search policy suitable for rapid local refinement need not be suitable for maintaining diversity in a multimodal landscape. The question addressed here is more specific: once a fuzzy state-feedback controller has been selected, how sensitive is its behavior to the semantic resolution of its partitions and to its rule-base structure?
 
-The author's previous OLA, CLEI, and WEA studies investigated selected axes of fuzzy-control design, including input and output sets and rule configurations. Those studies motivate a unified comparison, but they do not provide a factorial evaluation of granularity and rule structure over the complete F1--F23 suite. The present work closes that methodological gap by treating the FCS as a controlled parameterization rather than as an indivisible algorithmic label.
+\subsection{Fuzzy State-Feedback Control of PSO Parameters}
+\label{subsec:fuzzy_pso}
 
-\subsection{Positioning of the present study}
+A fuzzy inference system (FIS) provides an interpretable way to map numerical state descriptors into a control action. In a Mamdani FIS, linguistic antecedents and consequents are combined through a rule base and a defuzzification operator; this architecture remains a canonical model-free fuzzy-control paradigm \cite{Mamdani1974,Lee1990,Nguyen2019Fuzzy}. When used in PSO, the inputs commonly represent population diversity, iteration progress, or an improvement signal, and the output is an adapted value of $w$ or of several PSO coefficients \cite{ShiEberhart2001,Nobile2018,Valdez2017}.
+
+Fuzzy-PSO studies address different control targets and design questions. Valdez et al. compared fuzzy-logic augmentation across PSO variants for mathematical functions using co-evolution \cite{Valdez2017}. Xia et al. designed a multiple-input multiple-output fuzzy controller to tune adaptive learning weights \cite{Xia2023}, while Roy et al. developed benchmark-trained fuzzy feedback policies and reported 127 PSO algorithm variants with up to seven controlled parameters \cite{Roy2024}; the latter article was published in 2025. Salimi et al. applied fuzzy-adaptive PSO to reachability analysis in systems specified through graph transformations \cite{Salimi2025}, a distinct application domain. These contributions demonstrate the breadth of fuzzy parameter control, but they do not change the question addressed here: sensitivity of a fixed static Mamdani inertia architecture to granularity and consequent-pattern choices.
+
+\subsection{Fuzzy Partitions, Linguistic Granularity, and Interpretability}
+\label{subsec:granularity}
+
+Linguistic granularity is the number of labels used to discretize a fuzzy universe. It is not merely an implementation detail: it determines which distinctions the controller can express and, for a multi-input rule base, determines the number of candidate rules. A well-formed fuzzy partition is expected to provide coverage, normality, distinguishability, and a semantically ordered set of labels \cite{Klir2005,DuboisPrade2000}. Uniform triangular Ruspini partitions are a common construction because adjacent sets overlap smoothly while their membership grades sum to one over the normalized domain.
+
+The accuracy--interpretability trade-off associated with granularity has long been recognized in fuzzy modeling. Fine partitions can represent smaller input distinctions, but expand the potential rule base; coarser partitions reduce complexity at the cost of local resolution. Gacto et al. review measures for interpretability in linguistic fuzzy rule-based systems \cite{Gacto2011}, while Castiello et al. study variable-granularity interpretable partitions for classified data \cite{Castiello2019}. These works motivate treating granularity as a structural design choice, but they do not make optimization performance a direct measure of interpretability. For the present controller, the number of labels and consequent mapping are separate, coupled choices.
+
+Rule-base design is a second, distinct source of semantic variation. Fuzzy-system design methods can tune membership parameters, induce or prune rules, or modify the partition itself \cite{Ojha2019,Gu2022}. Evolving systems may split rules in response to drift \cite{Lughofer2018} or derive interpretable partitions from observed data \cite{Guillaume2004}. Such adaptive approaches are valuable, but they do not identify whether a particular static combination of granularity and rule logic generalizes over qualitatively different optimization landscapes. Establishing that baseline is necessary before attributing an advantage to more elaborate structural adaptation.
+
+\subsection{From Structural Adaptation to Configuration Selection}
+\label{subsec:structural_adaptation}
+
+The broader fuzzy-systems literature distinguishes parameter adaptation from structural adaptation. The former changes membership-function parameters or rule weights; the latter may add, split, merge, or remove rules and partition elements \cite{Gu2022,Saad2020}. Recent research further investigates interpretable evolving partitions \cite{Lughofer2018}, semantic constraints during evolutionary controller design \cite{Megherbi2019}, and variable-granularity knowledge representations \cite{Ahmed2017}. These strands demonstrate that fuzzy semantics need not be treated as immutable.
+
+Nevertheless, the flexibility of an adaptive mechanism can make interpretation difficult when multiple semantic choices change together. A controlled comparison of static configurations provides complementary descriptive evidence about how rankings vary when granularity and rule patterns are changed under a common architecture. Such comparisons do not by themselves identify independent causal effects or confirm a factorial interaction.
+
+\subsection{Research Gap and Positioning of This Study}
 \label{subsec:positioning}
 
-The objective here is not to introduce a learned rule base or a new adaptive metaheuristic. Instead, all PSO components other than the fuzzy inertia controller are held fixed. This isolates the effect of the two factors of interest and makes it possible to test whether the best static configuration is stable across different benchmark landscapes.
-
-% TODO: add verified bibliographic entries for PSO, Mamdani inference, fuzzy PSO, and the OLA/CLEI/WEA papers.
+Prior fuzzy-PSO studies demonstrate feedback controllers, multi-parameter adaptation, and optimized fuzzy policies, while fuzzy-modeling research treats partition granularity and interpretability as substantive design concerns. The present study is positioned as a controlled structural sensitivity analysis of a static Mamdani fuzzy inertia controller, not as a claim that no earlier factorial study exists. It evaluates four granularities, $n \in \{3,5,7,9\}$, and eight generated consequent patterns, $R_1,\ldots,R_8$, under common inputs, membership-function family, inference method, PSO implementation, and experimental budget. Because granularity changes both partition resolution and rule-table size, the results compare complete configurations rather than identify independent causal effects. The analysis also examines whether performance dispersion among rule-base patterns changes consistently across linguistic granularities, providing descriptive evidence on the sensitivity of complete controller configurations. The study does not validate an adaptive selector.

@@ -81,6 +81,7 @@ def parse_parametros(parametrosMH):
     
     return params
 
+
 def verificar_y_crear_carpetas():
     """
     Verifica que las carpetas y subcarpetas dentro de 'Resultados' estén creadas.

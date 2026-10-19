@@ -1,0 +1,226 @@
+{
+  "rq1_old_summary": {
+    "metric": "gap_final",
+    "alpha": 0.05,
+    "friedman": {
+      "chi2": 1051.278953799026,
+      "df": 32,
+      "p_value": 2.654877108974788e-200,
+      "n_instances": 62,
+      "n_configs": 33,
+      "reject_H0_no_difference": true
+    },
+    "critical_difference": {
+      "k": 33,
+      "N": 62,
+      "q_alpha_0.05": 3.795,
+      "CD": 6.590778840608024
+    },
+    "best_config_by_mean_rank": {
+      "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+      "mean_rank": 4.774193548387097
+    },
+    "worst_config_by_mean_rank": {
+      "mh_raw": "PSO_FCS:G9:I1:R2:O1",
+      "mean_rank": 26.54032258064516
+    },
+    "top5_mean_rank": [
+      {
+        "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+        "mean_rank": 4.774193548387097
+      },
+      {
+        "mh_raw": "PSO",
+        "mean_rank": 6.362903225806452
+      },
+      {
+        "mh_raw": "PSO_FCS:G5:I1:R1:O1",
+        "mean_rank": 6.975806451612903
+      },
+      {
+        "mh_raw": "PSO_FCS:G7:I1:R1:O1",
+        "mean_rank": 8.201612903225806
+      },
+      {
+        "mh_raw": "PSO_FCS:G9:I1:R1:O1",
+        "mean_rank": 8.42741935483871
+      }
+    ],
+    "significant_pairs_count": 272,
+    "H1_supported_by_friedman": true
+  },
+  "rq4_old_global_summary": {
+    "alpha": 0.05,
+    "n_instances": 62,
+    "n_configs": 32,
+    "bonferroni_alpha": 2.5201612903225806e-05,
+    "H4_supported_raw": false,
+    "H4_supported_bonferroni": false,
+    "H4_winning_configs_raw": [],
+    "H4_winning_configs_bonferroni": [],
+    "top5_raw_wins": [
+      {
+        "mh_raw": "PSO_FCS:G3:I1:R1:O1",
+        "n_labels": 3.0,
+        "rule_set": "R1",
+        "n_instances": 62,
+        "raw_wins": 27,
+        "raw_ties": 33,
+        "raw_losses": 2,
+        "bonf_wins": 13,
+        "bonf_ties": 49,
+        "bonf_losses": 0,
+        "a12_mean": 0.668532442684032,
+        "a12_median": 0.609261186264308
+      },
+      {
+        "mh_raw": "PSO_FCS:G7:I1:R5:O1",
+        "n_labels": 7.0,
+        "rule_set": "R5",
+        "n_instances": 62,
+        "raw_wins": 6,
+        "raw_ties": 28,
+        "raw_losses": 28,
+        "bonf_wins": 1,
+        "bonf_ties": 43,
+        "bonf_losses": 18,
+        "a12_mean": 0.363423517169615,
+        "a12_median": 0.3798126951092612
+      },
+      {
+        "mh_raw": "PSO_FCS:G9:I1:R5:O1",
+        "n_labels": 9.0,
+        "rule_set": "R5",
+        "n_instances": 62,
+        "raw_wins": 5,
+        "raw_ties": 31,
+        "raw_losses": 26,
+        "bonf_wins": 0,
+        "bonf_ties": 47,
+        "bonf_losses": 15,
+        "a12_mean": 0.3832281561545433,
+        "a12_median": 0.41155046826222685
+      },
+      {
+        "mh_raw": "PSO_FCS:G5:I1:R5:O1",
+        "n_labels": 5.0,
+        "rule_set": "R5",
+        "n_instances": 62,
+        "raw_wins": 5,
+        "raw_ties": 24,
+        "raw_losses": 33,
+        "bonf_wins": 0,
+        "bonf_ties": 38,
+        "bonf_losses": 24,
+        "a12_mean": 0.3042193951193313,
+        "a12_median": 0.29916753381893857
+      },
+      {
+        "mh_raw": "PSO_FCS:G5:I1:R1:O1",
+        "n_labels": 5.0,
+        "rule_set": "R1",
+        "n_instances": 62,
+        "raw_wins": 4,
+        "raw_ties": 51,
+        "raw_losses": 7,
+        "bonf_wins": 0,
+        "bonf_ties": 62,
+        "bonf_losses": 0,
+        "a12_mean": 0.46259776442549755,
+        "a12_median": 0.46982310093652446
+      }
+    ],
+    "worst5_raw_wins": [
+      {
+        "mh_raw": "PSO_FCS:G7:I1:R2:O1",
+        "n_labels": 7.0,
+        "rule_set": "R2",
+        "n_instances": 62,
+        "raw_wins": 0,
+        "raw_ties": 14,
+        "raw_losses": 48,
+        "bonf_wins": 0,
+        "bonf_ties": 17,
+        "bonf_losses": 45,
+        "a12_mean": 0.13990802591386658,
+        "a12_median": 0.002081165452653486
+      },
+      {
+        "mh_raw": "PSO_FCS:G3:I1:R4:O1",
+        "n_labels": 3.0,
+        "rule_set": "R4",
+        "n_instances": 62,
+        "raw_wins": 0,
+        "raw_ties": 10,
+        "raw_losses": 52,
+        "bonf_wins": 0,
+        "bonf_ties": 16,
+        "bonf_losses": 46,
+        "a12_mean": 0.09463428552247323,
+        "a12_median": 0.0
+      },
+      {
+        "mh_raw": "PSO_FCS:G5:I1:R4:O1",
+        "n_labels": 5.0,
+        "rule_set": "R4",
+        "n_instances": 62,
+        "raw_wins": 0,
+        "raw_ties": 8,
+        "raw_losses": 54,
+        "bonf_wins": 0,
+        "bonf_ties": 15,
+        "bonf_losses": 47,
+        "a12_mean": 0.08171091940518949,
+        "a12_median": 0.0
+      },
+      {
+        "mh_raw": "PSO_FCS:G7:I1:R4:O1",
+        "n_labels": 7.0,
+        "rule_set": "R4",
+        "n_instances": 62,
+        "raw_wins": 0,
+        "raw_ties": 8,
+        "raw_losses": 54,
+        "bonf_wins": 0,
+        "bonf_ties": 13,
+        "bonf_losses": 49,
+        "a12_mean": 0.07310932832063374,
+        "a12_median": 0.0
+      },
+      {
+        "mh_raw": "PSO_FCS:G9:I1:R4:O1",
+        "n_labels": 9.0,
+        "rule_set": "R4",
+        "n_instances": 62,
+        "raw_wins": 0,
+        "raw_ties": 8,
+        "raw_losses": 54,
+        "bonf_wins": 0,
+        "bonf_ties": 13,
+        "bonf_losses": 49,
+        "a12_mean": 0.06958477392501092,
+        "a12_median": 0.0
+      }
+    ]
+  },
+  "table11_archived_discrepancy": {
+    "archived_table_rows": 1984,
+    "a12_mismatch_rows_against_corrected_dataset": 50,
+    "p_mismatch_rows_against_current_paired_recalculation": 66,
+    "rows_with_either_mismatch": 80,
+    "interpretation": "Historical Table 11 outputs do not fully reproduce from the current consolidated scores. A12 differences cannot be caused by paired versus independent p-value choice; archived inputs/code revision remains to be reconciled."
+  },
+  "table11_discrepant_functions": {
+    "F18": 24,
+    "F22": 15,
+    "F14": 14,
+    "F20": 13,
+    "F21": 6,
+    "F15": 3,
+    "F9": 2,
+    "F13": 1,
+    "F8": 1,
+    "F12": 1
+  },
+  "paired_recalculation_use": "audit only; not considered valid inference because run_id is not a shared-seed block"
+}

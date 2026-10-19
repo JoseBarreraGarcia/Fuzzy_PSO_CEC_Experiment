@@ -2,18 +2,39 @@
 \section{Introduction}
 \label{sec:introduction}
 
-Particle swarm optimization (PSO) is a population-based metaheuristic whose performance depends on the balance between exploration and exploitation. The inertia weight is one of the main controls used to regulate this balance. A fuzzy control system (FCS) can make the inertia weight responsive to the state of the swarm, but the resulting behavior depends on design choices that are often fixed without systematic comparison.
+% Particle swarm optimization (PSO) is a bio-inspired, population-based stochastic optimizer rooted in swarm intelligence, in which particles update their positions using individual and collective search experience \cite{KennedyEberhart1995}. The inertia weight scales the previous velocity and helps regulate the balance between exploration and exploitation \cite{ShiEberhart1998}. A fuzzy control system (FCS) can adjust this weight during the search using measures of optimization progress \cite{ShiEberhart2001}. Research on evolved fuzzy feedback policies further illustrates the scope for state-dependent parameter control \cite{Roy2024}. Within this swarm-intelligence framework, fuzzy partitions and the rule base determine how observations of the search process are translated into a control action.
 
-In a Mamdani FCS, the number of linguistic labels determines the granularity of the input and output partitions, while the rule base determines how diversity and iteration progress are translated into an inertia weight. These choices are coupled: increasing the number of labels changes the resolution of the inference process and also increases the number of rules. Consequently, a configuration that performs well on one landscape may not be reliable on another one.
 
-This paper studies whether a single static configuration of a Mamdani FCS can dominate across the Classical Benchmark Suite F1--F23, or whether the best configuration depends on the problem class. The study is deliberately framed as a sensitivity analysis rather than as a proposal for a new optimizer. It evaluates 32 PSO\_FCS configurations formed by four granularities and eight rule patterns, using classical PSO as a baseline.
+Particle swarm optimization (PSO) is a bio-inspired, population-based stochastic optimization algorithm rooted in swarm intelligence, in which particles update their positions using individual and collective search experience \cite{KennedyEberhart1995}. The inertia weight regulates the influence of previous velocities and plays an important role in balancing exploration and exploitation during the search \cite{ShiEberhart1998}. Integrating fuzzy logic with bio-inspired optimization provides a means of regulating this search behavior through linguistic rules that map information about the optimization process into parameter adjustments. In PSO, a fuzzy control system (FCS) can regulate the inertia weight using measures of search progress and population diversity \cite{ShiEberhart2001}. Research on evolved fuzzy feedback policies further illustrates the potential of state-dependent parameter control \cite{Roy2024}. Within this integration, linguistic partitions and rule-base structure determine how the observed search state is translated into an inertia-control action.
 
-The contributions of this work are:
+
+In a Mamdani fuzzy inference system (FIS), the antecedents and consequents of linguistic rules are represented by fuzzy sets \cite{Gacto2011}. Linguistic granularity is a substantive design choice in fuzzy modeling, with implications for partition resolution, rule-base complexity, and interpretability \cite{Castiello2019,Gacto2011}. For the controller studied here, the number $n$ of linguistic labels determines the resolution of both input and output partitions, while the rule base maps combinations of diversity and iteration progress to an inertia weight. These are distinct but coupled structural choices: for a complete two-input table with equal granularity, increasing $n$ from 3 to 9 raises the rule count from 9 to 81. Whether finer partitions improve PSO performance therefore requires empirical assessment, rather than being inferred from representational resolution alone.
+
+% The specific question addressed here is how the performance of a static Mamdani inertia controller varies with linguistic granularity and rule-base pattern when the inference architecture and optimization budget are held fixed. This complements research on fuzzy parameter control and partition design by comparing complete controller configurations under common experimental conditions. The study evaluates 32 PSO\_FCS configurations formed by four granularities and eight rule-base patterns across the Classical Benchmark Suite F1--F23, using classical PSO as a baseline. It characterizes ranking and dynamic variation across functions and benchmark groups, rather than introducing a new optimizer or an adaptive selector. Because changing granularity also changes the rule-table size, the comparison does not isolate granularity and rule structure as independent causal effects.
+
+
+The specific question addressed here is how linguistic granularity and rule-base structure influence the behavior and optimization performance of a static Mamdani fuzzy inertia controller within a bio-inspired search algorithm. By examining these structural design choices under a common inference architecture and optimization budget, the study seeks to provide mathematical and empirical evidence to inform the design of fuzzy control systems for PSO. Specifically, 32 PSO\_FCS configurations, combining four linguistic granularities and eight rule-base patterns, are evaluated across the Classical Benchmark Suite F1--F23, using classical PSO as a baseline. The analysis examines differences in optimization performance, configuration rankings, and controller dynamics across benchmark functions and problem groups. Rather than introducing a new optimizer or an online configuration selector, the study characterizes the behavior of predefined controller structures. Since increasing linguistic granularity also changes the number of rules, the comparisons concern complete configurations and do not establish independent causal effects of granularity and rule-base structure.
+
+
+% The contributions of this work are:
+% \begin{enumerate}
+% 	\item an explicit parametric specification of a static Mamdani FCS, including its generated linguistic partitions and rule-base pattern families;
+% 	\item a mathematical characterization of the mirror symmetry satisfied by designated rule-pattern pairs under the specified inference architecture;
+% 	\item a controlled factorial comparison of four granularities and eight consequent patterns under a common PSO implementation and experimental budget, supported by supplementary run-level data and machine-readable statistical summaries; and
+% 	\item empirical evidence of ranking and dynamic heterogeneity among the evaluated configurations across functions and benchmark groups.
+% \end{enumerate}
+
+
+The main contributions of this work are:
 \begin{enumerate}
-	\item a parametric and reproducible Mamdani FCS whose partitions and rule patterns are generated from declarative configuration;
-	\item a factorial evaluation of linguistic granularity and rule-base structure over the F1--F23 suite, including scalable and fixed-dimensional functions;
-	\item an analysis of performance, convergence, inertia-weight dynamics, and configuration rankings by problem class; and
-	\item empirical evidence addressing whether a globally optimal static FCS configuration exists.
+    \item A parametric formulation of a static Mamdani fuzzy inertia controller for bio-inspired optimization, defining linguistic partitions and systematically generated rule-base families to examine how structural design choices shape the control of PSO search behavior;
+
+    \item A formal characterization of mirror symmetry between designated rule-base patterns, establishing conditions under which their induced inertia-control surfaces are complementary and providing a mathematical basis for comparing structurally related fuzzy controllers;
+
+    \item A controlled factorial evaluation of four linguistic granularities and eight rule-base patterns under a common PSO implementation and computational budget, supported by supplementary run-level data and machine-readable statistical summaries;
+
+    \item Empirical evidence that increasing linguistic granularity does not consistently improve optimization performance or reduce differences among rule-base patterns, highlighting the importance of rule-base structure and the dependence of configuration rankings and controller behavior on the evaluated optimization problems.
 \end{enumerate}
 
-The remainder of the paper presents the related work, controller design, experimental protocol, planned analyses, and interpretation of the results.
+
+The remainder of the paper is organized as follows. Section~\ref{sec:related_work} reviews prior work; Section~\ref{sec:framework} introduces the parametric controller and formalizes its rule-base families; Section~\ref{sec:experimental_design} describes the experimental protocol; Section~\ref{sec:results} reports global, function- and problem-class rankings, rule-base and granularity comparisons, robustness and dimensional scaling, and controller dynamics; and Sections~\ref{sec:discussion} and~\ref{sec:conclusion} interpret the findings and summarize the conclusions and future work.

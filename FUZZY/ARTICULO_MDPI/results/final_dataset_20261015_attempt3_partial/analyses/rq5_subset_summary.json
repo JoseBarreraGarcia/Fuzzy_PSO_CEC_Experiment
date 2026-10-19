@@ -1,0 +1,30 @@
+{
+  "kendall_tau_S1_S2": 0.09469696969696971,
+  "kendall_p_S1_S2": 0.45073160411871227,
+  "leaders": [
+    {
+      "subgroup": "S2",
+      "configuration_id": "FCS-5-R6",
+      "gap_median_mean": 0.20005969656910993,
+      "rank": 1.0
+    },
+    {
+      "subgroup": "S1",
+      "configuration_id": "FCS-3-R5",
+      "gap_median_mean": 379.85675855704636,
+      "rank": 1.0
+    }
+  ],
+  "historical_tau": 0.09469696969696971,
+  "historical_p": 0.45073160411871227,
+  "historical_leaders": {
+    "S1": {
+      "mh_raw": "PSO_FCS:G3:I1:R5:O1",
+      "gap_median": 379.85675855704636
+    },
+    "S2": {
+      "mh_raw": "PSO_FCS:G5:I1:R6:O1",
+      "gap_median": 0.20005969656910993
+    }
+  }
+}

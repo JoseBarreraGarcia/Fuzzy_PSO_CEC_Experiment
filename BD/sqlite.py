@@ -303,6 +303,8 @@ class BD:
         # Insertar cada función
         for func in all_functions:
             nombre_base = func.__name__  # f1, f2, ..., f30
+            if nombre_base == 'f2':
+                continue
             nombre_funcion = f"{nombre_base.upper()}CEC2017"  # F1CEC2017, F2CEC2017, ...
             optimo = optimos_cec2017.get(nombre_base, 0)
             

@@ -200,6 +200,45 @@ check("dos instancias identicas producen mismo w", det_ok)
 
 
 # ---------------------------------------------------------------------------
+section("7. Pares espejo: inversion semantica de ambos ejes")
+
+# Pares cuyos patrones invierten simultaneamente progreso y diversidad.
+MIRROR_PAIRS = [("R1", "R2"), ("R3", "R4"), ("R5", "R8"), ("R6", "R7")]
+WMIN, WMAX = 0.1, 0.9
+
+for n in N_LABELS_TEST:
+    out_labels = cfg["partitions"]["O1"]["labels_by_n"][str(n)]
+    out_idx = {lab: i for i, lab in enumerate(out_labels)}
+    for ra, rb in MIRROR_PAIRS:
+        ma = make_rule_matrix(ra, n)
+        mb = make_rule_matrix(rb, n)
+        reflected = all(out_idx[ma[k]] + out_idx[mb[k]] == n - 1 for k in ma)
+        check(f"matriz {ra} vs {rb} n={n} reflejada (i_a + i_b = n-1)", reflected)
+
+        ca = FuzzyInertiaController_Auto(w_set="O1", num_labels=n, input_set="I1",
+                                         rule_set=ra, wMin=WMIN, wMax=WMAX)
+        cb = FuzzyInertiaController_Auto(w_set="O1", num_labels=n, input_set="I1",
+                                         rule_set=rb, wMin=WMIN, wMax=WMAX)
+        err = max(abs(ca.compute_w(d, t) + cb.compute_w(d, t) - (WMIN + WMAX))
+                  for d in GRID for t in GRID)
+        check(f"superficie {ra} vs {rb} n={n}: w_a + w_b = wMin + wMax", err < TOL,
+              f"max err={err:.2e}")
+
+# Pares que aislan un solo eje semantico (no son reflexiones).
+SINGLE_AXIS_PAIRS = {
+    "progress (div=following)": ("R5", "R7"),
+    "progress (div=compensating)": ("R6", "R8"),
+    "diversity (prog=decreasing)": ("R5", "R6"),
+    "diversity (prog=increasing)": ("R7", "R8"),
+}
+for axis, (ra, rb) in SINGLE_AXIS_PAIRS.items():
+    pa, pb = cfg["rule_patterns"][ra], cfg["rule_patterns"][rb]
+    differing = [k for k in ("prog", "div") if pa[k] != pb[k]]
+    check(f"{ra} vs {rb} aisla un solo eje: {axis}", len(differing) == 1,
+          f"difieren en {differing}")
+
+
+# ---------------------------------------------------------------------------
 print("\n" + "=" * 60)
 if failures:
     print(f"FAIL: {len(failures)} chequeos fallaron:")

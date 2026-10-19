@@ -1,0 +1,7 @@
+{
+  "archived_table_rows": 1984,
+  "a12_mismatch_rows_against_corrected_dataset": 50,
+  "p_mismatch_rows_against_current_paired_recalculation": 66,
+  "rows_with_either_mismatch": 80,
+  "interpretation": "Historical Table 11 outputs do not fully reproduce from the current consolidated scores. A12 differences cannot be caused by paired versus independent p-value choice; archived inputs/code revision remains to be reconciled."
+}

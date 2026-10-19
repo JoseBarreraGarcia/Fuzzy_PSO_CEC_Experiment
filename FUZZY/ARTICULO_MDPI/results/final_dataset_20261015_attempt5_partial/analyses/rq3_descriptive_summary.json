@@ -1,0 +1,19 @@
+{
+  "rq3_is_descriptive": true,
+  "rank_dispersion_median_by_n": {
+    "3": 8.883924084708127,
+    "5": 8.365533028871672,
+    "7": 8.715173037377317,
+    "9": 9.373928510197084
+  },
+  "loggap_dispersion_median_by_n": {
+    "3": 0.9117183128328573,
+    "5": 1.1704778038594803,
+    "7": 1.1730150465504168,
+    "9": 0.9010951920971162
+  },
+  "rank_endpoint_decreases": 6,
+  "loggap_endpoint_decreases": 11,
+  "rank_nonincreasing_all_n": 3,
+  "blocked_run_id_H3_inference": "not recalculated/included: historical actual seeds differ by global experiment ID, so run_id does not identify common random-number blocks"
+}

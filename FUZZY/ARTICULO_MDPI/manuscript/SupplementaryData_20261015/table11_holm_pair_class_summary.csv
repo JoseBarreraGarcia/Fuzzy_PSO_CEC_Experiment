@@ -1,0 +1,25 @@
+pair,holm_dominant_rule,problem_class,comparisons,holm_wins_for_dominant,holm_nonsignificant,holm_losses_for_dominant,dominant_significant_win_rate
+R1 vs R2,R1,multimodal,96,71,25,0,0.7395833333333334
+R1 vs R2,R1,composed,40,0,40,0,0.0
+R1 vs R2,R1,unimodal,112,104,8,0,0.9285714285714286
+R3 vs R4,R4,multimodal,96,53,29,14,0.5520833333333334
+R3 vs R4,R4,composed,40,0,24,16,0.0
+R3 vs R4,R4,unimodal,112,51,45,16,0.45535714285714285
+R5 vs R8,R5,multimodal,96,46,50,0,0.4791666666666667
+R5 vs R8,R5,composed,40,1,39,0,0.025
+R5 vs R8,R5,unimodal,112,95,17,0,0.8482142857142857
+R6 vs R7,R6,multimodal,96,72,24,0,0.75
+R6 vs R7,R6,composed,40,1,39,0,0.025
+R6 vs R7,R6,unimodal,112,79,28,5,0.7053571428571429
+R5 vs R7,R5,multimodal,96,75,21,0,0.78125
+R5 vs R7,R5,composed,40,0,40,0,0.0
+R5 vs R7,R5,unimodal,112,77,35,0,0.6875
+R6 vs R8,R6,multimodal,96,61,35,0,0.6354166666666666
+R6 vs R8,R6,composed,40,0,40,0,0.0
+R6 vs R8,R6,unimodal,112,95,17,0,0.8482142857142857
+R5 vs R6,R5,multimodal,96,28,58,10,0.2916666666666667
+R5 vs R6,R5,composed,40,1,39,0,0.025
+R5 vs R6,R5,unimodal,112,70,33,9,0.625
+R7 vs R8,R8,multimodal,96,70,26,0,0.7291666666666666
+R7 vs R8,R8,composed,40,0,40,0,0.0
+R7 vs R8,R8,unimodal,112,67,32,13,0.5982142857142857

@@ -1,0 +1,550 @@
+{
+  "title": "Consolidated statistical dataset validation",
+  "version": "final_dataset_20261015",
+  "dataset": {
+    "output_version": "final_dataset_20261015",
+    "historical_source_rows_total": 63426,
+    "historical_non_F14_rows_used": 62403,
+    "corrected_F14_rows_used": 1023,
+    "consolidated_rows": 63426,
+    "unique_historical_exp_ids": 63426,
+    "benchmark_instances": 62,
+    "configurations": 33,
+    "configuration_instance_groups": 2046,
+    "runs_per_group": [
+      31
+    ],
+    "missing_actual_seeds_historical": 0,
+    "historical_actual_seeds_persisted": 0,
+    "historical_actual_seeds_reconstructed_from_verified_runner": 62403,
+    "F14_actual_seeds": 1023,
+    "historical_synthetic_seed_values_preserved": 62403,
+    "original_RQ4_rows": 1984,
+    "original_rule_pair_rows": 1984,
+    "F14_validation_report": {
+      "passed": true,
+      "dataset": "full",
+      "completed_runs": 1023,
+      "configurations": 33,
+      "run_ids_per_configuration": [
+        31
+      ],
+      "unique_historical_ids": 1023,
+      "unique_seeds": 1023,
+      "corrected_source_hash_matches": true,
+      "config_sha256": "3c0942de3374a69ae58f51e56a89497349f059c9a14e85627e7fd4e0a7879dbc",
+      "f14_source_sha256": "c376b83d0075473bfd0f4aa9fc2c3f6a166a59434ee8588026aff4db3dfcd19a",
+      "runner_sha256": "81e6e441a7c78b53ed35264d96ccbfebe0c2be9e7b269f789101bbc83e973201"
+    },
+    "source_sha256": {
+      "historical_level1_parquet": "cd810aa733bca4a81d8213995e3bde68553c6e491e2119bbe55173890151ec62",
+      "corrected_F14_level1_csv": "89145c3d9f6eff077279261a32a1f8272f037dbe2d10131711d051057efc7dc9",
+      "historical_iterations_parquet": "005084fa458b192fc8d3596dd0cdb043c8efc1954d280aadde03bbcb0cfa62e3",
+      "original_rule_outputs": "70c7833e74a13a1a7a0a21e15c1516ac3b7af58e15d156856930aeea064fc629",
+      "original_H4_outputs": "c81c7daf7f6faad9d609b74b391868298a8f82a4047d435a4e6fc65625543c06"
+    },
+    "pairing_policy": "Run-level comparisons use independent samples; historical actual seeds are reconstructed only where the verified runner formula and global IDs permit. No run_id pairing is treated as common-seed pairing."
+  },
+  "analysis_methods": {
+    "rq1": "Median normalized gap over 31 runs per configuration-instance; within-instance average ranks; Friedman and Nemenyi.",
+    "rq2_rq5": "Descriptive gap_median aggregation by class/subset; minimum ranks; Kendall tau for rank concordance.",
+    "rq3": "Descriptive function-level rank/log-gap dispersion only. Crossed run_id bootstrap not used because historical run_id does not identify common-seed blocks.",
+    "rq4": "Two-sided Mann\u2013Whitney U, independent 31-vs-31 samples, asymptotic continuity correction; A12; Bonferroni 0.05/1984.",
+    "table11": "Two-sided Mann\u2013Whitney U for independent samples, per pair/granularity/instance; unadjusted alpha=0.05, matching the original correction policy; A12.",
+    "runtime": "Ratio of independent sample medians; no run_id join."
+  },
+  "rq1": {
+    "metric": "median_normalized_gap_over_31_runs",
+    "alpha": 0.05,
+    "friedman_chi2": 1052.3755743397287,
+    "friedman_df": 32,
+    "friedman_p": 1.5584572715520894e-200,
+    "friedman_reject_equal_configuration_ranks": true,
+    "n_instances": 62,
+    "n_configurations": 33,
+    "nemenyi_significant_pairs": 272,
+    "cd": 6.590778840608024,
+    "cd_q_alpha": 3.795,
+    "best": {
+      "configuration_id": "FCS-3-R1",
+      "mean_rank": 4.774193548387097
+    },
+    "worst": {
+      "configuration_id": "FCS-9-R2",
+      "mean_rank": 26.54032258064516
+    },
+    "best_rank_by_granularity": {
+      "3": 4.774193548387097,
+      "5": 6.967741935483871,
+      "7": 8.201612903225806,
+      "9": 8.42741935483871
+    },
+    "best_configuration_by_granularity": {
+      "3": "FCS-3-R1",
+      "5": "FCS-5-R1",
+      "7": "FCS-7-R1",
+      "9": "FCS-9-R1"
+    }
+  },
+  "rq1_before_after": {
+    "configuration_mean_ranks_changed": 14,
+    "nemenyi_p_values_changed": 174,
+    "historical_significant_pairs": 272,
+    "consolidated_significant_pairs": 272,
+    "significance_membership_changes": 0
+  },
+  "rq2_before_after": {
+    "class_rank_position_changes": 0,
+    "subgroup_rank_position_changes": 0
+  },
+  "rq3_before_after": {
+    "granularity_rank_cells_changed": 14,
+    "granularity_rank_cells_total": 32,
+    "rank_dispersion_median_n9_historical": 9.323549293513253,
+    "rank_dispersion_median_n9_consolidated": 9.373928510197084
+  },
+  "rq4_before_after": {
+    "nominal_classification_changes": 82,
+    "bonferroni_classification_changes": 49,
+    "FCS3R1_significance_count_changed_functions": [
+      "F3",
+      "F11",
+      "F12",
+      "F13"
+    ]
+  },
+  "rq2_class_winners": [
+    {
+      "configuration_id": "FCS-5-R6",
+      "mh_family": "PSO_FCS",
+      "n_labels": 5.0,
+      "rule_set": "R6",
+      "problem_class": "composed",
+      "gap_median_mean": 0.2000596965691099,
+      "rank": 1.0
+    },
+    {
+      "configuration_id": "FCS-3-R1",
+      "mh_family": "PSO_FCS",
+      "n_labels": 3.0,
+      "rule_set": "R1",
+      "problem_class": "multimodal",
+      "gap_median_mean": 10.88348847662121,
+      "rank": 1.0
+    },
+    {
+      "configuration_id": "FCS-3-R5",
+      "mh_family": "PSO_FCS",
+      "n_labels": 3.0,
+      "rule_set": "R5",
+      "problem_class": "unimodal",
+      "gap_median_mean": 695.1568322419907,
+      "rank": 1.0
+    }
+  ],
+  "rq2_class_taus": [
+    {
+      "class_a": "composed",
+      "class_b": "multimodal",
+      "kendall_tau": 0.0795454545454545,
+      "p_value": 0.5281940726293002
+    },
+    {
+      "class_a": "composed",
+      "class_b": "unimodal",
+      "kendall_tau": 0.0833333333333333,
+      "p_value": 0.508223286899977
+    },
+    {
+      "class_a": "multimodal",
+      "class_b": "unimodal",
+      "kendall_tau": 0.8674242424242423,
+      "p_value": 1.6683212072228442e-18
+    }
+  ],
+  "rq3": {
+    "rq3_is_descriptive": true,
+    "rank_dispersion_median_by_n": {
+      "3": 8.883924084708127,
+      "5": 8.365533028871672,
+      "7": 8.715173037377317,
+      "9": 9.373928510197084
+    },
+    "loggap_dispersion_median_by_n": {
+      "3": 0.9117183128328573,
+      "5": 1.1704778038594803,
+      "7": 1.1730150465504168,
+      "9": 0.9010951920971162
+    },
+    "rank_endpoint_decreases": 6,
+    "loggap_endpoint_decreases": 11,
+    "rank_nonincreasing_all_n": 3,
+    "blocked_run_id_H3_inference": "not recalculated/included: historical actual seeds differ by global experiment ID, so run_id does not identify common random-number blocks"
+  },
+  "h3_audit": {
+    "final_RQ3_is_descriptive_only": true,
+    "final_RQ3_uses_run_id_as_inferential_block": false,
+    "new_interaction_test_introduced": false,
+    "historical_common_seed_blocks_established": false,
+    "legacy_artifact_rows": [
+      {
+        "artifact_or_script": "21_recalculate_final_dataset.py / tables/rq3_function_dispersion.csv",
+        "use": "Function-level rank/log-gap dispersion from consolidated scores; descriptive only; no run_id blocking.",
+        "status": "Current versioned RQ3 output; valid for descriptive reporting."
+      },
+      {
+        "artifact_or_script": "code/03_run_factorial_anova.py -> results/tests/h3_factorial_anova/{anova_table,srh_table,summary}.csv/json",
+        "use": "Legacy ANOVA/Scheirer\u2013Ray\u2013Hare factorial H3 inference and partial eta-squared from the earlier dataset.",
+        "status": "Archived legacy inference; not recalculated or used as confirmatory evidence in this package."
+      },
+      {
+        "artifact_or_script": "code/17_reanalyze_h3_blocked.py -> results/tests/h3_blocked/summary.json",
+        "use": "Exploratory two-way function \u00d7 run_id cluster bootstrap; assumes run_id clusters are shared across configurations.",
+        "status": "Archived exploratory output; not valid as common-seed blocking because seed assignment was based on global exp_id."
+      },
+      {
+        "artifact_or_script": "code/06_generate_paper_figures.py -> results/tests/h3_factorial_anova/std_across_R_vs_n.csv -> fig_std_R_vs_n",
+        "use": "Reads the old factorial H3 output to generate the std-across-rules figure.",
+        "status": "Stale dependency if that script is run; replace its input with the consolidated descriptive RQ3 table. Current TeX search finds only the generated-input manifest comment for this figure."
+      },
+      {
+        "artifact_or_script": "code/13_analyze_granularity.py -> results/tests/h3_factorial_anova/summary.json",
+        "use": "Requires the old H3 summary and prints partial_eta_squared and h3_std_R_decreasing_with_n after creating granularity tables/figure.",
+        "status": "Do not use its H3 console claims for final reporting; its descriptive rank/gap outputs should be regenerated from the consolidated inputs."
+      },
+      {
+        "artifact_or_script": "code/18_h3_function_dispersion.py and code/07_generate_paper_tables.py -> results/tests/h3_function_dispersion/function_dispersion.csv",
+        "use": "Descriptive function-level dispersion; no run_id pairing or bootstrap in script 18.",
+        "status": "Method is descriptive, but the old file is superseded by tables/rq3_function_dispersion.csv and must be replaced before paper-table regeneration."
+      }
+    ]
+  },
+  "rq4": {
+    "n_tests": 1984,
+    "alpha": 0.05,
+    "bonferroni_family": 1984,
+    "bonferroni_alpha": 2.5201612903225806e-05,
+    "historical_paired_nominal": {
+      "loss": 1260,
+      "tie": 658,
+      "win": 66
+    },
+    "independent_nominal": {
+      "loss": 1293,
+      "tie": 628,
+      "win": 63
+    },
+    "historical_paired_bonferroni": {
+      "loss": 1035,
+      "tie": 935,
+      "win": 14
+    },
+    "independent_bonferroni": {
+      "loss": 1056,
+      "tie": 906,
+      "win": 22
+    },
+    "nominal_classifications_changed": 82,
+    "bonferroni_classifications_changed": 49,
+    "a12_changes_after_f14_correction": 12,
+    "a12_max_abs_change_vs_historical": 0.008324661810613976
+  },
+  "rq4_fcs_3_r1": {
+    "configuration_id": "FCS-3-R1",
+    "n_instances": 62,
+    "n_labels": 3,
+    "rule_set": "R1",
+    "independent_nominal_wins": 30,
+    "independent_nominal_ties": 30,
+    "independent_nominal_losses": 2,
+    "independent_bonferroni_wins": 16,
+    "independent_bonferroni_ties": 46,
+    "independent_bonferroni_losses": 0,
+    "historical_paired_nominal_wins": 27,
+    "historical_paired_nominal_ties": 33,
+    "historical_paired_nominal_losses": 2,
+    "historical_paired_bonferroni_wins": 13,
+    "historical_paired_bonferroni_ties": 49,
+    "historical_paired_bonferroni_losses": 0,
+    "a12_mean": 0.668532442684032,
+    "a12_median": 0.609261186264308,
+    "nominal_classifications_changed": 3,
+    "bonferroni_classifications_changed": 3
+  },
+  "rq5": {
+    "kendall_tau_S1_S2": 0.09469696969696971,
+    "kendall_p_S1_S2": 0.45073160411871227,
+    "leaders": [
+      {
+        "subgroup": "S2",
+        "configuration_id": "FCS-5-R6",
+        "gap_median_mean": 0.20005969656910993,
+        "rank": 1.0
+      },
+      {
+        "subgroup": "S1",
+        "configuration_id": "FCS-3-R5",
+        "gap_median_mean": 379.85675855704636,
+        "rank": 1.0
+      }
+    ],
+    "historical_tau": 0.09469696969696971,
+    "historical_p": 0.45073160411871227,
+    "historical_leaders": {
+      "S1": {
+        "mh_raw": "PSO_FCS:G3:I1:R5:O1",
+        "gap_median": 379.85675855704636
+      },
+      "S2": {
+        "mh_raw": "PSO_FCS:G5:I1:R6:O1",
+        "gap_median": 0.20005969656910993
+      }
+    }
+  },
+  "rule_pair_summary": [
+    {
+      "kind": "mirror",
+      "pair": "R1 vs R2",
+      "n_comparisons": 248,
+      "archived_first_wins": 187,
+      "archived_ties": 61,
+      "archived_second_wins": 0,
+      "independent_first_wins": 192,
+      "independent_ties": 56,
+      "independent_second_wins": 0,
+      "independent_dominant": "R1",
+      "archived_a12_median": 0.9864724245577524,
+      "independent_a12_median": 0.9864724245577524,
+      "archived_strongest_class": "unimodal",
+      "independent_strongest_class": "unimodal",
+      "archived_a12_mismatches": 5,
+      "archived_p_mismatches_vs_paired_recalc": 9
+    },
+    {
+      "kind": "mirror",
+      "pair": "R3 vs R4",
+      "n_comparisons": 248,
+      "archived_first_wins": 42,
+      "archived_ties": 83,
+      "archived_second_wins": 123,
+      "independent_first_wins": 71,
+      "independent_ties": 59,
+      "independent_second_wins": 118,
+      "independent_dominant": "R4",
+      "archived_a12_median": 0.4136316337148803,
+      "independent_a12_median": 0.4136316337148803,
+      "archived_strongest_class": "unimodal",
+      "independent_strongest_class": "multimodal",
+      "archived_a12_mismatches": 2,
+      "archived_p_mismatches_vs_paired_recalc": 1
+    },
+    {
+      "kind": "mirror",
+      "pair": "R5 vs R8",
+      "n_comparisons": 248,
+      "archived_first_wins": 160,
+      "archived_ties": 86,
+      "archived_second_wins": 2,
+      "independent_first_wins": 173,
+      "independent_ties": 73,
+      "independent_second_wins": 2,
+      "independent_dominant": "R5",
+      "archived_a12_median": 0.9084287200832466,
+      "independent_a12_median": 0.9084287200832466,
+      "archived_strongest_class": "unimodal",
+      "independent_strongest_class": "unimodal",
+      "archived_a12_mismatches": 7,
+      "archived_p_mismatches_vs_paired_recalc": 11
+    },
+    {
+      "kind": "mirror",
+      "pair": "R6 vs R7",
+      "n_comparisons": 248,
+      "archived_first_wins": 174,
+      "archived_ties": 64,
+      "archived_second_wins": 10,
+      "independent_first_wins": 173,
+      "independent_ties": 57,
+      "independent_second_wins": 18,
+      "independent_dominant": "R6",
+      "archived_a12_median": 0.951092611862643,
+      "independent_a12_median": 0.951092611862643,
+      "archived_strongest_class": "multimodal",
+      "independent_strongest_class": "multimodal",
+      "archived_a12_mismatches": 7,
+      "archived_p_mismatches_vs_paired_recalc": 10
+    },
+    {
+      "kind": "single-axis",
+      "pair": "R5 vs R7",
+      "n_comparisons": 248,
+      "archived_first_wins": 170,
+      "archived_ties": 77,
+      "archived_second_wins": 1,
+      "independent_first_wins": 172,
+      "independent_ties": 75,
+      "independent_second_wins": 1,
+      "independent_dominant": "R5",
+      "archived_a12_median": 0.9573361082206036,
+      "independent_a12_median": 0.9573361082206036,
+      "archived_strongest_class": "multimodal",
+      "independent_strongest_class": "multimodal",
+      "archived_a12_mismatches": 4,
+      "archived_p_mismatches_vs_paired_recalc": 3
+    },
+    {
+      "kind": "single-axis",
+      "pair": "R6 vs R8",
+      "n_comparisons": 248,
+      "archived_first_wins": 171,
+      "archived_ties": 72,
+      "archived_second_wins": 5,
+      "independent_first_wins": 176,
+      "independent_ties": 65,
+      "independent_second_wins": 7,
+      "independent_dominant": "R6",
+      "archived_a12_median": 0.917273673257024,
+      "independent_a12_median": 0.917273673257024,
+      "archived_strongest_class": "unimodal",
+      "independent_strongest_class": "unimodal",
+      "archived_a12_mismatches": 10,
+      "archived_p_mismatches_vs_paired_recalc": 12
+    },
+    {
+      "kind": "single-axis",
+      "pair": "R5 vs R6",
+      "n_comparisons": 248,
+      "archived_first_wins": 113,
+      "archived_ties": 98,
+      "archived_second_wins": 37,
+      "independent_first_wins": 132,
+      "independent_ties": 81,
+      "independent_second_wins": 35,
+      "independent_dominant": "R5",
+      "archived_a12_median": 0.6620707596253902,
+      "independent_a12_median": 0.6620707596253902,
+      "archived_strongest_class": "unimodal",
+      "independent_strongest_class": "unimodal",
+      "archived_a12_mismatches": 7,
+      "archived_p_mismatches_vs_paired_recalc": 10
+    },
+    {
+      "kind": "single-axis",
+      "pair": "R7 vs R8",
+      "n_comparisons": 248,
+      "archived_first_wins": 15,
+      "archived_ties": 73,
+      "archived_second_wins": 160,
+      "independent_first_wins": 26,
+      "independent_ties": 68,
+      "independent_second_wins": 154,
+      "independent_dominant": "R8",
+      "archived_a12_median": 0.0884495317377731,
+      "independent_a12_median": 0.0884495317377731,
+      "archived_strongest_class": "multimodal",
+      "independent_strongest_class": "multimodal",
+      "archived_a12_mismatches": 8,
+      "archived_p_mismatches_vs_paired_recalc": 10
+    }
+  ],
+  "table11_archive_reconciliation": {
+    "archived_table_rows": 1984,
+    "a12_mismatch_rows_against_corrected_dataset": 50,
+    "p_mismatch_rows_against_current_paired_recalculation": 66,
+    "rows_with_either_mismatch": 80,
+    "interpretation": "Historical Table 11 outputs do not fully reproduce from the current consolidated scores. A12 differences cannot be caused by paired versus independent p-value choice; archived inputs/code revision remains to be reconciled."
+  },
+  "dynamics_before_after": {
+    "cells": 33033,
+    "max_abs_w_mean_change": 7.040842871974817e-05,
+    "max_abs_xpl_mean_change": 0.009474505723206406,
+    "w_cells_changed_gt_1e-12": 5500,
+    "xpl_cells_changed_gt_1e-12": 6811
+  },
+  "scientific_claim_deltas_csv": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\tables\\scientific_claim_deltas.csv",
+  "f14_comparison": {
+    "n_runs": 1023,
+    "material_changes_abs_gt_1e-6": 4,
+    "corrected_lower": 1,
+    "equal_within_1e-6": 1019,
+    "corrected_higher": 3,
+    "historical_mean": 4.240108551320195,
+    "corrected_mean": 4.252208528957211,
+    "historical_median": 2.982105156816675,
+    "corrected_median": 2.982105156816675,
+    "historical_best": 0.9980038377944498,
+    "corrected_best": 0.9980038377944498,
+    "mean_delta": 0.012099977637015142,
+    "median_delta": 0.0,
+    "min_delta": -4.815363867842921,
+    "max_delta": 9.500413523356904,
+    "material_run_changes": [
+      {
+        "historical_exp_id": 53464,
+        "run_id": 20,
+        "configuration_id": "FCS-3-R8",
+        "actual_seed": 53506,
+        "historical_fitness": 8.840835962754234,
+        "fitness_best": 11.718699562063058,
+        "delta_corrected_minus_historical": 2.8778635993088244
+      },
+      {
+        "historical_exp_id": 53577,
+        "run_id": 9,
+        "configuration_id": "FCS-5-R4",
+        "actual_seed": 53619,
+        "historical_fitness": 7.873992977132198,
+        "fitness_best": 17.3744065004891,
+        "delta_corrected_minus_historical": 9.500413523356904
+      },
+      {
+        "historical_exp_id": 53954,
+        "run_id": 14,
+        "configuration_id": "FCS-7-R8",
+        "actual_seed": 53996,
+        "historical_fitness": 6.903335694220139,
+        "fitness_best": 11.718699562063058,
+        "delta_corrected_minus_historical": 4.815363867842919
+      },
+      {
+        "historical_exp_id": 54207,
+        "run_id": 19,
+        "configuration_id": "FCS-9-R8",
+        "actual_seed": 54249,
+        "historical_fitness": 11.71869956206306,
+        "fitness_best": 6.903335694220139,
+        "delta_corrected_minus_historical": -4.815363867842921
+      }
+    ]
+  },
+  "runtime_method": "Unpaired ratio of medians; current paired overheads are unsupported.",
+  "blocked_H3_note": "The previous crossed-function/run_id bootstrap is not reused as confirmatory inference; RQ3 is descriptive.",
+  "manuscript_change_register": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\tables\\manuscript_change_register.csv",
+  "figures_generated": [
+    "fig_boxplot_gap_by_n_consolidated.png",
+    "fig_cd_diagram_h1.png",
+    "fig_convergence_representative_consolidated.png",
+    "fig_f14_corrected_objective_surface.png",
+    "fig_f14_dispersion_historical_vs_corrected.png",
+    "fig_f14_historical_vs_corrected.png",
+    "fig_f14_instance_ranks.png",
+    "fig_f14_mean_fitness_distribution.png",
+    "fig_function_heatmap_consolidated.png",
+    "fig_gap_dispersion_by_n_consolidated.png",
+    "fig_granularity_effect_consolidated.png",
+    "fig_h4_independent_outcomes.png",
+    "fig_pareto_s1_s2.png",
+    "fig_rule_class_heatmap.png",
+    "fig_rule_pattern_independent_outcomes.png",
+    "fig_runtime_unpaired_overhead.png",
+    "fig_w_trajectories_consolidated.png"
+  ],
+  "outputs": {
+    "consolidated_csv": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\consolidated_level1.csv",
+    "consolidated_parquet": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\consolidated_level1.parquet",
+    "tables": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\tables",
+    "analyses": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\analyses",
+    "figures": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\final_dataset_20261015\\figures"
+  },
+  "recommendation": "The consolidated scores and independent-sample analyses are validated for reanalysis. Do not use run_id as a common-seed block. Reconcile the archived Table 11 row-level discrepancies and decide whether the H3 blocked inference is excluded or redesigned before treating the outputs as definitive. Manuscript and historical outputs were not modified."
+}

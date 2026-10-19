@@ -389,280 +389,200 @@ def _get_available_rule_sets():
         return ['R1']
 
 
+def _short_code(label):
+    """'very_very_low' -> 'VVL', 'medium_high' -> 'MH'."""
+    return ''.join(part[0].upper() for part in str(label).split('_'))
+
+
 def plot_fuzzy_rules_heatmap_panel(rule_sets=None, num_labels=None):
     """
-    WEA2026: Panel plot comparing rule bases R1-R6 side by side.
-    Generates a 2×3 grid of heatmaps for each num_labels variant.
-    
+    Panel plot comparing rule bases across all granularities.
+    Full-page portrait layout (2 columns) with shared axis ticks and a single colorbar.
+
     Args:
         rule_sets: list of rule sets to include (default: all available)
-        num_labels: list of [3], [5], or [3, 5] (default: [3, 5])
-    
-    Returns dict with paths: {'3labels': path, '5labels': path}
+        num_labels: list of granularities (default: [3, 5, 7, 9])
+
+    Returns dict with paths: {'{N}labels': path, ...}
     """
     plots_dir = ensure_plots_directory()
     
     if rule_sets is None:
         rule_sets = _get_available_rule_sets()
     if num_labels is None:
-        num_labels = [3, 5]
+        num_labels = [3, 5, 7, 9]
     
     results = {}
     
-    # ===== 3-LABEL PANEL =====
-    if 3 in num_labels:
-        from fuzzy_controller_w_3L import FuzzyInertiaController_3L as FIC3
-        
-        diversity_labels = ['low', 'medium', 'high']
-        progress_labels = ['early', 'mid', 'late']
-        output_labels = {'low': 0, 'medium': 1, 'high': 2}
-        output_text = {0: 'L. w', 1: 'M. w', 2: 'H. w'}
-        
-        rows, cols, figsize = _calculate_grid_dims(len(rule_sets))
-        fig, axes = plt.subplots(rows, cols, figsize=figsize)
-        if len(rule_sets) == 1:
-            axes = np.array([axes])
-        axes = axes.flatten()
-        
-        fig.suptitle('Fuzzy Rule Bases Comparison - 3 Labels', fontsize=14, fontweight='bold', y=1.02)
-        
-        for idx, rs in enumerate(rule_sets):
-            ax = axes[idx]
-            ctrl = FIC3('O1', rule_set=rs)
-            
-            rule_matrix = np.zeros((len(diversity_labels), len(progress_labels)))
-            for i, div_lab in enumerate(diversity_labels):
-                for j, prog_lab in enumerate(progress_labels):
-                    out = ctrl.rules.get((div_lab, prog_lab), 'unknown')
-                    rule_matrix[i, j] = output_labels.get(out, -1)
-            
-            im = ax.imshow(rule_matrix, cmap='RdYlGn_r', aspect='auto', vmin=0, vmax=2)
-            ax.set_xticks(range(len(progress_labels)))
-            ax.set_yticks(range(len(diversity_labels)))
-            ax.set_xticklabels(progress_labels, fontsize=9)
-            ax.set_yticklabels(diversity_labels, fontsize=9)
-            
-            for i in range(len(diversity_labels)):
-                for j in range(len(progress_labels)):
-                    ax.text(j, i, output_text[int(rule_matrix[i, j])],
-                           ha="center", va="center", color="black", fontsize=9, fontweight='bold')
-            
-            ax.set_title(f'{rs}', fontsize=12, fontweight='bold')
-            ax.set_xlabel('Progress', fontsize=10)
-            ax.set_ylabel('Diversity', fontsize=10)
-        
-        # Hide unused axes
-        for idx in range(len(rule_sets), len(axes)):
-            axes[idx].set_visible(False)
-        
-        plt.tight_layout()
-        output_path = os.path.join(plots_dir, '04_fuzzy_rules_panel_3labels.png')
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)
-        results['3labels'] = output_path
-    
-    # ===== 5-LABEL PANEL =====
-    if 5 in num_labels:
-        from fuzzy_controller_w_5L import FuzzyInertiaController_5L as FIC5
-        
-        diversity_labels = ['very_low', 'low', 'medium', 'high', 'very_high']
-        progress_labels = ['very_early', 'early', 'mid', 'late', 'very_late']
-        output_labels = {'very_low': 0, 'low': 1, 'medium': 2, 'high': 3, 'very_high': 4}
-        output_text = {0: 'V.L.', 1: 'L.', 2: 'M.', 3: 'H.', 4: 'V.H.'}
-        
-        rows, cols, figsize = _calculate_grid_dims(len(rule_sets))
-        fig, axes = plt.subplots(rows, cols, figsize=figsize)
-        if len(rule_sets) == 1:
-            axes = np.array([axes])
-        axes = axes.flatten()
-        
-        fig.suptitle('Fuzzy Rule Bases Comparison - 5 Labels', fontsize=14, fontweight='bold', y=1.02)
-        
-        for idx, rs in enumerate(rule_sets):
-            ax = axes[idx]
-            ctrl = FIC5('O1', rule_set=rs)
-            
-            rule_matrix = np.zeros((len(diversity_labels), len(progress_labels)))
-            for i, div_lab in enumerate(diversity_labels):
-                for j, prog_lab in enumerate(progress_labels):
-                    out = ctrl.rules.get((div_lab, prog_lab), 'unknown')
-                    rule_matrix[i, j] = output_labels.get(out, -1)
-            
-            im = ax.imshow(rule_matrix, cmap='RdYlGn_r', aspect='auto', vmin=0, vmax=4)
-            ax.set_xticks(range(len(progress_labels)))
-            ax.set_yticks(range(len(diversity_labels)))
-            ax.set_xticklabels(progress_labels, fontsize=7, rotation=30, ha='right')
-            ax.set_yticklabels(diversity_labels, fontsize=7)
-            
-            for i in range(len(diversity_labels)):
-                for j in range(len(progress_labels)):
-                    ax.text(j, i, output_text[int(rule_matrix[i, j])],
-                           ha="center", va="center", color="black", fontsize=8, fontweight='bold')
-            
-            ax.set_title(f'{rs}', fontsize=12, fontweight='bold')
-            ax.set_xlabel('Progress', fontsize=10)
-            ax.set_ylabel('Diversity', fontsize=10)
-        
-        # Hide unused axes
-        for idx in range(len(rule_sets), len(axes)):
-            axes[idx].set_visible(False)
-        
-        plt.tight_layout()
-        output_path = os.path.join(plots_dir, '04_fuzzy_rules_panel_5labels.png')
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)
-        results['5labels'] = output_path
+    for n in num_labels:
+        try:
+            ctrl_sample = _make_controller(num_labels=n, w_set='O1', input_set='I1', rule_set='R1')
+            diversity_labels = list(ctrl_sample.div_mf.keys())
+            progress_labels = list(ctrl_sample.it_mf.keys())
+            output_labels_list = list(ctrl_sample.w_mf.keys())
+
+            output_label_to_idx = {label: idx for idx, label in enumerate(output_labels_list)}
+            output_text = {idx: _short_code(label) for idx, label in enumerate(output_labels_list)}
+            vmax = len(output_labels_list) - 1
+
+            div_codes = [_short_code(l) for l in diversity_labels]
+            prog_codes = [_short_code(l) for l in progress_labels]
+
+            # Coarse granularities fit a half-page landscape grid; fine ones need a full page.
+            if n <= 5:
+                cols, rows, figsize = 4, int(np.ceil(len(rule_sets) / 4)), (7.0, 4.4)
+                tick_fs, cell_fs, title_fs = 7, 8, 10
+            else:
+                cols, rows, figsize = 2, int(np.ceil(len(rule_sets) / 2)), (7.0, 9.3)
+                tick_fs, cell_fs, title_fs = 6, 6 if n == 7 else 5, 10
+            fig, axes = plt.subplots(rows, cols, figsize=figsize, squeeze=False)
+            axes = axes.flatten()
+
+
+            im = None
+            for idx, rs in enumerate(rule_sets):
+                if idx >= len(axes):
+                    break
+                ax = axes[idx]
+                ctrl = _make_controller(num_labels=n, w_set='O1', input_set='I1', rule_set=rs)
+                
+                rule_matrix = np.zeros((len(diversity_labels), len(progress_labels)))
+                for i, div_lab in enumerate(diversity_labels):
+                    for j, prog_lab in enumerate(progress_labels):
+                        out = ctrl.rules.get((div_lab, prog_lab), 'unknown')
+                        rule_matrix[i, j] = output_label_to_idx.get(out, -1)
+                
+                im = ax.imshow(rule_matrix, cmap='RdYlGn_r', aspect='auto', vmin=0, vmax=vmax)
+                ax.set_xticks(range(len(progress_labels)))
+                ax.set_yticks(range(len(diversity_labels)))
+
+                is_bottom_row = idx >= len(rule_sets) - cols
+                is_left_col = idx % cols == 0
+                ax.set_xticklabels(prog_codes if is_bottom_row else [], fontsize=tick_fs)
+                ax.set_yticklabels(div_codes if is_left_col else [], fontsize=tick_fs)
+                ax.tick_params(length=2)
+                if is_bottom_row:
+                    ax.set_xlabel('Progress', fontsize=8)
+                if is_left_col:
+                    ax.set_ylabel('Diversity', fontsize=8)
+
+                for i in range(len(diversity_labels)):
+                    for j in range(len(progress_labels)):
+                        ax.text(j, i, output_text[int(rule_matrix[i, j])],
+                                ha="center", va="center", color="black",
+                                fontsize=cell_fs, fontweight='bold')
+                
+                ax.set_title(f'{rs}', fontsize=title_fs, fontweight='bold')
+
+            for idx in range(len(rule_sets), len(axes)):
+                axes[idx].set_visible(False)
+
+            if n <= 5:
+                fig.subplots_adjust(left=0.08, right=0.98, top=0.84, bottom=0.18,
+                                    hspace=0.30, wspace=0.12)
+            else:
+                fig.subplots_adjust(left=0.09, right=0.98, top=0.93, bottom=0.10,
+                                    hspace=0.22, wspace=0.10)
+            if im is not None:
+                cax = fig.add_axes((0.15, 0.035, 0.70, 0.014))
+                cbar = fig.colorbar(im, cax=cax, orientation='horizontal',
+                                    ticks=list(range(len(output_labels_list))))
+                cbar.set_label('Output inertia weight label w', fontsize=8)
+                cbar.ax.set_xticklabels(
+                    [f'{_short_code(l)} = {l}' if n <= 3 else _short_code(l)
+                     for l in output_labels_list], fontsize=6)
+                cbar.ax.tick_params(length=2)
+
+            output_path = os.path.join(plots_dir, f'04_fuzzy_rules_panel_{n}labels.png')
+            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.close(fig)
+            results[f'{n}labels'] = output_path
+        except Exception as e:
+            print(f"[WARN] Failed to generate rules heatmap panel for {n} labels: {e}")
+            results[f'{n}labels'] = None
     
     return results
 
 
-def plot_all_w_sets_comparison():
+def plot_all_w_sets_comparison(num_labels_list=None):
     """
-    Create comparison plots showing all available w_sets side by side for BOTH 3-label and 5-label.
+    Create comparison plots showing all available w_sets side by side for ALL granularities.
+    Uses FuzzyInertiaController_Auto to support [3, 5, 7, 9] labels.
     Dynamically adjusts grid layout based on number of available sets.
     Shows how output w varies for each set.
-    Returns dict with paths to both variants: {'3labels': path1, '5labels': path2}
+    Returns dict with paths: {'{N}labels': path, ...}
     """
-    plots_dir = ensure_plots_directory()
+    if num_labels_list is None:
+        num_labels_list = [3, 5, 7, 9]
     
+    plots_dir = ensure_plots_directory()
     results = {}
     
-    # ===== 3-LABEL VERSION =====
-    from fuzzy_controller_w_3L import FuzzyInertiaController_3L
-    
-    # Dynamically get available w_sets
-    w_sets = _get_available_w_sets(FuzzyInertiaController_3L)
-    rows, cols, figsize = _calculate_grid_dims(len(w_sets))
-    
-    fig, axes = plt.subplots(rows, cols, figsize=figsize, dpi=100)
-    
-    # Handle single subplot case (axes is not a 2D array)
-    if rows == 1 and cols == 1:
-        axes = np.array([[axes]])
-    elif rows == 1 or cols == 1:
-        axes = axes.reshape(rows, cols)
-    else:
-        axes = axes.flatten().reshape(rows, cols)
-    
-    axes_flat = axes.flatten()
-    
-    colors_3 = {'low': '#1f77b4', 'medium': '#ff7f0e', 'high': '#2ca02c'}
-    
-    for idx, w_set in enumerate(w_sets):
+    for num_labels in num_labels_list:
         try:
-            controller = FuzzyInertiaController_3L(w_set)
-        except ValueError:
-            axes_flat[idx].text(0.5, 0.5, f'Set {w_set} not defined', 
-                               ha='center', va='center', fontsize=12)
-            axes_flat[idx].axis('off')
-            continue
-        
-        ax = axes_flat[idx]
-        w_norm = np.linspace(0, 1, 100)
-        w_mf = controller.w_mf
-        wMin = controller.wMin
-        wMax = controller.wMax
-        
-        for label, (a, b, c) in w_mf.items():
-            mu = [tri(w, a, b, c) for w in w_norm]
-            w_scaled = wMin + w_norm * (wMax - wMin)
-            ax.plot(w_scaled, mu, label=label, linewidth=2.5, color=colors_3[label])
-            ax.fill_between(w_scaled, mu, alpha=0.15, color=colors_3[label])
-        
-        ax.set_title(f'Set {w_set}', fontsize=16, fontweight='bold')
-        ax.set_xlabel(f'w [{wMin:.2f}, {wMax:.2f}]', fontsize=16)
-        ax.set_ylabel('Membership Degree', fontsize=16)
-        ax.grid(True, alpha=0.3)
-        ax.set_ylim([0, 1.05])
-        ax.legend(fontsize=16)
-    
-    # Hide unused subplots
-    for idx in range(len(w_sets), len(axes_flat)):
-        axes_flat[idx].axis('off')
-    
-    sets_str = ", ".join(w_sets)
-    fig.suptitle(f'Fuzzy Inertia Weight Sets Comparison - 3 Labels ({sets_str})', 
-                 fontsize=13, fontweight='bold', y=0.995)
-    plt.tight_layout()
-    
-    output_path_3 = os.path.join(plots_dir, '05_fuzzy_w_sets_comparison_3labels.png')
-    plt.savefig(output_path_3, dpi=300, bbox_inches='tight', format='png')
-    plt.close(fig)
-    
-    results['3labels'] = output_path_3
-    
-    # ===== 5-LABEL VERSION =====
-    try:
-        from fuzzy_controller_w_5L import FuzzyInertiaController_5L
-        
-        # Dynamically get available w_sets
-        w_sets_5 = _get_available_w_sets(FuzzyInertiaController_5L)
-        rows_5, cols_5, figsize_5 = _calculate_grid_dims(len(w_sets_5))
-        
-        fig, axes = plt.subplots(rows_5, cols_5, figsize=figsize_5, dpi=100)
-        
-        # Handle single subplot case
-        if rows_5 == 1 and cols_5 == 1:
-            axes = np.array([[axes]])
-        elif rows_5 == 1 or cols_5 == 1:
-            axes = axes.reshape(rows_5, cols_5)
-        else:
-            axes = axes.flatten().reshape(rows_5, cols_5)
-        
-        axes_flat = axes.flatten()
-        
-        colors_5 = {
-            'very_low': '#1f77b4', 
-            'low': '#4fa3ff', 
-            'medium': '#ff7f0e', 
-            'high': '#2ca02c',
-            'very_high': '#17ad17'
-        }
-        
-        for idx, w_set in enumerate(w_sets_5):
-            try:
-                controller = FuzzyInertiaController_5L(w_set)
-            except ValueError:
-                axes_flat[idx].text(0.5, 0.5, f'Set {w_set} not defined', 
-                                   ha='center', va='center', fontsize=16)
+            ctrl = _make_controller(num_labels=num_labels, w_set='O1', input_set='I1')
+            w_sets = _get_available_w_sets(ctrl)
+            rows, cols, figsize = _calculate_grid_dims(len(w_sets))
+            
+            fig, axes = plt.subplots(rows, cols, figsize=figsize, dpi=100)
+            
+            # Handle single subplot case (axes is not a 2D array)
+            if rows == 1 and cols == 1:
+                axes = np.array([[axes]])
+            elif rows == 1 or cols == 1:
+                axes = axes.reshape(rows, cols)
+            else:
+                axes = axes.flatten().reshape(rows, cols)
+            
+            axes_flat = axes.flatten()
+            colors = _palette_for_labels(ctrl.w_mf.keys())
+            
+            for idx, w_set in enumerate(w_sets):
+                try:
+                    controller = _make_controller(num_labels=num_labels, w_set=w_set, 
+                                                  input_set='I1', wMin=0.0, wMax=1.0)
+                except ValueError:
+                    axes_flat[idx].text(0.5, 0.5, f'Set {w_set} not defined', 
+                                       ha='center', va='center', fontsize=12)
+                    axes_flat[idx].axis('off')
+                    continue
+                
+                ax = axes_flat[idx]
+                w_norm = np.linspace(0, 1, 400)
+                w_mf = controller.w_mf
+                wMin = controller.wMin
+                wMax = controller.wMax
+                
+                for label, (a, b, c) in w_mf.items():
+                    mu = [tri(w, a, b, c) for w in w_norm]
+                    w_scaled = wMin + w_norm * (wMax - wMin)
+                    ax.plot(w_scaled, mu, label=label, linewidth=2.5, color=colors.get(label, '#000000'))
+                    ax.fill_between(w_scaled, mu, alpha=0.15, color=colors.get(label, '#000000'))
+                
+                ax.set_title(f'Set {w_set}', fontsize=11, fontweight='bold')
+                ax.set_xlabel(f'w [{wMin:.2f}, {wMax:.2f}]', fontsize=10)
+                ax.set_ylabel('Membership Degree', fontsize=10)
+                ax.grid(True, alpha=0.3)
+                ax.set_ylim([0, 1.05])
+                ax.legend(fontsize=8, loc='upper right')
+            
+            # Hide unused subplots
+            for idx in range(len(w_sets), len(axes_flat)):
                 axes_flat[idx].axis('off')
-                continue
             
-            ax = axes_flat[idx]
-            w_norm = np.linspace(0, 1, 100)
-            w_mf = controller.w_mf
-            wMin = controller.wMin
-            wMax = controller.wMax
+            sets_str = ", ".join(w_sets)
+            fig.suptitle(f'Fuzzy Inertia Weight Sets Comparison - {num_labels} Labels (O1) - {sets_str}', 
+                         fontsize=12, fontweight='bold', y=0.995)
+            plt.tight_layout()
             
-            for label, (a, b, c) in w_mf.items():
-                mu = [tri(w, a, b, c) for w in w_norm]
-                w_scaled = wMin + w_norm * (wMax - wMin)
-                ax.plot(w_scaled, mu, label=label, linewidth=2.5, color=colors_5[label])
-                ax.fill_between(w_scaled, mu, alpha=0.15, color=colors_5[label])
+            output_path = os.path.join(plots_dir, f'05_fuzzy_w_sets_comparison_{num_labels}labels.png')
+            plt.savefig(output_path, dpi=300, bbox_inches='tight', format='png')
+            plt.close(fig)
             
-            ax.set_title(f'Set {w_set}', fontsize=16, fontweight='bold')
-            ax.set_xlabel(f'w [{wMin:.2f}, {wMax:.2f}]', fontsize=16)
-            ax.set_ylabel('Membership Degree', fontsize=16)
-            ax.grid(True, alpha=0.3)
-            ax.set_ylim([0, 1.05])
-            ax.legend(fontsize=16, loc='upper right')
-        
-        # Hide unused subplots
-        for idx in range(len(w_sets_5), len(axes_flat)):
-            axes_flat[idx].axis('off')
-        
-        sets_str_5 = ", ".join(w_sets_5)
-        fig.suptitle(f'Fuzzy Inertia Weight Sets Comparison - 5 Labels ({sets_str_5})', 
-                     fontsize=13, fontweight='bold', y=0.995)
-        plt.tight_layout()
-        
-        output_path_5 = os.path.join(plots_dir, '05_fuzzy_w_sets_comparison_5labels.png')
-        plt.savefig(output_path_5, dpi=300, bbox_inches='tight', format='png')
-        plt.close(fig)
-        
-        results['5labels'] = output_path_5
-    except ImportError:
-        print("Warning: FuzzyInertiaController_5L not found, skipping 5-label version")
+            results[f'{num_labels}labels'] = output_path
+        except Exception as e:
+            print(f"[WARN] Failed to generate w_sets comparison for {num_labels} labels: {e}")
+            results[f'{num_labels}labels'] = None
     
     return results
 
@@ -1271,24 +1191,25 @@ def plot_all_input_sets_3d_surface(rule_set="R1"):
     return output_path
 
 
-def plot_3d_surface_panel(rule_sets=None, num_labels=None, input_set="I1"):
+def plot_3d_surface_panel(rule_sets=None, num_labels=None, input_set="I1",
+                          w_min=0.0, w_max=1.0):
     """
-    WEA2026: Panel plot comparing 3D w surfaces for R1-R6 side by side.
-    Generates a 2×3 grid of 3D surfaces for each num_labels variant.
+    Panel plot comparing 3D w surfaces for all rule sets side by side.
+    Generates a grid of 3D surfaces for each num_labels variant using FuzzyInertiaController_Auto.
     
     Args:
         rule_sets: list of rule sets to include (default: all available)
-        num_labels: list of [3], [5], or [3, 5] (default: [3, 5])
+        num_labels: list of granularities (default: [3, 5, 7, 9])
         input_set: input set to use (default: 'I1')
     
-    Returns dict with paths: {'3labels': path, '5labels': path}
+    Returns dict with paths: {'{N}labels': path, ...}
     """
     plots_dir = ensure_plots_directory()
     
     if rule_sets is None:
         rule_sets = _get_available_rule_sets()
     if num_labels is None:
-        num_labels = [3, 5]
+        num_labels = [3, 5, 7, 9]
     
     div_range = np.linspace(0.01, 0.99, 35)
     prog_range = np.linspace(0.01, 0.99, 35)
@@ -1296,67 +1217,46 @@ def plot_3d_surface_panel(rule_sets=None, num_labels=None, input_set="I1"):
     
     results = {}
     
-    # ===== 3-LABEL PANEL =====
-    if 3 in num_labels:
-        from fuzzy_controller_w_3L import FuzzyInertiaController_3L as FIC3
-        
-        rows, cols, _ = _calculate_grid_dims(len(rule_sets))
-        fig = plt.figure(figsize=(6 * cols, 5 * rows))
-        fig.suptitle(f'Inertia Weight Surfaces: Rule Set Comparison (3-Label, {input_set})',
-                     fontsize=14, fontweight='bold', y=1.02)
-        
-        for idx, rs in enumerate(rule_sets):
-            ctrl = FIC3(w_set='O1', input_set=input_set, rule_set=rs)
-            W = np.zeros_like(DIV)
-            for i in range(DIV.shape[0]):
-                for j in range(DIV.shape[1]):
-                    W[i, j] = ctrl.compute_w(DIV[i, j], PROG[i, j])
-            
-            ax = fig.add_subplot(rows, cols, idx + 1, projection='3d')
-            ax.plot_surface(DIV, PROG, W, cmap='viridis', alpha=0.85, edgecolor='none')
-            ax.set_xlabel('Diversity', fontsize=9)
-            ax.set_ylabel('Progress', fontsize=9)
-            ax.set_zlabel('w', fontsize=9)
-            ax.set_title(f'{rs}', fontsize=12, fontweight='bold')
-            ax.set_zlim([0, 1])
-            ax.tick_params(labelsize=8)
-        
-        plt.tight_layout()
-        output_path = os.path.join(plots_dir, f'11_3d_surface_panel_3labels_{input_set}.png')
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)
-        results['3labels'] = output_path
-    
-    # ===== 5-LABEL PANEL =====
-    if 5 in num_labels:
-        from fuzzy_controller_w_5L import FuzzyInertiaController_5L as FIC5
-        
-        rows, cols, _ = _calculate_grid_dims(len(rule_sets))
-        fig = plt.figure(figsize=(6 * cols, 5 * rows))
-        fig.suptitle(f'Inertia Weight Surfaces: Rule Set Comparison (5-Label, {input_set})',
-                     fontsize=14, fontweight='bold', y=1.02)
-        
-        for idx, rs in enumerate(rule_sets):
-            ctrl = FIC5(w_set='O1', input_set=input_set, rule_set=rs)
-            W = np.zeros_like(DIV)
-            for i in range(DIV.shape[0]):
-                for j in range(DIV.shape[1]):
-                    W[i, j] = ctrl.compute_w(DIV[i, j], PROG[i, j])
-            
-            ax = fig.add_subplot(rows, cols, idx + 1, projection='3d')
-            ax.plot_surface(DIV, PROG, W, cmap='plasma', alpha=0.85, edgecolor='none')
-            ax.set_xlabel('Diversity', fontsize=9)
-            ax.set_ylabel('Progress', fontsize=9)
-            ax.set_zlabel('w', fontsize=9)
-            ax.set_title(f'{rs}', fontsize=12, fontweight='bold')
-            ax.set_zlim([0, 1])
-            ax.tick_params(labelsize=8)
-        
-        plt.tight_layout()
-        output_path = os.path.join(plots_dir, f'11_3d_surface_panel_5labels_{input_set}.png')
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        plt.close(fig)
-        results['5labels'] = output_path
+    for n in num_labels:
+        try:
+            cols = 2
+            rows = int(np.ceil(len(rule_sets) / cols))
+            fig = plt.figure(figsize=(7.0, 9.3))
+
+            surf = None
+            for idx, rs in enumerate(rule_sets):
+                ctrl = _make_controller(num_labels=n, w_set='O1', input_set=input_set,
+                                        rule_set=rs, wMin=w_min, wMax=w_max)
+                W = np.zeros_like(DIV)
+                for i in range(DIV.shape[0]):
+                    for j in range(DIV.shape[1]):
+                        W[i, j] = ctrl.compute_w(DIV[i, j], PROG[i, j])
+                
+                ax = fig.add_subplot(rows, cols, idx + 1, projection='3d')
+                surf = ax.plot_surface(DIV, PROG, W, cmap='viridis', alpha=0.9,
+                                       edgecolor='none', vmin=w_min, vmax=w_max)
+                ax.set_xlabel('Diversity', fontsize=8, labelpad=-4)
+                ax.set_ylabel('Progress', fontsize=8, labelpad=-4)
+                ax.set_zlabel('w', fontsize=8, labelpad=-6)
+                ax.set_title(f'{rs}', fontsize=10, fontweight='bold')
+                ax.set_zlim([w_min, w_max])
+                ax.tick_params(labelsize=6, pad=-2)
+
+            fig.subplots_adjust(left=0.02, right=0.98, top=0.94, bottom=0.08,
+                                hspace=0.32, wspace=0.05)
+            if surf is not None:
+                cax = fig.add_axes((0.20, 0.035, 0.60, 0.012))
+                cbar = fig.colorbar(surf, cax=cax, orientation='horizontal')
+                cbar.set_label('Inertia weight w', fontsize=8)
+                cbar.ax.tick_params(labelsize=6, length=2)
+
+            output_path = os.path.join(plots_dir, f'11_3d_surface_panel_{n}labels_{input_set}.png')
+            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.close(fig)
+            results[f'{n}labels'] = output_path
+        except Exception as e:
+            print(f"[WARN] Failed to generate 3D surface panel for {n} labels: {e}")
+            results[f'{n}labels'] = None
     
     return results
 
@@ -1518,61 +1418,108 @@ def generate_all_fuzzy_plots(verbose=False, config=None):
             if verbose:
                 print(f"[ERROR] w_sets comparison failed: {e}")
     
-    # ===== Input MF comparison 3 vs 5 labels =====
-    if plots_cfg.get('input_mf_comparison_3vs5', True):
+    # ===== NEW 06: Input Diversity MF Comparison [3,5,7,9] =====
+    if plots_cfg.get('input_diversity_mf', True):
+        from fuzzy_plots_06_10_parametric import (
+            plot_06_input_diversity_mf_individual,
+            plot_06_input_diversity_mf_panel
+        )
         for iset in input_sets:
             try:
-                path = plot_input_diversity_comparison_membership_functions(input_set=iset)
-                outputs.append(path)
-                if verbose:
-                    print(f"[OK] Diversity comparison MFs ({iset}): {path}")
+                result = plot_06_input_diversity_mf_individual(input_set=iset, num_labels_list=num_labels)
+                _collect_dict_results(result, outputs, verbose, f"06: Diversity MF individual ({iset})")
             except Exception as e:
                 if verbose:
-                    print(f"[ERROR] Diversity comparison MFs {iset} failed: {e}")
+                    print(f"[ERROR] 06 Diversity MF individual {iset} failed: {e}")
             
             try:
-                path = plot_input_progress_comparison_membership_functions(input_set=iset)
+                path = plot_06_input_diversity_mf_panel(input_set=iset, num_labels_list=num_labels)
                 outputs.append(path)
                 if verbose:
-                    print(f"[OK] Progress comparison MFs ({iset}): {path}")
+                    print(f"[OK] 06: Diversity MF panel ({iset}): {path}")
             except Exception as e:
                 if verbose:
-                    print(f"[ERROR] Progress comparison MFs {iset} failed: {e}")
-            
-            try:
-                path = plot_output_w_comparison_membership_functions()
-                outputs.append(path)
-                if verbose:
-                    print(f"[OK] Output w comparison MFs (3 vs 5): {path}")
-            except Exception as e:
-                if verbose:
-                    print(f"[ERROR] Output w comparison MFs failed: {e}")
+                    print(f"[ERROR] 06 Diversity MF panel {iset} failed: {e}")
     
-    # ===== Critical points comparison =====
-    if plots_cfg.get('critical_points', True):
+    # ===== NEW 07: Input Progress MF Comparison [3,5,7,9] =====
+    if plots_cfg.get('input_progress_mf', True):
+        from fuzzy_plots_06_10_parametric import (
+            plot_07_input_progress_mf_individual,
+            plot_07_input_progress_mf_panel
+        )
         for iset in input_sets:
             try:
-                path = plot_comparison_critical_points(input_set=iset)
-                outputs.append(path)
-                if verbose:
-                    print(f"[OK] Critical points ({iset}): {path}")
+                result = plot_07_input_progress_mf_individual(input_set=iset, num_labels_list=num_labels)
+                _collect_dict_results(result, outputs, verbose, f"07: Progress MF individual ({iset})")
             except Exception as e:
                 if verbose:
-                    print(f"[ERROR] Critical points {iset} failed: {e}")
+                    print(f"[ERROR] 07 Progress MF individual {iset} failed: {e}")
+            
+            try:
+                path = plot_07_input_progress_mf_panel(input_set=iset, num_labels_list=num_labels)
+                outputs.append(path)
+                if verbose:
+                    print(f"[OK] 07: Progress MF panel ({iset}): {path}")
+            except Exception as e:
+                if verbose:
+                    print(f"[ERROR] 07 Progress MF panel {iset} failed: {e}")
     
-    # ===== 3D Surface: individual (per rule_set × input_set) =====
+    # ===== NEW 08: Output w MF Comparison [3,5,7,9] =====
+    if plots_cfg.get('output_w_mf', True):
+        from fuzzy_plots_06_10_parametric import (
+            plot_08_output_w_mf_individual,
+            plot_08_output_w_mf_panel
+        )
+        try:
+            result = plot_08_output_w_mf_individual(num_labels_list=num_labels)
+            _collect_dict_results(result, outputs, verbose, "08: Output w MF individual")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] 08 Output w MF individual failed: {e}")
+        
+        try:
+            path = plot_08_output_w_mf_panel(num_labels_list=num_labels)
+            outputs.append(path)
+            if verbose:
+                print(f"[OK] 08: Output w MF panel: {path}")
+        except Exception as e:
+            if verbose:
+                print(f"[ERROR] 08 Output w MF panel failed: {e}")
+    
+    # ===== NEW 09: Critical Points Comparison [3,5,7,9] =====
+    if plots_cfg.get('critical_points_mf', True):
+        from fuzzy_plots_06_10_parametric import (
+            plot_09_critical_points_individual,
+            plot_09_critical_points_panel
+        )
+        for iset in input_sets:
+            try:
+                result = plot_09_critical_points_individual(input_set=iset, num_labels_list=num_labels)
+                _collect_dict_results(result, outputs, verbose, f"09: Critical points individual ({iset})")
+            except Exception as e:
+                if verbose:
+                    print(f"[ERROR] 09 Critical points individual {iset} failed: {e}")
+            
+            try:
+                path = plot_09_critical_points_panel(input_set=iset, num_labels_list=num_labels)
+                outputs.append(path)
+                if verbose:
+                    print(f"[OK] 09: Critical points panel ({iset}): {path}")
+            except Exception as e:
+                if verbose:
+                    print(f"[ERROR] 09 Critical points panel {iset} failed: {e}")
+    
+    # ===== NEW 10: 3D Surfaces Individual [3,5,7,9] per rule_set =====
     if plots_cfg.get('surface_3d_individual', True):
+        from fuzzy_plots_06_10_parametric import plot_10_3d_surfaces_individual
         for iset in input_sets:
             for rs in rule_sets:
                 try:
-                    paths_list = plot_3d_comparison(input_set=iset, rule_set=rs)
-                    for path in paths_list:
-                        outputs.append(path)
-                        if verbose:
-                            print(f"[OK] 3D Surface ({iset}, {rs}): {path}")
+                    result = plot_10_3d_surfaces_individual(input_set=iset, rule_set=rs, num_labels_list=num_labels)
+                    _collect_dict_results(result, outputs, verbose, f"10: 3D Surface ({iset}, {rs})")
                 except Exception as e:
                     if verbose:
-                        print(f"[ERROR] 3D Surface {iset} {rs} failed: {e}")
+                        print(f"[ERROR] 10 3D Surface {iset} {rs} failed: {e}")
     
     # ===== 3D Surface: panel (all rule_sets side by side) =====
     if plots_cfg.get('surface_3d_panel', False):

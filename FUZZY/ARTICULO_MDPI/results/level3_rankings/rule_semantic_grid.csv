@@ -1,0 +1,9 @@
+rule_set,progress,diversity,description,mean_rank,best_rank,worst_rank
+R1,decreasing,agnostic,"Progress decreasing, diversity-agnostic",7.094758064516129,4.774193548387097,8.42741935483871
+R5,decreasing,following,Progress decreasing + diversity-following,9.995967741935484,9.024193548387096,11.57258064516129
+R6,decreasing,compensating,Progress decreasing + diversity-compensating,12.112903225806452,10.701612903225806,13.137096774193548
+R8,increasing,compensating,Progress increasing + diversity-compensating,17.159274193548384,16.032258064516128,18.241935483870968
+R3,agnostic,following,"Diversity-following, progress-agnostic",21.903225806451612,20.137096774193548,23.080645161290324
+R4,agnostic,compensating,"Diversity-compensating, progress-agnostic",22.048387096774192,19.95967741935484,24.491935483870968
+R7,increasing,following,Progress increasing + diversity-following,24.092741935483872,23.25,24.887096774193548
+R2,increasing,agnostic,"Progress increasing, diversity-agnostic",24.252016129032256,21.217741935483872,26.54032258064516

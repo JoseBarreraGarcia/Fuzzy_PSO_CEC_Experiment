@@ -1,0 +1,33 @@
+{
+  "metric": "median_normalized_gap_over_31_runs",
+  "alpha": 0.05,
+  "friedman_chi2": 1052.3755743397287,
+  "friedman_df": 32,
+  "friedman_p": 1.5584572715520894e-200,
+  "friedman_reject_equal_configuration_ranks": true,
+  "n_instances": 62,
+  "n_configurations": 33,
+  "nemenyi_significant_pairs": 272,
+  "cd": 6.590778840608024,
+  "cd_q_alpha": 3.795,
+  "best": {
+    "configuration_id": "FCS-3-R1",
+    "mean_rank": 4.774193548387097
+  },
+  "worst": {
+    "configuration_id": "FCS-9-R2",
+    "mean_rank": 26.54032258064516
+  },
+  "best_rank_by_granularity": {
+    "3": 4.774193548387097,
+    "5": 6.967741935483871,
+    "7": 8.201612903225806,
+    "9": 8.42741935483871
+  },
+  "best_configuration_by_granularity": {
+    "3": "FCS-3-R1",
+    "5": "FCS-5-R1",
+    "7": "FCS-7-R1",
+    "9": "FCS-9-R1"
+  }
+}

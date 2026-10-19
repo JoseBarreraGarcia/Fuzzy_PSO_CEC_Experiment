@@ -1,0 +1,33 @@
+% Scalable benchmark functions F1-F13.
+\begin{table}[H]
+\centering
+\small
+\caption{Scalable benchmark functions F1--F13. Formulations follow the classical suite \cite{Yao1999,Abualigah2021}. Bounds and reference optima are the values used by the solver. All functions are evaluated at $d\in\{10,30,50,100\}$.}
+\label{tab:benchmark_scalable}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{c>{\raggedright\arraybackslash}p{2.2cm}>{\footnotesize\raggedright\arraybackslash}X cc}
+\toprule
+\textbf{Function} & \textbf{Name} & \textbf{Definition} & \textbf{Range} & \boldmath$f^{*}$ \\
+\midrule
+F1 & Sphere & $\sum_{i=1}^{d} x_i^{2}$ & $[-100,100]$ & $0$ \\
+F2 & Schwefel 2.22 & $\begin{aligned}[t]&\sum_{i=1}^{d}|x_i|\\&+\prod_{i=1}^{d}|x_i|\end{aligned}$ & $[-10,10]$ & $0$ \\
+F3 & Schwefel 1.2 & $\sum_{i=1}^{d}\left(\sum_{j=1}^{i} x_j\right)^{2}$ & $[-100,100]$ & $0$ \\
+F4 & Schwefel 2.21 & $\max_i\{|x_i|,\, 1\le i\le d\}$ & $[-100,100]$ & $0$ \\
+F5 & Rosenbrock & $\sum_{i=1}^{d-1}\left[100\left(x_{i+1}-x_i^{2}\right)^{2}+(x_i-1)^{2}\right]$ & $[-30,30]$ & $0$ \\
+F6 & Step & $\sum_{i=1}^{d}\left(\lfloor x_i+0.5\rfloor\right)^{2}$ & $[-100,100]$ & $0$ \\
+F7 & Quartic with noise & $\sum_{i=1}^{d} i\,x_i^{4} + \mathrm{random}[0,1)$ & $[-1.28,1.28]$ & $0$ \\
+\midrule
+F8 & Schwefel 2.26 & $\sum_{i=1}^{d}\left(-x_i\sin\sqrt{|x_i|}\right)$ & $[-500,500]$ & $-418.9829\,d$ \\
+F9 & Rastrigin & $\sum_{i=1}^{d}\left[x_i^{2}-10\cos(2\pi x_i)+10\right]$ & $[-5.12,5.12]$ & $0$ \\
+F10 & Ackley & $\begin{aligned}[t]&-20\exp\!\left(-0.2\sqrt{\tfrac{1}{d}\textstyle\sum_{i=1}^{d}x_i^{2}}\right)\\&-\exp\!\left(\tfrac{1}{d}\textstyle\sum_{i=1}^{d}\cos(2\pi x_i)\right)+20+e\end{aligned}$ & $[-32,32]$ & $0$ \\
+F11 & Griewank & $\tfrac{1}{4000}\sum_{i=1}^{d}x_i^{2}-\prod_{i=1}^{d}\cos\!\left(\tfrac{x_i}{\sqrt{i}}\right)+1$ & $[-600,600]$ & $0$ \\
+F12 & Penalized 1 & $\begin{aligned}[t]&\tfrac{\pi}{d}\Big\{10\sin(\pi y_1)\\&+\textstyle\sum_{i=1}^{d-1}(y_i-1)^2\\&\quad\times\left[1+10\sin^2(\pi y_{i+1})\right]\\&+(y_d-1)^2\Big\}+\textstyle\sum_{i=1}^{d}u(x_i,10,100,4)\end{aligned}$ & $[-50,50]$ & $0$ \\
+F13 & Penalized 2 & $\begin{aligned}[t]&0.1\Big\{\sin^2(3\pi x_1)\\&+\textstyle\sum_{i=1}^{d-1}(x_i-1)^2\\&\quad\times\left[1+\sin^2(3\pi x_{i+1})\right]\\&+(x_d-1)^2\left[1+\sin^2(2\pi x_d)\right]\Big\}\\&+\textstyle\sum_{i=1}^{d}u(x_i,5,100,4)\end{aligned}$ & $[-50,50]$ & $0$ \\
+\bottomrule
+\end{tabularx}
+\noindent\footnotesize
+For both benchmark tables, $\mathbf{x}=(x_1,\ldots,x_d)\in\mathbb{R}^d$ is a candidate point and the displayed range applies coordinatewise. F1--F7 are unimodal; F8--F13 are multimodal. In F12, $y_i = 1+\tfrac{x_i+1}{4}$. In F12--F13, the penalty term is
+$u(x_i,a,k,m) = k(x_i-a)^{m}$ if $x_i>a$, $k(-x_i-a)^{m}$ if $x_i<-a$, and $0$ otherwise.
+F7 is stochastic: its solver reference $f^*=0$ is the lower support bound of the additive $U[0,1)$ noise, used when computing normalized gaps. The landscape visualizations instead plot the expected objective, whose noise contribution is $0.5$.
+The reference optimum of F8 is dimension-dependent and is scaled by $d$ when the normalized gap is computed.
+\end{table}

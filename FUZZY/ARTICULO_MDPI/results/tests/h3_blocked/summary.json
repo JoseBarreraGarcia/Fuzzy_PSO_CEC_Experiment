@@ -1,0 +1,79 @@
+{
+  "method": "exploratory two-way function x run_id pigeonhole bootstrap with finite-cluster null calibration",
+  "estimand": "interaction in within-block relative configuration ranks and log-gap across n and rule pattern",
+  "source": "FUZZY\\ARTICULO_MDPI\\results\\level1_raw\\experiments_meta.parquet",
+  "fcs_observations": 61504,
+  "instances": 62,
+  "functions": 23,
+  "runs_per_instance_config": 31,
+  "configurations_per_block": 32,
+  "bootstrap_seed": 20261013,
+  "bootstrap_batch_size": 500,
+  "tests": {
+    "log_gap": {
+      "statistic_diagonal_wald_q": 93.94232038915848,
+      "exploratory_p_value": 0.35164648353516464,
+      "bootstrap_replicates": 100000,
+      "bootstrap_exceedances": 35164,
+      "monte_carlo_se": 0.0015099303105209035,
+      "function_clusters": 23,
+      "run_id_clusters": 31,
+      "paired_blocks": 1922,
+      "interaction_contrasts": 21
+    },
+    "rank_gap": {
+      "statistic_diagonal_wald_q": 357.64426611020696,
+      "exploratory_p_value": 0.00010999890001099989,
+      "bootstrap_replicates": 100000,
+      "bootstrap_exceedances": 10,
+      "monte_carlo_se": 3.3164092087073985e-05,
+      "function_clusters": 23,
+      "run_id_clusters": 31,
+      "paired_blocks": 1922,
+      "interaction_contrasts": 21,
+      "descriptive_partial_eta_squared": 0.010688920389633856
+    }
+  },
+  "null_calibration": {
+    "normal": {
+      "simulations": 500,
+      "bootstrap_replicates_per_simulation": 999,
+      "bootstrap_rejection_rate": 0.06,
+      "bootstrap_rejection_rate_95pct_wilson": [
+        0.04234835648094619,
+        0.08436106312521978
+      ],
+      "wald_f_rejection_rate": 0.728,
+      "wald_f_rejection_rate_95pct_wilson": [
+        0.6873673929547526,
+        0.7651559077947796
+      ],
+      "bootstrap_rejections": 30,
+      "wald_f_rejections": 364
+    },
+    "t4": {
+      "simulations": 500,
+      "bootstrap_replicates_per_simulation": 999,
+      "bootstrap_rejection_rate": 0.046,
+      "bootstrap_rejection_rate_95pct_wilson": [
+        0.030845108370816207,
+        0.06807779276827323
+      ],
+      "wald_f_rejection_rate": 0.748,
+      "wald_f_rejection_rate_95pct_wilson": [
+        0.7081521755124419,
+        0.7840661516186281
+      ],
+      "bootstrap_rejections": 23,
+      "wald_f_rejections": 374
+    }
+  },
+  "rank_spread_by_granularity": {
+    "3": 5.8006043137942545,
+    "5": 5.640385617135353,
+    "7": 5.943704415586581,
+    "9": 6.198232635353531
+  },
+  "rank_spread_decreases_monotonically": false,
+  "interpretation": "Bootstrap p-values are exploratory and require independent statistical review. The Wald F approximation is not used because null simulations show severe Type-I error inflation."
+}

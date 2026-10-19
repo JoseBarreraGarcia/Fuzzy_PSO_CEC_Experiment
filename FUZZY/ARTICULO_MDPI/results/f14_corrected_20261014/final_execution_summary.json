@@ -1,0 +1,16 @@
+{
+  "completed_runs": 1023,
+  "configurations": 33,
+  "runs_per_configuration": [
+    31
+  ],
+  "failures": 0,
+  "historical_id_min": 53197,
+  "historical_id_max": 54219,
+  "seed_formula": "42 + historical_exp_id",
+  "seed_min": 53239,
+  "seed_max": 54261,
+  "database": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\f14_corrected_20261014\\BD\\resultados.db",
+  "level1_dataset": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\f14_corrected_20261014\\corrected_f14_level1.csv",
+  "comparison": "C:\\Users\\josec\\Experimentos_Fuzzy_Python\\Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI\\FUZZY\\ARTICULO_MDPI\\results\\f14_corrected_20261014\\historical_vs_corrected_by_config.csv"
+}
