@@ -272,7 +272,9 @@ Avance ejecutado:
   campañas, configuraciones, réplicas, métricas y trazas.
 - [x] El registro puede persistir snapshots inmutables y congelar la selección
   de métricas al iniciar una campaña.
-- [ ] Falta integrar el esquema v2 con el runner y los solvers.
+- [x] Se preparó la API transaccional del ciclo de vida de campañas, réplicas y
+  métricas, con validación de selección, ámbito, tipo y monotonicidad.
+- [ ] Falta crear el adaptador entre esta API y el runner/solvers actuales.
 - [ ] Falta migrar las funciones autoritativas de análisis sobre los fixtures.
 - [ ] No se ha retirado todavía ningún árbol histórico de análisis.
 

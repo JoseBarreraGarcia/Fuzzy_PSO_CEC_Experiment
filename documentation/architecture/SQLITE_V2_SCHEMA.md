@@ -13,7 +13,9 @@ Archivos:
 
 - `BD/migrations/001_initial_schema.sql`;
 - `BD/persistence_v2.py`;
+- `BD/repository_v2.py`;
 - `tests/test_persistence_v2.py`.
+- `tests/test_repository_v2.py`.
 
 ## Modelo
 
@@ -96,3 +98,21 @@ repositorio.
 - importación explícita de bases históricas.
 
 Ninguno de estos puntos se resolverá implícitamente en una migración.
+
+## API transaccional preparada
+
+`ExperimentRepository` implementa el ciclo de vida sin conectarlo todavía al
+runner heredado:
+
+1. crear campaña y congelar su configuración canónica;
+2. registrar instancias y configuraciones;
+3. planificar réplicas sin generar semillas;
+4. iniciar campaña y réplica;
+5. registrar puntos de control y métricas seleccionadas;
+6. completar o marcar como fallida cada réplica;
+7. finalizar y sellar la campaña.
+
+La API rechaza transiciones inválidas, métricas no seleccionadas, ámbitos
+incorrectos, valores no finitos o incompatibles con el tipo registrado y
+presupuestos de traza no monotónicos. Las escrituras compuestas son
+transaccionales para no dejar puntos de control parciales.
