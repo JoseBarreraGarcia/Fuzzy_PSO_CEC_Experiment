@@ -15,6 +15,6 @@ entre limitar, reparar o penalizar corresponde al optimizador o al problema y
 debe quedar registrado. Sí rechaza dimensiones incorrectas y valores no
 finitos.
 
-Estado: contrato base implementado; las implementaciones siguen en `Problem/`.
-CEC2017 sólo se conectará mediante un adaptador probado o una migración
-autocontenida, sin crear una dependencia permanente hacia el árbol heredado.
+Estado: contrato base implementado. CEC2017 ya fue migrado de forma
+autocontenida a `benchmarks/cec2017/` y dispone de un adaptador probado; las
+demás familias siguen en `Problem/`.

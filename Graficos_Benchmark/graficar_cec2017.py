@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
 from joblib import Parallel, delayed
-from Problem.Benchmark.CEC.cec2017.functions import all_functions
+from afcs.problems.benchmarks.cec2017 import all_functions
 
 # CEC2017 F2 fue retirada de la suite oficial y no debe generarse ni usarse
 # en nuevas campañas. Se mantiene en la librería vendorizada sólo por

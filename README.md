@@ -57,9 +57,11 @@ altere silenciosamente la metodología histórica.
 
 ## Validación del estado actual
 
-Desde PowerShell, con el entorno virtual del repositorio:
+Desde PowerShell, con el entorno virtual y las dependencias ya instaladas,
+instale el paquete v2 en modo editable y ejecute las pruebas:
 
 ```powershell
+.\.venv\Scripts\python.exe -m pip install -e . --no-deps
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 

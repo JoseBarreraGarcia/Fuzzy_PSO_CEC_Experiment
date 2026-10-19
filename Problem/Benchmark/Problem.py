@@ -1,7 +1,7 @@
 import numpy as np 
 import math
 import opfunu.cec_based
-from Problem.Benchmark.CEC.cec2017.functions import all_functions
+from afcs.problems.benchmarks.cec2017 import all_functions
 
 from BD.sqlite import BD
 

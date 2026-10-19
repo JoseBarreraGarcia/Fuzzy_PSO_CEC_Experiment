@@ -23,7 +23,7 @@ Control System*. Cada carpeta responde a una pregunta concreta:
 
 | Ruta actual | Destino v2 | Estado |
 |---|---|---|
-| `Problem/Benchmark/CEC/cec2017/` | `src/afcs/problems/benchmarks/cec2017/` | operativo; migración futura con regresiones |
+| `Problem/Benchmark/CEC/cec2017/` | `src/afcs/problems/benchmarks/cec2017/` | migrado; diagnóstico histórico permanece en origen |
 | `Problem/Benchmark/Problem.py` | `src/afcs/problems/benchmarks/` | requiere separar dispatcher e implementaciones |
 | `Problem/SCP/` | `src/afcs/problems/scp/` | pendiente de contrato común |
 | `Problem/USCP/` | `src/afcs/problems/uscp/` | pendiente de contrato común |

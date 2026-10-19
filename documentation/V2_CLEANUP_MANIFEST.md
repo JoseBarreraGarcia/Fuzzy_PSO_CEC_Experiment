@@ -283,6 +283,8 @@ Avance ejecutado:
   debe gobernar la migración.
 - [x] Se creó el paquete instalable `afcs` y sus contratos fundamentales para
   dirección, espacio de búsqueda, evaluaciones, presupuesto NFE y problemas.
+- [x] Se migró CEC2017 al paquete `afcs`, conservando `data.pkl` sin cambios,
+  exclusión de F2, dimensiones aprobadas y pruebas de equivalencia del adaptador.
 
 ### Ola 3 — separación de publicaciones
 

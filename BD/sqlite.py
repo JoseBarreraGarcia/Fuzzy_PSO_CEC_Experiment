@@ -279,7 +279,7 @@ class BD:
         Inserta las instancias de funciones CEC2017 en la base de datos.
         Similar al manejo de funciones clásicas pero con tipo 'CEC2017'.
         """
-        from Problem.Benchmark.CEC.cec2017.functions import all_functions
+        from afcs.problems.benchmarks.cec2017 import all_functions
         
         self.conectar()
         

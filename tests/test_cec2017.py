@@ -1,9 +1,16 @@
 import unittest
 import warnings
+import sys
+from pathlib import Path
 
 import numpy as np
 
-from Problem.Benchmark.CEC.cec2017 import composition, functions, transforms
+SRC = Path(__file__).resolve().parents[1] / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from afcs.problems.benchmarks.cec2017 import composition, functions, transforms
+from afcs.problems.benchmarks.cec2017.problem import CEC2017Problem
 from Problem.Benchmark.Problem import fitness
 
 
@@ -85,6 +92,37 @@ class TestCEC2017Suite(unittest.TestCase):
         point[0] = np.nan
         with self.assertRaisesRegex(ValueError, "NaN o infinitas"):
             fitness("F1CEC2017", point)
+
+    def test_v2_adapter_matches_raw_implementation(self):
+        rng = np.random.default_rng(20261019)
+        for dimension in EXPERIMENT_DIMENSIONS:
+            point = rng.uniform(-100.0, 100.0, size=dimension)
+            for function_number in OFFICIAL_FUNCTION_NUMBERS:
+                with self.subTest(function=function_number, dimension=dimension):
+                    problem = CEC2017Problem(function_number, dimension)
+                    raw = functions.all_functions[function_number - 1](
+                        point.reshape(1, -1)
+                    )[0]
+                    self.assertEqual(problem.evaluate(point).objective, float(raw))
+
+    def test_v2_adapter_declares_identity_domain_and_optimum(self):
+        problem = CEC2017Problem(21, 30)
+        self.assertEqual(problem.metadata.problem_id, "F21CEC2017")
+        self.assertEqual(problem.metadata.family, "CEC2017")
+        self.assertEqual(problem.metadata.dimension, 30)
+        self.assertEqual(problem.metadata.known_optimum, 2100.0)
+        self.assertTrue(problem.metadata.search_space.contains(np.zeros(30)))
+
+    def test_v2_adapter_rejects_f2_dimension_and_non_finite_input(self):
+        with self.assertRaisesRegex(ValueError, "F2"):
+            CEC2017Problem(2, 30)
+        with self.assertRaisesRegex(ValueError, "dimension"):
+            CEC2017Problem(1, 7)
+        problem = CEC2017Problem(1, 30)
+        point = np.zeros(30)
+        point[0] = np.inf
+        with self.assertRaisesRegex(ValueError, "finite"):
+            problem.evaluate(point)
 
 
 if __name__ == "__main__":
