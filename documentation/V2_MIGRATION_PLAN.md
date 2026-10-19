@@ -208,16 +208,94 @@ La limpieza estructural no se considera terminada hasta que:
 - la configuración inválida falle antes de crear experimentos;
 - la ejecución secuencial y paralela sea reproducible.
 
-## 9. Decisiones que requieren aprobación
+## 9. Decisiones aprobadas
 
-Antes de comenzar la Fase B se debe decidir:
+### 9.1 Referencia histórica del artículo
 
-1. Si `FUZZY/ARTICULO_MDPI/` se retira por completo de v2 o se conserva un
-   README que apunte a la rama histórica.
-2. Qué scripts de `analysis_modules*` y `FUZZY/ARTICULO_MDPI/code` se consideran
-   reutilizables.
-3. Si SCP y USCP seguirán formando parte del núcleo v2.
-4. Si las metaheurísticas distintas de PSO/PSO_FCS se mantienen como soportadas.
-5. Qué resultados mínimos se conservarán como fixture de pruebas.
+Se retirará de v2 el material específico del artículo que no sea necesario para
+operar o entender el framework. En su lugar se conservará un README que indique:
 
-Hasta resolver estas decisiones, no debe ejecutarse una limpieza destructiva.
+- rama histórica: `Solver_CEC_Fuzzy_PSO_ARTICULO_MDPI`;
+- commit congelado: `f8649134362f9a7b5e04f2f2bf032eb4b5938172`;
+- contenido disponible allí: manuscrito, resultados, figuras, suplementos,
+  archivos editoriales y versiones históricas de los análisis.
+
+### 9.2 Código de análisis
+
+Se conservará todo código estadístico o analítico que pueda reutilizarse en
+nuevas campañas. La conservación no implica mantener todas las copias actuales:
+
+1. identificar la versión más reciente y fiable de cada análisis;
+2. consolidar duplicados;
+3. desacoplar rutas y nombres específicos del artículo;
+4. parametrizar entradas y salidas;
+5. añadir pruebas con datos pequeños;
+6. documentar supuestos, unidad experimental y formato esperado.
+
+Se priorizarán análisis de agregación, rankings, convergencia, pruebas no
+paramétricas, comparaciones pareadas/no pareadas, Pareto, escalabilidad,
+diversidad, dinámica del controlador y generación de tablas o figuras.
+
+### 9.3 Familias de problemas
+
+BEN/CEC, SCP y USCP seguirán formando parte del núcleo. La arquitectura debe
+permitir añadir otros problemas de ingeniería, en particular Knapsack Problem
+(KP), sin incorporar casos especiales en el runner principal.
+
+Cada familia deberá implementar un contrato común para:
+
+- carga o construcción de instancia;
+- dominio y representación de soluciones;
+- evaluación y dirección de optimización;
+- restricciones y reparación;
+- óptimo o referencia conocida, cuando exista;
+- metadatos y serialización de resultados.
+
+### 9.4 Metaheurísticas
+
+No se eliminarán las metaheurísticas distintas de PSO/PSO_FCS. La versión 2
+debe permitir aplicar control difuso inicialmente a PSO y posteriormente a GA y
+otras metaheurísticas clásicas.
+
+Durante la limpieza se distinguirá entre:
+
+- metaheurística soportada y cubierta por pruebas;
+- implementación experimental que necesita adaptación;
+- código duplicado u obsoleto sustituido por una versión consolidada.
+
+No se borrará una implementación solamente por no estar incluida en la primera
+campaña v2.
+
+### 9.5 Fixtures de pruebas
+
+Un *fixture* es un conjunto de datos pequeño, estable y versionado que permite
+comprobar automáticamente una ruta del sistema. No representa una campaña ni
+se utiliza para obtener conclusiones científicas.
+
+Decisión adoptada: conservar o crear fixtures mínimos y preferentemente
+sintéticos, no datasets completos del artículo. Como mínimo:
+
+- uno o dos benchmarks deterministas de dimensión pequeña;
+- una instancia SCP pequeña con óptimo conocido;
+- una instancia USCP pequeña;
+- una instancia KP pequeña cuando se formalice su integración;
+- un extracto tabular artificial para probar el pipeline estadístico;
+- salidas esperadas y tolerancias explícitas.
+
+Los fixtures deben caber cómodamente en Git, evitar información redundante y
+tener procedencia o método de generación documentado.
+
+## 10. Condición para comenzar la limpieza
+
+Las decisiones de alcance están aprobadas. Antes de eliminar archivos se debe
+producir una lista concreta por ruta con una de estas acciones:
+
+- conservar sin cambios;
+- consolidar o refactorizar;
+- mover a documentación de lecciones aprendidas;
+- retirar de v2 porque permanece en la rama MDPI;
+- ignorar por ser generado o temporal.
+
+La primera limpieza deberá separar el material histórico del artículo sin
+eliminar código reutilizable de análisis, familias de problemas ni
+metaheurísticas.

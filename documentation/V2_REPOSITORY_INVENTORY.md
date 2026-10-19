@@ -170,3 +170,16 @@ Todo el contenido de este inventario permanece disponible en:
 - commit `f8649134362f9a7b5e04f2f2bf032eb4b5938172`.
 
 La limpieza de v2 no debe modificar ni forzar el historial de esa rama.
+
+## 9. Decisiones de alcance confirmadas
+
+- Se conservará en v2 un README que apunte a la rama y commit históricos del
+  artículo.
+- Se conservará y consolidará el código estadístico reutilizable, evitando
+  reiniciar el pipeline de análisis desde cero.
+- BEN/CEC, SCP y USCP continuarán soportados; la arquitectura contemplará KP y
+  otras familias de ingeniería.
+- Se conservarán las metaheurísticas existentes para permitir extender el
+  control difuso desde PSO hacia GA y otras MH clásicas.
+- Los resultados completos del artículo no actuarán como datos de prueba. Se
+  usarán fixtures pequeños, estables y preferentemente sintéticos.
