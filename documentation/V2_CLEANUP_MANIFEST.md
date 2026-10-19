@@ -281,6 +281,8 @@ Avance ejecutado:
   navegable mediante README, sin duplicar todavía implementaciones.
 - [x] Se documentó el mapa ruta heredada → módulo v2 y la visión científica que
   debe gobernar la migración.
+- [x] Se creó el paquete instalable `afcs` y sus contratos fundamentales para
+  dirección, espacio de búsqueda, evaluaciones, presupuesto NFE y problemas.
 
 ### Ola 3 — separación de publicaciones
 
