@@ -265,8 +265,11 @@ Avance ejecutado:
   `documentation/V2_ANALYSIS_RESCUE_MAP.md`.
 - [x] Se identificaron reconstrucciones de métricas que deberán etiquetarse y
   el defecto de trazas `Divj_max0` pendiente de corrección.
-- [ ] Falta implementar el registro de métricas y su esquema validado.
-- [ ] Falta crear fixtures tabulares y migrar las funciones autoritativas.
+- [x] Se implementó el registro versionado inicial de 28 métricas y el
+  resolvedor validado para perfiles, `all` y listas explícitas.
+- [x] Se crearon fixtures tabulares sintéticos para réplicas y trazas.
+- [ ] Falta integrar el registro con los solvers y el futuro esquema SQLite.
+- [ ] Falta migrar las funciones autoritativas de análisis sobre los fixtures.
 - [ ] No se ha retirado todavía ningún árbol histórico de análisis.
 
 ### Ola 3 — separación de publicaciones

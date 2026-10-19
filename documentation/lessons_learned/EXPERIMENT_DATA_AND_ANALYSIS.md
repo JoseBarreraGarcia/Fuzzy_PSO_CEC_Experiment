@@ -111,6 +111,21 @@ Las trazas de alta frecuencia podrán guardarse en cada iteración, en puntos de
 control o por eventos. La selección controla volumen, no elimina la definición
 de la métrica del sistema.
 
+### Base de implementación preparada
+
+La primera versión del contrato está materializada en:
+
+- `config/metrics_registry.json`: catálogo versionado, métricas obligatorias y
+  perfiles;
+- `Util/metrics_registry.py`: carga, validación y resolución sin efectos
+  laterales;
+- `tests/fixtures/`: réplicas y trazas sintéticas;
+- `tests/test_metrics_registry.py`: pruebas de validez y selección.
+
+Esta base todavía no está conectada a los solvers ni al esquema SQLite. Por
+tanto, describe y valida qué se desea registrar, pero no cambia los datos que
+produce una ejecución actual.
+
 ## 4. Análisis jerárquico
 
 El orden aprobado es:
