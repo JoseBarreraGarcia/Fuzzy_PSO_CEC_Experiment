@@ -57,9 +57,9 @@ class FuzzyInertiaController_5L:
         centroids = []
         for label, (a, b, c) in self.w_mf.items():
             mf_vals = np.array([tri(val, a, b, c) for val in self.y], dtype=float)
-            den = np.trapz(mf_vals, self.y)
+            den = np.trapezoid(mf_vals, self.y)
             if den > 1e-12:
-                centroids.append(np.trapz(self.y * mf_vals, self.y) / den)
+                centroids.append(np.trapezoid(self.y * mf_vals, self.y) / den)
         return min(centroids), max(centroids)
 
     def _build_input_mfs(self, input_set):
@@ -490,11 +490,11 @@ class FuzzyInertiaController_5L:
             agg = np.maximum(agg, np.minimum(firing, mf_out))
 
         # Defuzzificación (centroide)
-        den = np.trapz(agg, self.y)
+        den = np.trapezoid(agg, self.y)
         if den <= 1e-12:
             w_norm = 0.5
         else:
-            w_norm = np.trapz(self.y * agg, self.y) / den
+            w_norm = np.trapezoid(self.y * agg, self.y) / den
 
         # Rescalar w_norm de [c_min, c_max] a [0, 1] (compensa compresión del centroide)
         w_norm = (w_norm - self._w_norm_min) / (self._w_norm_max - self._w_norm_min)

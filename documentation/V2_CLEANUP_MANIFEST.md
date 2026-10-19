@@ -6,6 +6,9 @@
 **Fecha de clasificación:** 19 de octubre de 2026  
 **Estado:** propuesta revisable; este documento no ejecuta eliminaciones ni movimientos.
 
+**Ejecución:** la primera ola comenzó tras la aprobación del manifiesto. Los
+avances se registran en la sección 10 sin alterar la clasificación histórica.
+
 ## 1. Objetivo y reglas
 
 Este manifiesto traduce el inventario inicial a decisiones concretas por ruta.
@@ -230,6 +233,18 @@ archivos y suplementos históricos; no se necesita elegir una copia para v2.
 3. Retirar temporales raíz y scripts `_fix_*` ya absorbidos.
 4. Retirar PDFs generados de `Graficos_Benchmark/` conservando generadores.
 5. Ejecutar las pruebas actuales y nuevos tests de reglas.
+
+Avance ejecutado:
+
+- [x] Se añadieron exclusiones para gráficos de benchmark y temporales.
+- [x] `tmp_verify_rules.py` se convirtió en pruebas automáticas para las ocho
+  matrices 3L y 5L.
+- [x] Se corrigió la integración numérica de los controladores para NumPy 2.4.
+- [x] Se retiraron los temporales raíz y los dos scripts `_fix_*` absorbidos.
+- [x] Se retiraron 106 PDFs regenerables de `Graficos_Benchmark/` (aprox.
+  89,62 MB), conservando sus generadores.
+- [x] El generador CEC2017 omite F2, retirada de la suite oficial.
+- [x] La batería ampliada aprueba 15 de 15 pruebas.
 
 ### Ola 2 — rescate de conocimiento y análisis
 

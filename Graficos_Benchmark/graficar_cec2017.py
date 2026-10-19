@@ -5,6 +5,13 @@ import os
 from joblib import Parallel, delayed
 from Problem.Benchmark.CEC.cec2017.functions import all_functions
 
+# CEC2017 F2 fue retirada de la suite oficial y no debe generarse ni usarse
+# en nuevas campañas. Se mantiene en la librería vendorizada sólo por
+# compatibilidad histórica.
+SUPPORTED_FUNCTIONS = tuple(
+    func for func in all_functions if func.__name__ != 'f2'
+)
+
 # Directorio de salida
 OUTPUT_DIR = './Graficos_Benchmark/CEC2017/'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -269,7 +276,7 @@ def generar_todos_graficos(n_jobs=-1, resolucion=200):
     print("GENERADOR DE GRÁFICOS CEC2017 (cec2017py)")
     print("=" * 80)
     
-    funciones = all_functions
+    funciones = SUPPORTED_FUNCTIONS
     
     print(f"\n[INFO] Total de funciones CEC2017: {len(funciones)}")
     print(f"[INFO] Resolución: {resolucion}x{resolucion} puntos")
@@ -318,7 +325,7 @@ def generar_todos_graficos(n_jobs=-1, resolucion=200):
 def generar_secuencial(resolucion=200):
     """Modo secuencial para debugging."""
     print("[INFO] Modo secuencial (debugging)\n")
-    funciones = all_functions
+    funciones = SUPPORTED_FUNCTIONS
     
     for i, func in enumerate(funciones, 1):
         nombre = func.__name__
