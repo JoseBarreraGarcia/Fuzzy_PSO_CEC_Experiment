@@ -268,7 +268,11 @@ Avance ejecutado:
 - [x] Se implementó el registro versionado inicial de 28 métricas y el
   resolvedor validado para perfiles, `all` y listas explícitas.
 - [x] Se crearon fixtures tabulares sintéticos para réplicas y trazas.
-- [ ] Falta integrar el registro con los solvers y el futuro esquema SQLite.
+- [x] Se preparó un esquema SQLite v2 paralelo, versionado e idempotente, con
+  campañas, configuraciones, réplicas, métricas y trazas.
+- [x] El registro puede persistir snapshots inmutables y congelar la selección
+  de métricas al iniciar una campaña.
+- [ ] Falta integrar el esquema v2 con el runner y los solvers.
 - [ ] Falta migrar las funciones autoritativas de análisis sobre los fixtures.
 - [ ] No se ha retirado todavía ningún árbol histórico de análisis.
 

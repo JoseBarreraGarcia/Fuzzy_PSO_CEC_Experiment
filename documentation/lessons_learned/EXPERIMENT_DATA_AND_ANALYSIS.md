@@ -122,9 +122,13 @@ La primera versión del contrato está materializada en:
 - `tests/fixtures/`: réplicas y trazas sintéticas;
 - `tests/test_metrics_registry.py`: pruebas de validez y selección.
 
-Esta base todavía no está conectada a los solvers ni al esquema SQLite. Por
-tanto, describe y valida qué se desea registrar, pero no cambia los datos que
-produce una ejecución actual.
+El catálogo puede sincronizar sus definiciones y selección con el esquema
+SQLite v2 preparado, pero todavía no está conectado a los solvers ni al runner
+heredado. Por tanto, no cambia los datos que produce una ejecución actual.
+
+El esquema SQLite v2 preparado posteriormente se documenta en
+[`../architecture/SQLITE_V2_SCHEMA.md`](../architecture/SQLITE_V2_SCHEMA.md).
+Permanece en paralelo al esquema heredado y aún no cambia la ejecución actual.
 
 ## 4. Análisis jerárquico
 
