@@ -255,6 +255,20 @@ Avance ejecutado:
 4. Migrar capacidades de `analysis_modules*`, MDPI y WEA con fixtures.
 5. Verificar equivalencia numérica sobre extractos pequeños autorizados.
 
+Avance ejecutado:
+
+- [x] Se creó `documentation/lessons_learned/` con trazabilidad histórica.
+- [x] Se consolidaron las condiciones operativas y regresiones de CEC2017.
+- [x] Se formalizaron réplica, SQLite autoritativa, sellado de campaña,
+  selección de métricas y análisis jerárquico con familias Holm explícitas.
+- [x] Se inventariaron las capacidades estadísticas y sus fuentes actuales en
+  `documentation/V2_ANALYSIS_RESCUE_MAP.md`.
+- [x] Se identificaron reconstrucciones de métricas que deberán etiquetarse y
+  el defecto de trazas `Divj_max0` pendiente de corrección.
+- [ ] Falta implementar el registro de métricas y su esquema validado.
+- [ ] Falta crear fixtures tabulares y migrar las funciones autoritativas.
+- [ ] No se ha retirado todavía ningún árbol histórico de análisis.
+
 ### Ola 3 — separación de publicaciones
 
 1. Añadir al README la guía de recuperación histórica.
