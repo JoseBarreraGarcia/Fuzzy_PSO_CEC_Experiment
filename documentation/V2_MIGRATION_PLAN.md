@@ -3,8 +3,8 @@
 **Rama:** `Solver_CEC_Fuzzy_PSO_v2`  
 **Punto de partida:** `f8649134362f9a7b5e04f2f2bf032eb4b5938172`  
 **Fecha:** 19 de octubre de 2026  
-**Estado:** inventario y clasificación por ruta completados; no se ha eliminado
-ni reorganizado código.
+**Estado:** limpieza inicial, contratos de métricas y persistencia completados;
+migración del código operativo al paquete v2 pendiente.
 
 ## 1. Propósito
 
@@ -28,7 +28,7 @@ porque siempre podrá recuperarse desde el commit de congelación.
 
 ## 3. Alcance de la primera etapa
 
-Esta etapa incluye solamente:
+La primera etapa incluyó:
 
 - creación de la rama v2 desde el estado MDPI congelado;
 - inventario del contenido versionado;
@@ -36,33 +36,42 @@ Esta etapa incluye solamente:
 - ejecución de la batería de pruebas existente;
 - propuesta de limpieza y arquitectura objetivo.
 
-No incluye todavía:
+En etapas posteriores ya se retiraron artefactos regenerables aprobados y se
+prepararon el registro de métricas y la persistencia SQLite v2. Todavía no se
+incluyen:
 
-- eliminación de archivos;
 - movimientos de módulos;
 - cambios al sistema de semillas;
-- migraciones de base de datos;
 - cambios en resultados o análisis del artículo.
 
 ## 4. Arquitectura objetivo
 
+La visión doctoral y la navegación completa se mantienen en
+`documentation/PROJECT_VISION.md` y
+`documentation/architecture/MODULE_MAP.md`. El nombre conceptual del paquete
+objetivo es `afcs` y las carpetas bajo `src/afcs/` documentan desde ahora la
+responsabilidad de cada módulo.
+
 ```text
 src/
-├── benchmarks/
-│   ├── classical/
-│   └── cec2017/
-├── optimizers/
-│   ├── pso/
-│   └── fuzzy_pso/
-├── experiment/
-│   ├── runner.py
-│   ├── seeding.py
-│   ├── budget.py
-│   └── provenance.py
-├── persistence/
-│   ├── database.py
-│   └── migrations/
-└── analysis/
+└── afcs/
+    ├── core/
+    ├── problems/
+    │   ├── benchmarks/
+    │   ├── scp/
+    │   ├── uscp/
+    │   └── knapsack/
+    ├── optimizers/
+    │   ├── pso/
+    │   └── ga/
+    ├── metrics/
+    ├── fuzzy/
+    ├── selectors/
+    ├── controllers/
+    ├── binarization/
+    ├── experiments/
+    ├── persistence/
+    └── analysis/
 
 configs/
 ├── examples/

@@ -277,6 +277,10 @@ Avance ejecutado:
 - [ ] Falta crear el adaptador entre esta API y el runner/solvers actuales.
 - [ ] Falta migrar las funciones autoritativas de análisis sobre los fixtures.
 - [ ] No se ha retirado todavía ningún árbol histórico de análisis.
+- [x] Se incorporó el contexto doctoral y se creó una estructura `src/afcs/`
+  navegable mediante README, sin duplicar todavía implementaciones.
+- [x] Se documentó el mapa ruta heredada → módulo v2 y la visión científica que
+  debe gobernar la migración.
 
 ### Ola 3 — separación de publicaciones
 
