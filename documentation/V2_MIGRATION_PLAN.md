@@ -3,7 +3,8 @@
 **Rama:** `Solver_CEC_Fuzzy_PSO_v2`  
 **Punto de partida:** `f8649134362f9a7b5e04f2f2bf032eb4b5938172`  
 **Fecha:** 19 de octubre de 2026  
-**Estado:** fase inicial de inventario; no se ha eliminado ni reorganizado código.
+**Estado:** inventario y clasificación por ruta completados; no se ha eliminado
+ni reorganizado código.
 
 ## 1. Propósito
 
@@ -299,3 +300,8 @@ producir una lista concreta por ruta con una de estas acciones:
 La primera limpieza deberá separar el material histórico del artículo sin
 eliminar código reutilizable de análisis, familias de problemas ni
 metaheurísticas.
+
+La clasificación concreta está documentada en
+[`V2_CLEANUP_MANIFEST.md`](V2_CLEANUP_MANIFEST.md). Ese manifiesto es la lista
+de control para ejecutar la limpieza por olas y exige verificación histórica,
+pruebas y smoke tests antes de retirar cada bloque.
