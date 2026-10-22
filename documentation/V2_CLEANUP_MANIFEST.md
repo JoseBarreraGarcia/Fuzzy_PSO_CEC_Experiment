@@ -301,6 +301,10 @@ Avance ejecutado:
   NFE exacto, clipping legacy, minimización/maximización y RNG inyectado.
 - [x] La inyección de RNG quedó explícitamente separada del protocolo pendiente
   de semillas: el optimizador no crea ni deriva semillas de campañas/réplicas.
+- [x] Se conectó un ejecutor mínimo de réplicas con SQLite v2: persiste resultado
+  final o fallo estructurado y no reconstruye métricas ni asigna semillas.
+- [ ] Falta el constructor que valide la correspondencia entre plan, problema,
+  configuración de optimizador y presupuesto antes de ejecutar una campaña.
 
 ### Ola 3 — separación de publicaciones
 

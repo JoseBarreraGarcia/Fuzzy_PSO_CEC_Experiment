@@ -1,7 +1,7 @@
 # Esquema SQLite v2
 
-**Estado:** infraestructura preparada y probada; todavía no conectada al runner
-ni a los solvers heredados.
+**Estado:** infraestructura preparada y probada; conectada al ejecutor mínimo
+de réplicas v2, todavía no a los solvers heredados ni a un runner de campañas.
 
 ## Propósito
 
@@ -19,6 +19,10 @@ Archivos:
 
 Las rutas `BD/persistence_v2.py` y `BD/repository_v2.py` permanecen sólo
 como puentes de importación durante la transición.
+
+`src/afcs/experiments/runner.py` conecta una réplica planificada con cualquier
+optimizador que implemente `RunnableOptimizer`. Actualmente persiste resultados
+finales y fallos estructurados; no inventa trazas ni asigna semillas.
 
 ## Modelo
 
@@ -93,7 +97,7 @@ repositorio.
 ## Decisiones todavía no implementadas
 
 - derivación y persistencia definitiva de semillas;
-- API transaccional completa para crear y ejecutar campañas;
+- API de planificación y ejecución completa de campañas;
 - frecuencia predeterminada de trazas;
 - fórmula v2 definitiva de error, GAP y RDP;
 - forma de agregación de violaciones por familia de problemas;

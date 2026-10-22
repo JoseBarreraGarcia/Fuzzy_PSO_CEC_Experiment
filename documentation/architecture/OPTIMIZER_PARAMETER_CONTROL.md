@@ -169,7 +169,7 @@ cobrarle un coste inexistente y medir el coste añadido por la adaptación.
 3. [Completado] Definir Optimizer, SearchState, ParameterPolicy y ParameterUpdate.
 4. [Completado] Extraer el núcleo PSO sin cambiar fórmulas ni orden de operaciones.
 5. [Completado] Implementar NoAdaptation, inercia fija y política legacy equivalente.
-6. Conectar el runner y persistencia v2.
+6. [En progreso] Conectar el runner y persistencia v2.
 7. Migrar PSO-FCS como política difusa.
 8. Incorporar las otras políticas de w tras aprobar sus fórmulas.
 9. Adaptar GA y después inventariar las demás MH legacy.
@@ -190,6 +190,8 @@ Avance de implementación:
 - generador NumPy inyectado por el llamador: implementado como desacoplamiento,
   sin derivar ni asignar semillas;
 - runner de campañas, métricas y persistencia durante la corrida: pendientes.
+- ejecutor mínimo de una réplica y persistencia del resultado/fallo: implementado;
+- validación automática plan ↔ problema ↔ optimizador: pendiente.
 
 ## 9. Decisiones todavía abiertas
 
