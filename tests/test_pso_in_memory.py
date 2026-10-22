@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 from afcs.core import OptimizationDirection, ReplicaRandomStreams, SearchSpace
+from afcs.metrics import PSOTraceCollector, TraceSampling
 from afcs.optimizers.pso import (
     FixedInertia,
     LegacyCompatiblePSO,
@@ -61,6 +62,37 @@ class TestPSOInMemory(unittest.TestCase):
         positions_b, best_b = execute()
         np.testing.assert_array_equal(positions_a, positions_b)
         self.assertEqual(best_a, best_b)
+
+    def test_instrumentation_does_not_change_search_trajectory(self):
+        config = LegacyPSORunConfig(population_size=5, max_iterations=4)
+        baseline = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=FixedInertia(0.5),
+            random_streams=ReplicaRandomStreams(42),
+        ).run()
+        collector = PSOTraceCollector(
+            selected_metrics=("objective_best", "diversity_hussain", "inertia_weight"),
+            sampling=TraceSampling(),
+            maximum_iteration=config.max_iterations,
+            lower_bounds=(-5.0, -5.0),
+            upper_bounds=(5.0, 5.0),
+        )
+        instrumented = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=FixedInertia(0.5),
+            random_streams=ReplicaRandomStreams(42),
+            trace_collector=collector,
+        ).run()
+
+        np.testing.assert_array_equal(instrumented.positions, baseline.positions)
+        self.assertEqual(instrumented.best_objective, baseline.best_objective)
+        self.assertEqual(
+            instrumented.initial_population_sha256,
+            baseline.initial_population_sha256,
+        )
+        self.assertEqual(len(instrumented.trace_points), 5)
 
     def test_legacy_policy_reaches_historical_final_inertia(self):
         config = LegacyPSORunConfig(population_size=3, max_iterations=4)

@@ -85,7 +85,10 @@ class SequentialCampaignOrchestrator:
         executed = 0
         for run_id in self._repository.run_ids_by_status(campaign_id, "planned"):
             plan = self._repository.get_planned_run(run_id)
-            optimizer = self._factory.build(plan)
+            optimizer = self._factory.build(
+                plan,
+                selected_metrics=self._repository.selected_metric_ids(campaign_id),
+            )
             self._executor.execute(run_id, optimizer)
             executed += 1
 

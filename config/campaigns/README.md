@@ -20,11 +20,29 @@ informativa y el lector la ignora.
 | `problems` | Matriz de problemas | `CEC2017`; F1 y F3-F30; dimensiones 10, 30, 50, 100 |
 | `treatments` | Configuraciones del optimizador | `PSO`; políticas `fixed_inertia` y `legacy_ldiw` |
 | `execution` | Recursos de ejecución | `parallel_workers=1`; otros valores se rechazan hasta validar el piloto paralelo |
+| `trace` | Muestreo de la trayectoria | Activación, frecuencia, checkpoint inicial y checkpoint final obligatorio |
 
 Los parámetros PSO obligatorios son `population_size` y `max_iterations`. Los
 opcionales y sus valores efectivos por defecto son `cognitive=2.0`,
 `social=2.0` y `velocity_factor=0.1`. `fixed_inertia` requiere `value`;
 `legacy_ldiw` acepta `maximum=0.9` y `minimum=0.1`.
+
+La configuración inicial de trazas es:
+
+```json
+{
+  "enabled": true,
+  "every_iterations": 1,
+  "include_initial": true,
+  "include_final": true
+}
+```
+
+El checkpoint 0 se registra después de evaluar la población inicial y consume
+`population_size` evaluaciones. `inertia_weight` no aparece en ese punto porque
+todavía no se ha aplicado en ningún movimiento. En el checkpoint `t >= 1`, su
+valor corresponde al utilizado para producir la población observada en `t`.
+`every_iterations` puede reducir la frecuencia, pero el punto final se conserva.
 
 La selección de métricas siempre incorpora las métricas obligatorias del
 registro `src/afcs/metrics/definitions.json`. El objeto selectivo tiene esta

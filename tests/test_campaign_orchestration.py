@@ -22,10 +22,10 @@ from afcs.experiments.cli import campaign_preview, main
 EXAMPLE_PATH = Path("config/campaigns/cec2017_pso_v2.example.json")
 
 
-def _smoke_config(campaign_id: str = "smoke"):
+def _smoke_config(campaign_id: str = "smoke", metrics: str = "minimal"):
     raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
     raw["campaign"].update(
-        {"id": campaign_id, "name": "Sequential smoke", "replicas": 2, "metrics": "minimal"}
+        {"id": campaign_id, "name": "Sequential smoke", "replicas": 2, "metrics": metrics}
     )
     raw["problems"] = [
         {"family": "CEC2017", "functions": [1], "dimensions": [10]}
@@ -52,7 +52,7 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_plan_and_execute_smoke_campaign_end_to_end(self) -> None:
-        loaded = _smoke_config()
+        loaded = _smoke_config(metrics="optimizer")
         orchestrator = SequentialCampaignOrchestrator(self.repository)
 
         summary = orchestrator.plan_and_execute(loaded)
@@ -78,6 +78,30 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertTrue(
             all(row["optimizer_version"] == "2.0.0a0-legacy-compatible" for row in rows)
         )
+        trace_rows = self.connection.execute(
+            """
+            SELECT tp.run_id, tp.checkpoint_index, tp.iteration_index,
+                   tp.evaluations
+            FROM trace_points AS tp
+            ORDER BY tp.run_id, tp.checkpoint_index
+            """
+        ).fetchall()
+        self.assertEqual(len(trace_rows), 12)
+        first_run_id = trace_rows[0]["run_id"]
+        first_run = [row for row in trace_rows if row["run_id"] == first_run_id]
+        self.assertEqual(
+            [(row["iteration_index"], row["evaluations"]) for row in first_run],
+            [(0, 4), (1, 8), (2, 12)],
+        )
+        inertia_rows = self.connection.execute(
+            """
+            SELECT checkpoint_index FROM trace_metric_values
+            WHERE run_id = ? AND metric_id = 'inertia_weight'
+            ORDER BY checkpoint_index
+            """,
+            (first_run_id,),
+        ).fetchall()
+        self.assertEqual([row["checkpoint_index"] for row in inertia_rows], [1, 2])
 
         repeated = orchestrator.execute_pending("smoke")
         self.assertEqual(repeated.executed_now, 0)
@@ -114,6 +138,7 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertEqual(preview["summary"]["total_runs"], 4)
         self.assertEqual(preview["summary"]["total_evaluations"], 48)
         self.assertEqual(preview["randomness"]["base_seed"], 42)
+        self.assertEqual(preview["trace"]["every_iterations"], 1)
 
     def test_cli_separates_preview_plan_and_run(self) -> None:
         raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))

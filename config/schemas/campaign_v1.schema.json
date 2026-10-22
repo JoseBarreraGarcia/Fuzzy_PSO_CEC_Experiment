@@ -5,7 +5,7 @@
   "description": "Declaración reproducible de una campaña experimental AFCS v2.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "campaign", "randomness", "problems", "treatments", "execution"],
+  "required": ["schema_version", "campaign", "randomness", "problems", "treatments", "execution", "trace"],
   "properties": {
     "$schema": {"type": "string", "description": "Ruta al esquema para validación y ayuda del editor."},
     "_documentation": {"type": "object", "description": "Ayuda humana ignorada por el ejecutor; no altera el experimento."},
@@ -14,7 +14,8 @@
     "randomness": {"$ref": "#/$defs/randomness"},
     "problems": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/cec2017Problems"}},
     "treatments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/psoTreatment"}},
-    "execution": {"$ref": "#/$defs/execution"}
+    "execution": {"$ref": "#/$defs/execution"},
+    "trace": {"$ref": "#/$defs/trace"}
   },
   "$defs": {
     "campaign": {
@@ -90,6 +91,17 @@
     "execution": {
       "type": "object", "additionalProperties": false,
       "properties": {"parallel_workers": {"const": 1, "default": 1, "description": "La ejecución v1 es secuencial; el paralelismo se habilitará tras validar reproducibilidad."}}
+    },
+    "trace": {
+      "type": "object", "additionalProperties": false,
+      "required": ["enabled", "every_iterations", "include_initial", "include_final"],
+      "allOf": [{"if": {"properties": {"enabled": {"const": true}}}, "then": {"properties": {"include_final": {"const": true}}}}],
+      "properties": {
+        "enabled": {"type": "boolean", "default": true},
+        "every_iterations": {"type": "integer", "minimum": 1, "default": 1, "description": "Registra cada k iteraciones; el punto final nunca se omite."},
+        "include_initial": {"type": "boolean", "default": true, "description": "Registra la población inicial ya evaluada como checkpoint 0."},
+        "include_final": {"type": "boolean", "default": true, "description": "Obligatorio cuando las trazas están activas."}
+      }
     }
   }
 }

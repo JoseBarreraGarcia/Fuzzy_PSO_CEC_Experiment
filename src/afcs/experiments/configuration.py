@@ -42,6 +42,26 @@ class ExecutionConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class TraceConfig:
+    enabled: bool = True
+    every_iterations: int = 1
+    include_initial: bool = True
+    include_final: bool = True
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("enabled", self.enabled),
+            ("include_initial", self.include_initial),
+            ("include_final", self.include_final),
+        ):
+            if not isinstance(value, bool):
+                raise TypeError(f"trace.{name} must be boolean")
+        _positive_integer(self.every_iterations, "trace.every_iterations")
+        if self.enabled and not self.include_final:
+            raise ValueError("trace.include_final must be true when tracing is enabled")
+
+
+@dataclass(frozen=True, slots=True)
 class CampaignSummary:
     problem_instances: int
     algorithm_configurations: int
@@ -57,6 +77,7 @@ class LoadedCampaignConfig:
     campaign: CampaignDefinition
     treatments: tuple[TreatmentDefinition, ...]
     execution: ExecutionConfig
+    trace: TraceConfig
     summary: CampaignSummary
     resolved_config: Mapping[str, Any]
 
@@ -103,6 +124,7 @@ def parse_campaign_config(
             "problems",
             "treatments",
             "execution",
+            "trace",
         },
         optional={"$schema", "_documentation"},
         path="root",
@@ -146,6 +168,7 @@ def parse_campaign_config(
     problems = _parse_problems(root["problems"])
     treatment_specs = _parse_treatments(root["treatments"])
     execution = _parse_execution(root["execution"])
+    trace = _parse_trace(root["trace"])
 
     treatments: list[TreatmentDefinition] = []
     for treatment_id, run_config, policy_factory in treatment_specs:
@@ -167,6 +190,7 @@ def parse_campaign_config(
         problems=problems,
         treatment_specs=treatment_specs,
         execution=execution,
+        trace=trace,
     )
     campaign = CampaignDefinition(
         campaign_id=_non_empty_string(campaign_raw["id"], "campaign.id"),
@@ -194,6 +218,7 @@ def parse_campaign_config(
         campaign=campaign,
         treatments=tuple(treatments),
         execution=execution,
+        trace=trace,
         summary=summary,
         resolved_config=resolved,
     )
@@ -347,12 +372,32 @@ def _parse_execution(raw: Any) -> ExecutionConfig:
     return parsed
 
 
+def _parse_trace(raw: Any) -> TraceConfig:
+    trace = _object(raw, "trace")
+    _keys(
+        trace,
+        required={"enabled", "every_iterations", "include_initial", "include_final"},
+        optional=set(),
+        path="trace",
+    )
+    try:
+        return TraceConfig(
+            enabled=trace["enabled"],
+            every_iterations=trace["every_iterations"],
+            include_initial=trace["include_initial"],
+            include_final=trace["include_final"],
+        )
+    except (TypeError, ValueError) as error:
+        raise ConfigurationError(str(error)) from error
+
+
 def _resolved_config(**parts: Any) -> dict[str, Any]:
     campaign_raw = parts["campaign_raw"]
     randomness = parts["randomness"]
     problems = parts["problems"]
     treatment_specs = parts["treatment_specs"]
     execution = parts["execution"]
+    trace = parts["trace"]
     problem_groups: dict[int, list[int]] = {}
     for problem in problems:
         problem_groups.setdefault(problem.function_number, []).append(
@@ -396,6 +441,12 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
         ],
         "treatments": treatments,
         "execution": {"parallel_workers": execution.parallel_workers},
+        "trace": {
+            "enabled": trace.enabled,
+            "every_iterations": trace.every_iterations,
+            "include_initial": trace.include_initial,
+            "include_final": trace.include_final,
+        },
     }
 
 

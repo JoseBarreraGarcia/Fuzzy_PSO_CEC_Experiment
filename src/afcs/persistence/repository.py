@@ -51,6 +51,7 @@ class PlannedRun:
 
     run_id: int
     status: str
+    campaign_config: Mapping[str, Any]
     algorithm: str
     optimizer_version: str | None
     algorithm_parameters: Mapping[str, Any]
@@ -70,6 +71,11 @@ class PlannedRun:
     rng_engine: str | None
 
     def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "campaign_config",
+            MappingProxyType(dict(self.campaign_config)),
+        )
         object.__setattr__(
             self,
             "algorithm_parameters",
@@ -326,7 +332,7 @@ class ExperimentRepository:
         row = self.connection.execute(
             """
             SELECT
-                r.run_id, r.status, r.random_seed,
+                r.run_id, r.status, r.random_seed, c.config_json,
                 ac.algorithm, ac.optimizer_version,
                 ac.parameters_json AS algorithm_parameters_json,
                 ac.budget_evaluations, ac.budget_iterations, ac.population_size,
@@ -349,6 +355,7 @@ class ExperimentRepository:
         return PlannedRun(
             run_id=int(row["run_id"]),
             status=str(row["status"]),
+            campaign_config=json.loads(row["config_json"]),
             algorithm=str(row["algorithm"]),
             optimizer_version=row["optimizer_version"],
             algorithm_parameters=json.loads(row["algorithm_parameters_json"]),
@@ -392,6 +399,19 @@ class ExperimentRepository:
             (campaign_id, status),
         ).fetchall()
         return tuple(int(row["run_id"]) for row in rows)
+
+    def selected_metric_ids(self, campaign_id: str) -> tuple[str, ...]:
+        self.campaign_status(campaign_id)
+        selected = {
+            str(row["metric_id"])
+            for row in self.connection.execute(
+                "SELECT metric_id FROM campaign_metrics WHERE campaign_id = ?",
+                (campaign_id,),
+            )
+        }
+        return tuple(
+            metric_id for metric_id in self.registry.metrics if metric_id in selected
+        )
 
     def start_campaign(self, campaign_id: str, started_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "draft")

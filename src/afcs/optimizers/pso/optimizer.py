@@ -5,12 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import math
+from time import perf_counter
+from collections.abc import Callable
 
 import numpy as np
 
 from afcs.controllers import ParameterPolicy
 from afcs.core import EvaluationBudget, OptimizationDirection, ReplicaRandomStreams
 from afcs.optimizers import OptimizerMetadata, OptimizerRunMetadata, SearchState
+from afcs.metrics import OptimizationTracePoint, PSOTraceCollector
 from afcs.problems import OptimizationProblem
 
 from .core import PSOConfig, advance_swarm
@@ -68,6 +71,7 @@ class PSORunResult:
     inertia_history: tuple[float, ...]
     initial_population_sha256: str
     initial_velocity_sha256: str
+    trace_points: tuple[OptimizationTracePoint, ...] = ()
 
 
 class LegacyCompatiblePSO:
@@ -86,6 +90,8 @@ class LegacyCompatiblePSO:
         inertia_policy: ParameterPolicy,
         rng: np.random.Generator | None = None,
         random_streams: ReplicaRandomStreams | None = None,
+        trace_collector: PSOTraceCollector | None = None,
+        clock: Callable[[], float] = perf_counter,
     ) -> None:
         if not isinstance(problem, OptimizationProblem):
             raise TypeError("problem must implement OptimizationProblem")
@@ -103,9 +109,17 @@ class LegacyCompatiblePSO:
             random_streams, ReplicaRandomStreams
         ):
             raise TypeError("random_streams must be ReplicaRandomStreams")
+        if trace_collector is not None and not isinstance(
+            trace_collector, PSOTraceCollector
+        ):
+            raise TypeError("trace_collector must be PSOTraceCollector")
+        if not callable(clock):
+            raise TypeError("clock must be callable")
         self._problem = problem
         self._config = config
         self._inertia_policy = inertia_policy
+        self._trace_collector = trace_collector
+        self._clock = clock
         if random_streams is None:
             self._initialization_rng = rng
             self._dynamics_rng = rng
@@ -150,6 +164,7 @@ class LegacyCompatiblePSO:
         )
 
     def run(self) -> PSORunResult:
+        initialization_started = self._clock()
         space = self._problem.metadata.search_space
         lower = np.asarray(space.lower_bounds, dtype=float)
         upper = np.asarray(space.upper_bounds, dtype=float)
@@ -171,6 +186,15 @@ class LegacyCompatiblePSO:
         best_index = self._best_index(personal_best_values)
         global_best = personal_best[best_index].copy()
         global_best_value = float(personal_best_values[best_index])
+        self._observe(
+            iteration=0,
+            evaluations=budget.consumed,
+            positions=positions,
+            objective_values=objective_values,
+            best_objective=global_best_value,
+            elapsed_seconds=self._clock() - initialization_started,
+            inertia_weight=None,
+        )
 
         inertia_history: list[float] = []
         current_parameters: dict[str, float] = {}
@@ -180,6 +204,7 @@ class LegacyCompatiblePSO:
         )
 
         for iteration in range(1, self._config.max_iterations + 1):
+            iteration_started = self._clock()
             state = SearchState(
                 iteration=iteration,
                 evaluations=budget.consumed,
@@ -226,6 +251,15 @@ class LegacyCompatiblePSO:
             ):
                 global_best = personal_best[candidate_index].copy()
                 global_best_value = candidate_value
+            self._observe(
+                iteration=iteration,
+                evaluations=budget.consumed,
+                positions=positions,
+                objective_values=objective_values,
+                best_objective=global_best_value,
+                elapsed_seconds=self._clock() - iteration_started,
+                inertia_weight=inertia,
+            )
 
         if not budget.exhausted:
             raise RuntimeError("PSO terminated before consuming its declared budget")
@@ -239,7 +273,16 @@ class LegacyCompatiblePSO:
             inertia_history=tuple(inertia_history),
             initial_population_sha256=initial_population_sha256,
             initial_velocity_sha256=initial_velocity_sha256,
+            trace_points=(
+                self._trace_collector.points
+                if self._trace_collector is not None
+                else ()
+            ),
         )
+
+    def _observe(self, **observation) -> None:
+        if self._trace_collector is not None:
+            self._trace_collector.observe(**observation)
 
     def _evaluate_population(
         self, positions: np.ndarray, budget: EvaluationBudget

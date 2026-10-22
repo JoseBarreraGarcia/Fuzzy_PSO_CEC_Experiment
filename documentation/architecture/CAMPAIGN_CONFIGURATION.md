@@ -31,6 +31,11 @@ El esquema facilita la edición, pero el lector Python sigue siendo la barrera
 obligatoria antes de planificar o persistir una campaña. Ambos contratos deben
 actualizarse juntos.
 
+El bloque `trace` separa la selección de métricas de su frecuencia de muestreo.
+La selección responde qué variables se registran; `every_iterations` responde
+cada cuánto se crea un checkpoint. El punto final es obligatorio cuando la
+traza está activa.
+
 ## Expansión de la matriz
 
 Cada combinación función-dimensión crea una instancia de problema. Cada

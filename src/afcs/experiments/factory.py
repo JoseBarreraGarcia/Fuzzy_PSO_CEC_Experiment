@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping
 from types import MappingProxyType
 
 from afcs.core import ReplicaRandomStreams
+from afcs.metrics import PSOTraceCollector, TraceSampling
 from afcs.optimizers.pso import (
     FixedInertia,
     LegacyCompatiblePSO,
@@ -18,7 +19,7 @@ from afcs.problems.benchmarks.cec2017 import CEC2017Problem
 from .contracts import RunnableOptimizer
 
 
-OptimizerBuilder = Callable[[PlannedRun], RunnableOptimizer]
+OptimizerBuilder = Callable[[PlannedRun, tuple[str, ...]], RunnableOptimizer]
 PSO_VERSION = "2.0.0a0-legacy-compatible"
 
 
@@ -40,7 +41,12 @@ class OptimizerFactory:
     def supported_optimizers(self) -> tuple[str, ...]:
         return tuple(self._builders)
 
-    def build(self, plan: PlannedRun) -> RunnableOptimizer:
+    def build(
+        self,
+        plan: PlannedRun,
+        *,
+        selected_metrics: tuple[str, ...] = (),
+    ) -> RunnableOptimizer:
         if not isinstance(plan, PlannedRun):
             raise TypeError("plan must be PlannedRun")
         try:
@@ -50,13 +56,15 @@ class OptimizerFactory:
                 f"Unsupported persisted optimizer {plan.algorithm!r}; "
                 f"available={list(self._builders)}"
             ) from error
-        optimizer = builder(plan)
+        optimizer = builder(plan, selected_metrics)
         if not isinstance(optimizer, RunnableOptimizer):
             raise TypeError("optimizer builder must return RunnableOptimizer")
         return optimizer
 
 
-def _build_pso(plan: PlannedRun) -> LegacyCompatiblePSO:
+def _build_pso(
+    plan: PlannedRun, selected_metrics: tuple[str, ...]
+) -> LegacyCompatiblePSO:
     if plan.optimizer_version != PSO_VERSION:
         raise ValueError(
             f"Unsupported PSO version {plan.optimizer_version!r}; expected {PSO_VERSION!r}"
@@ -74,6 +82,15 @@ def _build_pso(plan: PlannedRun) -> LegacyCompatiblePSO:
     if isinstance(function_number, bool) or not isinstance(function_number, int):
         raise ValueError("CEC2017 plan requires an integer function_number")
     problem = CEC2017Problem(function_number, plan.dimension)
+    trace = plan.campaign_config.get("trace")
+    if not isinstance(trace, Mapping):
+        raise ValueError("Persisted campaign requires trace configuration")
+    sampling = TraceSampling(
+        enabled=trace.get("enabled"),
+        every_iterations=trace.get("every_iterations"),
+        include_initial=trace.get("include_initial"),
+        include_final=trace.get("include_final"),
+    )
 
     parameters = plan.algorithm_parameters
     policy_data = parameters.get("inertia_policy")
@@ -88,11 +105,19 @@ def _build_pso(plan: PlannedRun) -> LegacyCompatiblePSO:
         velocity_factor=parameters.get("velocity_factor", 0.1),
     )
     streams = ReplicaRandomStreams(plan.random_seed, engine=plan.rng_engine)
+    collector = PSOTraceCollector(
+        selected_metrics=selected_metrics,
+        sampling=sampling,
+        maximum_iteration=plan.budget_iterations,
+        lower_bounds=problem.metadata.search_space.lower_bounds,
+        upper_bounds=problem.metadata.search_space.upper_bounds,
+    )
     return LegacyCompatiblePSO(
         problem=problem,
         config=config,
         inertia_policy=policy,
         random_streams=streams,
+        trace_collector=collector,
     )
 
 

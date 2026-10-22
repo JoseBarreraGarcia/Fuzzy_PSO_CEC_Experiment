@@ -318,8 +318,13 @@ Avance ejecutado:
   filas pendientes y smoke test integral CEC2017/PSO/SQLite.
 - [ ] Falta aprobar e implementar una política explícita para recuperar réplicas
   abandonadas en estado `running` tras una interrupción abrupta.
-- [ ] Falta persistir trazas de iteración y conectar la instrumentación completa
-  de los perfiles métricos antes de campañas exhaustivas.
+- [x] PSO persiste atómicamente checkpoints desde la población inicial evaluada,
+  con NFE, métricas poblacionales y `w` aplicado desde la primera transición.
+- [x] Las métricas poblacionales v2 tienen versión explícita y pruebas de
+  equivalencia con las fórmulas heredadas; `Divj_max` ya no reutiliza el valor
+  de la iteración cero.
+- [ ] Falta instrumentar las métricas internas del controlador difuso y extender
+  el contrato de observación a GA y las demás metaheurísticas.
 
 ### Ola 3 — separación de publicaciones
 

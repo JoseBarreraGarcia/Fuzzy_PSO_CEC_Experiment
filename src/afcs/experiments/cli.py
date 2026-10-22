@@ -28,6 +28,7 @@ def campaign_preview(loaded: LoadedCampaignConfig) -> dict:
         "problems": list(loaded.resolved_config["problems"]),
         "treatments": list(loaded.resolved_config["treatments"]),
         "execution": dict(loaded.resolved_config["execution"]),
+        "trace": dict(loaded.resolved_config["trace"]),
     }
 
 

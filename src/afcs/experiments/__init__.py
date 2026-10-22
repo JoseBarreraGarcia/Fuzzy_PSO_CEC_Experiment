@@ -6,6 +6,7 @@ from .configuration import (
     ConfigurationError,
     ExecutionConfig,
     LoadedCampaignConfig,
+    TraceConfig,
     load_campaign_config,
     parse_campaign_config,
 )
@@ -50,6 +51,7 @@ __all__ = [
     "RunnableOptimizer",
     "SequentialCampaignOrchestrator",
     "TreatmentDefinition",
+    "TraceConfig",
     "load_campaign_config",
     "parse_campaign_config",
 ]

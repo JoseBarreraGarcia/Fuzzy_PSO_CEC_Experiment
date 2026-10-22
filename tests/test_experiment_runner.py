@@ -9,6 +9,7 @@ import numpy as np
 from afcs.core import ReplicaRandomStreams, SearchSpace
 from afcs.experiments import ExperimentRunExecutor, RunBindingError
 from afcs.metrics import load_metric_registry
+from afcs.metrics import OptimizationTracePoint
 from afcs.optimizers.pso import FixedInertia, LegacyCompatiblePSO, LegacyPSORunConfig
 from afcs.persistence import ExperimentRepository, initialize_v2_database
 from afcs.problems import CallableProblem, ProblemMetadata
@@ -175,6 +176,37 @@ class TestExperimentRunExecutor(unittest.TestCase):
             "SELECT status FROM runs WHERE run_id = ?", (self.run_id,)
         ).fetchone()[0]
         self.assertEqual(status, "planned")
+
+    def test_trace_and_final_result_are_persisted_atomically(self):
+        @dataclass
+        class ResultWithInvalidTrace:
+            best_position: tuple[float, ...] = (0.0, 0.0)
+            best_objective: float = 0.0
+            evaluations: int = 12
+            trace_points: tuple[OptimizationTracePoint, ...] = (
+                OptimizationTracePoint(0, 0, 4, 0.01, {"objective_best": 1.0}),
+                OptimizationTracePoint(1, 1, 8, 0.01, {"inertia_weight": 0.6}),
+            )
+
+        class InvalidTraceOptimizer:
+            run_metadata = self._matching_optimizer().run_metadata
+
+            def run(self):
+                return ResultWithInvalidTrace()
+
+        with self.assertRaisesRegex(Exception, "not selected"):
+            ExperimentRunExecutor(self.repository).execute(
+                self.run_id, InvalidTraceOptimizer()
+            )
+
+        trace_count = self.connection.execute(
+            "SELECT COUNT(*) FROM trace_points WHERE run_id = ?", (self.run_id,)
+        ).fetchone()[0]
+        status = self.connection.execute(
+            "SELECT status FROM runs WHERE run_id = ?", (self.run_id,)
+        ).fetchone()[0]
+        self.assertEqual(trace_count, 0)
+        self.assertEqual(status, "failed")
 
     def _matching_optimizer(self):
         return LegacyCompatiblePSO(

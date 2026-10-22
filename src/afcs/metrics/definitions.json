@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "required_metrics": [
     "run_status",
     "replica_index",
@@ -27,7 +27,8 @@
       "population_entropy",
       "diversity_dimension_mean",
       "diversity_dimension_min",
-      "diversity_dimension_max"
+      "diversity_dimension_max",
+      "inertia_weight"
     ],
     "fuzzy": [
       "iteration_index",
@@ -220,11 +221,11 @@
       "missing_policy": "allowed_if_not_selected"
     },
     "diversity_hussain": {
-      "version": 1,
+      "version": 2,
       "name": "Diversidad global de Hussain",
       "description": "Diversidad global calculada por Diversity.Codes.hussainDiversity; la fórmula debe conservar versión explícita.",
       "scope": ["iteration"],
-      "source": "Diversity.Codes.hussainDiversity",
+      "source": "afcs.metrics.tracing.hussain_diversity_v1 (equivalente validado de Diversity.Codes.hussainDiversity)",
       "dtype": "float",
       "unit": "search_space",
       "direction": "diagnostic",
@@ -234,11 +235,11 @@
       "missing_policy": "never_reconstruct_as_observed"
     },
     "exploration_percent": {
-      "version": 1,
+      "version": 2,
       "name": "Exploración",
       "description": "Porcentaje XPL derivado de la diversidad corriente respecto del máximo observado por la implementación vigente.",
       "scope": ["iteration"],
-      "source": "Diversity.Codes.XPLXTP.porcentajesXLPXPT",
+      "source": "afcs.metrics.tracing.exploration_exploitation_v1",
       "dtype": "float",
       "unit": "percent",
       "direction": "diagnostic",
@@ -248,11 +249,11 @@
       "missing_policy": "never_reconstruct_as_observed"
     },
     "exploitation_percent": {
-      "version": 1,
+      "version": 2,
       "name": "Explotación",
       "description": "Porcentaje XPT complementario producido por la implementación vigente.",
       "scope": ["iteration"],
-      "source": "Diversity.Codes.XPLXTP.porcentajesXLPXPT",
+      "source": "afcs.metrics.tracing.exploration_exploitation_v1",
       "dtype": "float",
       "unit": "percent",
       "direction": "diagnostic",
@@ -262,11 +263,11 @@
       "missing_policy": "never_reconstruct_as_observed"
     },
     "population_entropy": {
-      "version": 1,
+      "version": 2,
       "name": "Entropía poblacional media",
       "description": "Media por dimensión de entropías normalizadas de histogramas; bins efectivos limitados por sqrt(N).",
       "scope": ["iteration"],
-      "source": "Diversity.Codes.populationEntropy.population_entropy",
+      "source": "afcs.metrics.tracing.population_entropy_v1 (equivalente validado de Diversity.Codes.populationEntropy)",
       "dtype": "float",
       "unit": "normalized",
       "direction": "diagnostic",
@@ -276,11 +277,11 @@
       "missing_policy": "allowed_if_not_selected"
     },
     "diversity_dimension_mean": {
-      "version": 1,
+      "version": 2,
       "name": "Diversidad media por dimensión",
       "description": "Media de Div_j, donde Div_j es la desviación absoluta media respecto de la mediana de cada dimensión.",
       "scope": ["iteration"],
-      "source": "Diversity.Codes.diversityDimention.diversity_per_dimension",
+      "source": "afcs.metrics.tracing.diversity_per_dimension_v1 (equivalente validado de Diversity.Codes.diversityDimention)",
       "dtype": "float",
       "unit": "search_space",
       "direction": "diagnostic",
@@ -290,11 +291,11 @@
       "missing_policy": "allowed_if_not_selected"
     },
     "diversity_dimension_min": {
-      "version": 1,
+      "version": 2,
       "name": "Diversidad mínima por dimensión",
       "description": "Mínimo de Div_j en el punto observado.",
       "scope": ["iteration"],
-      "source": "Diversity.Codes.diversityDimention.diversity_per_dimension",
+      "source": "afcs.metrics.tracing.diversity_per_dimension_v1 (equivalente validado de Diversity.Codes.diversityDimention)",
       "dtype": "float",
       "unit": "search_space",
       "direction": "diagnostic",
@@ -304,11 +305,11 @@
       "missing_policy": "allowed_if_not_selected"
     },
     "diversity_dimension_max": {
-      "version": 1,
+      "version": 2,
       "name": "Diversidad máxima por dimensión",
       "description": "Máximo de Div_j en la iteración corriente; no debe reutilizarse el valor de la iteración cero.",
       "scope": ["iteration"],
-      "source": "Diversity.Codes.diversityDimention.diversity_per_dimension",
+      "source": "afcs.metrics.tracing.diversity_per_dimension_v1 (equivalente validado de Diversity.Codes.diversityDimention)",
       "dtype": "float",
       "unit": "search_space",
       "direction": "diagnostic",

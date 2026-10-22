@@ -39,7 +39,8 @@ réplica es una decisión metodológica aún pendiente.
   esquema como en el lector.
 - La ejecución se detiene ante el primer error, después de registrar la réplica
   como `failed`. Una invocación posterior continúa con las demás pendientes.
-- Todavía no se persisten trazas por iteración ni todas las métricas del perfil.
+- Las trazas PSO y las métricas de los perfiles `convergence` y `optimizer` ya
+  se persisten. Falta instrumentar las salidas internas del controlador difuso.
 - El controlador difuso aún no forma parte del catálogo ejecutable.
 - El piloto de equivalencia secuencial/paralela continúa pendiente.
 

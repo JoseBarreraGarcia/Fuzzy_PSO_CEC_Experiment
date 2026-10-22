@@ -56,19 +56,29 @@ class ExperimentRunExecutor:
             runtime = finished - started
             if runtime < 0:
                 raise ValueError("clock must be monotonic")
-            self._repository.complete_run(
-                run_id=run_id,
-                objective_best=objective,
-                solution=solution,
-                evaluations=evaluations,
-                runtime_total_seconds=runtime,
-                initial_population_sha256=getattr(
-                    result, "initial_population_sha256", None
-                ),
-                initial_velocity_sha256=getattr(
-                    result, "initial_velocity_sha256", None
-                ),
-            )
+            with self._repository.transaction():
+                for point in getattr(result, "trace_points", ()):
+                    self._repository.record_trace(
+                        run_id=run_id,
+                        checkpoint_index=point.checkpoint_index,
+                        iteration_index=point.iteration_index,
+                        evaluations=point.evaluations,
+                        elapsed_seconds=point.elapsed_seconds,
+                        metrics=point.metrics,
+                    )
+                self._repository.complete_run(
+                    run_id=run_id,
+                    objective_best=objective,
+                    solution=solution,
+                    evaluations=evaluations,
+                    runtime_total_seconds=runtime,
+                    initial_population_sha256=getattr(
+                        result, "initial_population_sha256", None
+                    ),
+                    initial_velocity_sha256=getattr(
+                        result, "initial_velocity_sha256", None
+                    ),
+                )
             return result
         except Exception as error:
             self._repository.fail_run(
