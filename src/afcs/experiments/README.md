@@ -3,6 +3,12 @@
 Este módulo coordina la ejecución sin incorporar fórmulas de optimización,
 control difuso ni acceso SQL dentro de los algoritmos.
 
+`CampaignPlanner` recibe definiciones tipadas ya resueltas, comprueba conflictos
+y expande cada tratamiento al número solicitado de réplicas. La persistencia es
+atómica: o se guarda la campaña completa o no se guarda ninguna de sus filas.
+Esto reemplaza la lógica dispersa de expansión, no los archivos de `config/`
+que seguirán siendo la interfaz humana cuando exista su esquema v2.
+
 ## Estado operativo
 
 `ExperimentRunExecutor` conecta una réplica ya planificada con un optimizador
@@ -34,6 +40,8 @@ runner conozca sus operadores internos.
 - La versión del optimizador está presente en sus metadatos, pero el esquema
   SQLite v1 todavía no tiene una columna dedicada para validarla y persistirla.
 - Todavía no ejecuta campañas completas ni aplica reanudación o paralelismo.
+- Todavía no existe el lector que transforme `config/*.json` en las definiciones
+  tipadas del planificador.
 
 `runtime_total_seconds` mide provisionalmente el intervalo monotónico ocupado
 por `optimizer.run()`. Las escrituras SQLite quedan fuera de ese intervalo para

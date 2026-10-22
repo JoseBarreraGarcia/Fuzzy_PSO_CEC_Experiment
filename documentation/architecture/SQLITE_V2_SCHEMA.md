@@ -30,6 +30,11 @@ parámetros, hash de datos, población y presupuestos. Una discrepancia detiene 
 ejecución y conserva la réplica como `planned`. La versión del optimizador aún
 no puede contrastarse porque el esquema inicial no tiene una columna específica.
 
+`CampaignPlanner` persiste de forma atómica campañas ya validadas, elimina
+duplicados de instancias/configuraciones y expande tratamientos por índice de
+réplica. Las semillas permanecen nulas. El lector del futuro esquema humano de
+`config/` aún no está implementado.
+
 ## Modelo
 
 ```text

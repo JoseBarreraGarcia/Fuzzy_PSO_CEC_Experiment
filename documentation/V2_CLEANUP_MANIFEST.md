@@ -307,6 +307,10 @@ Avance ejecutado:
   configuración del optimizador, política, población y presupuesto.
 - [ ] Falta persistir la versión del optimizador y construir planes/campañas
   completos desde configuración validada.
+- [x] Se implementó la expansión y persistencia atómica de campañas tipadas,
+  con detección previa de tratamientos duplicados o configuraciones en conflicto.
+- [ ] Falta definir y leer el esquema v2 de `config/`; los JSON heredados todavía
+  no se reinterpretan ni migran automáticamente.
 
 ### Ola 3 — separación de publicaciones
 

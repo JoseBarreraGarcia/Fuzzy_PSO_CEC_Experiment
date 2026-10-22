@@ -158,7 +158,8 @@ Antes de retirarlos de v2 se debe confirmar que están presentes en `f864913`.
 
 1. Introducir `pyproject.toml`.
 2. Definir paquete `src/` e imports absolutos estables.
-3. Añadir esquema de configuración validado.
+3. Añadir esquema de configuración validado. La expansión/persistencia tipada ya
+   está implementada; falta la entrada humana y su lector.
 4. Sustituir scripts numerados por una CLI documentada.
 5. Separar configuración de benchmark, algoritmo, campaña y análisis.
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
@@ -124,6 +125,28 @@ class ExperimentRepository:
         self.connection = connection
         self.registry = registry
 
+    @contextmanager
+    def transaction(self):
+        """Group repository operations into one atomic SQLite transaction."""
+
+        if self.connection.in_transaction:
+            with nullcontext():
+                yield
+            return
+        self.connection.execute("BEGIN")
+        try:
+            yield
+        except Exception:
+            self.connection.rollback()
+            raise
+        else:
+            self.connection.commit()
+
+    def _write_scope(self):
+        if self.connection.in_transaction:
+            return nullcontext()
+        return self.connection
+
     def create_campaign(
         self,
         campaign_id: str,
@@ -136,7 +159,7 @@ class ExperimentRepository:
     ) -> tuple[str, ...]:
         config_payload = canonical_json(config)
         timestamp = created_at or utc_now()
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 """
                 INSERT INTO campaigns (
@@ -171,7 +194,7 @@ class ExperimentRepository:
         data_sha256: str | None = None,
     ) -> int:
         parameters_json = canonical_json(parameters or {})
-        with self.connection:
+        with self._write_scope():
             existing = self.connection.execute(
                 """
                 SELECT instance_id FROM problem_instances
@@ -215,7 +238,7 @@ class ExperimentRepository:
     ) -> None:
         self._require_campaign_status(campaign_id, "draft")
         parameters_json = canonical_json(parameters)
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 """
                 INSERT INTO algorithm_configurations (
@@ -247,7 +270,7 @@ class ExperimentRepository:
         random_seed: int | None = None,
     ) -> int:
         self._require_campaign_status(campaign_id, "draft")
-        with self.connection:
+        with self._write_scope():
             cursor = self.connection.execute(
                 """
                 INSERT INTO runs (
@@ -312,7 +335,7 @@ class ExperimentRepository:
         ).fetchone()[0]
         if run_count == 0:
             raise RepositoryError("A campaign cannot start without planned runs")
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 "UPDATE campaigns SET status = 'running', started_at = ? WHERE campaign_id = ?",
                 (started_at or utc_now(), campaign_id),
@@ -323,7 +346,7 @@ class ExperimentRepository:
         self._require_campaign_status(row["campaign_id"], "running")
         if row["status"] != "planned":
             raise RepositoryError(f"Run {run_id} is not planned")
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 "UPDATE runs SET status = 'running', started_at = ? WHERE run_id = ?",
                 (started_at or utc_now(), run_id),
@@ -358,7 +381,7 @@ class ExperimentRepository:
         ):
             raise RepositoryError("Trace checkpoints and evaluations must be monotonic")
 
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 """
                 INSERT INTO trace_points (
@@ -393,7 +416,7 @@ class ExperimentRepository:
         selected_metrics = metrics or {}
         self._validate_selected_metrics(row["campaign_id"], selected_metrics, "replica")
 
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 """
                 UPDATE runs
@@ -426,7 +449,7 @@ class ExperimentRepository:
         row = self._get_run(run_id)
         if row["status"] not in {"planned", "running"}:
             raise RepositoryError(f"Run {run_id} cannot transition to failed")
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 """
                 UPDATE runs
@@ -447,7 +470,7 @@ class ExperimentRepository:
         ).fetchone()[0]
         if pending:
             raise RepositoryError("Campaign still has non-terminal runs")
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 "UPDATE campaigns SET status = 'completed', finished_at = ? WHERE campaign_id = ?",
                 (finished_at or utc_now(), campaign_id),
@@ -455,7 +478,7 @@ class ExperimentRepository:
 
     def seal_campaign(self, campaign_id: str, sealed_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "completed")
-        with self.connection:
+        with self._write_scope():
             self.connection.execute(
                 "UPDATE campaigns SET status = 'sealed', sealed_at = ? WHERE campaign_id = ?",
                 (sealed_at or utc_now(), campaign_id),
