@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 import math
 from types import MappingProxyType
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from afcs.optimizers import SearchState
 
@@ -49,6 +49,10 @@ class ParameterPolicy(Protocol):
     policy_version: str
     compatible_parameters: tuple[str, ...]
 
+    @property
+    def configuration(self) -> Mapping[str, Any]:
+        ...
+
     def propose(
         self,
         state: SearchState,
@@ -63,6 +67,10 @@ class NoAdaptation:
     policy_id = "no_adaptation"
     policy_version = "1"
     compatible_parameters: tuple[str, ...] = ()
+
+    @property
+    def configuration(self) -> Mapping[str, Any]:
+        return MappingProxyType({})
 
     def propose(
         self,

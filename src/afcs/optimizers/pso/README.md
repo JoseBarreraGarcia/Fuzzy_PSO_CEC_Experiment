@@ -40,6 +40,20 @@ implementa el protocolo de semillas: no genera semillas maestras, no deriva
 subflujos y no asigna semillas a campañas o réplicas. Esa integración sigue
 reservada para su fase independiente.
 
+## Identidad de ejecución
+
+Cada objeto PSO expone `OptimizerRunMetadata`, que describe de forma canónica:
+
+- identidad y versión del optimizador;
+- metadatos del problema;
+- `cognitive`, `social` y `velocity_factor`;
+- identidad, versión y configuración completa de la política de inercia;
+- población y presupuestos de iteraciones y evaluaciones.
+
+El runner compara estos datos con SQLite antes de iniciar una réplica. El RNG
+no forma parte de esta configuración mientras el protocolo de semillas siga
+pendiente.
+
 ## Límites actuales
 
 - Sólo se utiliza el valor objetivo retornado por el problema; la política para

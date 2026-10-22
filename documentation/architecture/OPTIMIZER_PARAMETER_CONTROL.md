@@ -191,7 +191,10 @@ Avance de implementación:
   sin derivar ni asignar semillas;
 - runner de campañas, métricas y persistencia durante la corrida: pendientes.
 - ejecutor mínimo de una réplica y persistencia del resultado/fallo: implementado;
-- validación automática plan ↔ problema ↔ optimizador: pendiente.
+- validación automática plan ↔ problema ↔ optimizador: implementada para los
+  campos disponibles en el esquema v1;
+- persistencia y validación de la versión del optimizador: pendiente de una
+  migración futura del esquema.
 
 ## 9. Decisiones todavía abiertas
 

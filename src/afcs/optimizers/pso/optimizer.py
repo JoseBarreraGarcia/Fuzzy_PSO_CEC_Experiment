@@ -9,7 +9,7 @@ import numpy as np
 
 from afcs.controllers import ParameterPolicy
 from afcs.core import EvaluationBudget, OptimizationDirection
-from afcs.optimizers import SearchState
+from afcs.optimizers import OptimizerMetadata, OptimizerRunMetadata, SearchState
 from afcs.problems import OptimizationProblem
 
 from .core import PSOConfig, advance_swarm
@@ -34,7 +34,9 @@ class LegacyPSORunConfig:
                 raise TypeError(f"{name} must be an integer")
             if value <= 0:
                 raise ValueError(f"{name} must be positive")
-        PSOConfig(cognitive=self.cognitive, social=self.social)
+        coefficients = PSOConfig(cognitive=self.cognitive, social=self.social)
+        object.__setattr__(self, "cognitive", coefficients.cognitive)
+        object.__setattr__(self, "social", coefficients.social)
         if isinstance(self.velocity_factor, bool):
             raise TypeError("velocity_factor must be numeric")
         try:
@@ -95,6 +97,36 @@ class LegacyCompatiblePSO:
         self._config = config
         self._inertia_policy = inertia_policy
         self._rng = rng
+
+    @property
+    def run_metadata(self) -> OptimizerRunMetadata:
+        return OptimizerRunMetadata(
+            optimizer=OptimizerMetadata(
+                optimizer_id="PSO",
+                version="2.0.0a0-legacy-compatible",
+                configurable_parameters=(
+                    "w",
+                    "cognitive",
+                    "social",
+                    "velocity_factor",
+                ),
+                adaptable_parameters=("w",),
+            ),
+            problem=self._problem.metadata,
+            parameters={
+                "cognitive": self._config.cognitive,
+                "social": self._config.social,
+                "velocity_factor": self._config.velocity_factor,
+                "inertia_policy": {
+                    "policy_id": self._inertia_policy.policy_id,
+                    "policy_version": self._inertia_policy.policy_version,
+                    "configuration": dict(self._inertia_policy.configuration),
+                },
+            },
+            evaluation_budget=self._config.evaluation_budget,
+            iteration_budget=self._config.max_iterations,
+            population_size=self._config.population_size,
+        )
 
     def run(self) -> PSORunResult:
         space = self._problem.metadata.search_space

@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 import sqlite3
+from types import MappingProxyType
 from typing import Any
 
 from afcs.metrics import MetricRegistry
@@ -40,6 +41,38 @@ class StoredValue:
     value_integer: int | None = None
     value_text: str | None = None
     value_json: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PlannedRun:
+    """Read-only execution plan assembled from normalized SQLite records."""
+
+    run_id: int
+    status: str
+    algorithm: str
+    algorithm_parameters: Mapping[str, Any]
+    budget_evaluations: int | None
+    budget_iterations: int | None
+    population_size: int | None
+    problem_family: str
+    problem_name: str
+    dimension: int | None
+    optimum: float | None
+    direction: str
+    problem_parameters: Mapping[str, Any]
+    data_sha256: str | None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "algorithm_parameters",
+            MappingProxyType(dict(self.algorithm_parameters)),
+        )
+        object.__setattr__(
+            self,
+            "problem_parameters",
+            MappingProxyType(dict(self.problem_parameters)),
+        )
 
 
 def encode_metric_value(value: Any, dtype: str | None = None) -> StoredValue:
@@ -231,6 +264,46 @@ class ExperimentRepository:
                 ),
             )
             return int(cursor.lastrowid)
+
+    def get_planned_run(self, run_id: int) -> PlannedRun:
+        """Return the normalized database plan used for preflight validation."""
+
+        row = self.connection.execute(
+            """
+            SELECT
+                r.run_id, r.status,
+                ac.algorithm, ac.parameters_json AS algorithm_parameters_json,
+                ac.budget_evaluations, ac.budget_iterations, ac.population_size,
+                pi.problem_family, pi.name AS problem_name, pi.dimension,
+                pi.optimum, pi.direction,
+                pi.parameters_json AS problem_parameters_json, pi.data_sha256
+            FROM runs AS r
+            JOIN algorithm_configurations AS ac
+              ON ac.configuration_id = r.configuration_id
+             AND ac.campaign_id = r.campaign_id
+            JOIN problem_instances AS pi ON pi.instance_id = r.instance_id
+            WHERE r.run_id = ?
+            """,
+            (run_id,),
+        ).fetchone()
+        if row is None:
+            raise RepositoryError(f"Unknown run: {run_id}")
+        return PlannedRun(
+            run_id=int(row["run_id"]),
+            status=str(row["status"]),
+            algorithm=str(row["algorithm"]),
+            algorithm_parameters=json.loads(row["algorithm_parameters_json"]),
+            budget_evaluations=row["budget_evaluations"],
+            budget_iterations=row["budget_iterations"],
+            population_size=row["population_size"],
+            problem_family=str(row["problem_family"]),
+            problem_name=str(row["problem_name"]),
+            dimension=row["dimension"],
+            optimum=row["optimum"],
+            direction=str(row["direction"]),
+            problem_parameters=json.loads(row["problem_parameters_json"]),
+            data_sha256=row["data_sha256"],
+        )
 
     def start_campaign(self, campaign_id: str, started_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "draft")

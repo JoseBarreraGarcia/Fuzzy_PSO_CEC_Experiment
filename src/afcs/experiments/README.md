@@ -9,11 +9,17 @@ control difuso ni acceso SQL dentro de los algoritmos.
 ya configurado:
 
 1. cambia la réplica de `planned` a `running`;
-2. ejecuta `optimizer.run()`;
-3. valida objetivo, NFE y solución final;
-4. persiste el resultado y marca la réplica como `completed`;
-5. ante una excepción, guarda tipo y mensaje, marca `failed` y vuelve a lanzar
+2. antes del cambio de estado, compara el ejecutable con el plan persistido;
+3. ejecuta `optimizer.run()`;
+4. valida objetivo, NFE y solución final;
+5. persiste el resultado y marca la réplica como `completed`;
+6. ante una excepción, guarda tipo y mensaje, marca `failed` y vuelve a lanzar
    la excepción para que no pase inadvertida.
+
+La validación previa exige coincidencia de algoritmo, familia e identidad del
+problema, dimensión, dirección, óptimo conocido, parámetros, hash de datos,
+población y presupuestos declarados. Una discrepancia produce `RunBindingError`
+y deja la réplica en `planned`, pues todavía no comenzó una ejecución válida.
 
 El contrato `RunnableOptimizer` es neutral respecto de la metaheurística. El
 PSO v2 ya lo satisface estructuralmente; GA y otras MH podrán hacerlo sin que el
@@ -25,9 +31,8 @@ runner conozca sus operadores internos.
 - No crea, deriva ni asigna semillas. Recibe un optimizador cuyo RNG ya fue
   proporcionado por el nivel de planificación.
 - No reconstruye trazas ni métricas que no fueron observadas durante la corrida.
-- Todavía no valida automáticamente que problema, algoritmo y presupuesto del
-  objeto coincidan con los registros planificados; esa vinculación pertenecerá
-  al futuro constructor validado de planes de ejecución.
+- La versión del optimizador está presente en sus metadatos, pero el esquema
+  SQLite v1 todavía no tiene una columna dedicada para validarla y persistirla.
 - Todavía no ejecuta campañas completas ni aplica reanudación o paralelismo.
 
 `runtime_total_seconds` mide provisionalmente el intervalo monotónico ocupado

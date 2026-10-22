@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 import math
+from types import MappingProxyType
 
 from afcs.controllers import ParameterUpdate
 from afcs.optimizers import SearchState
@@ -30,6 +31,10 @@ class FixedInertia:
         if not math.isfinite(value):
             raise ValueError("inertia value must be finite")
         object.__setattr__(self, "value", value)
+
+    @property
+    def configuration(self) -> Mapping[str, float]:
+        return MappingProxyType({"value": self.value})
 
     def propose(
         self,
@@ -79,6 +84,16 @@ class LegacyLinearInertia:
             raise ValueError("iteration must be between zero and max_iterations")
         return self.maximum - iteration * (
             (self.maximum - self.minimum) / self.max_iterations
+        )
+
+    @property
+    def configuration(self) -> Mapping[str, float | int]:
+        return MappingProxyType(
+            {
+                "max_iterations": self.max_iterations,
+                "maximum": self.maximum,
+                "minimum": self.minimum,
+            }
         )
 
     def propose(

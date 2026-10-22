@@ -7,7 +7,7 @@ import unittest
 import numpy as np
 
 from afcs.core import SearchSpace
-from afcs.experiments import ExperimentRunExecutor
+from afcs.experiments import ExperimentRunExecutor, RunBindingError
 from afcs.metrics import load_metric_registry
 from afcs.optimizers.pso import FixedInertia, LegacyCompatiblePSO, LegacyPSORunConfig
 from afcs.persistence import ExperimentRepository, initialize_v2_database
@@ -24,6 +24,7 @@ class Clock:
 
 @dataclass
 class FailingOptimizer:
+    run_metadata: object
     message: str = "synthetic failure"
 
     def run(self):
@@ -46,6 +47,23 @@ class TestExperimentRunExecutor(unittest.TestCase):
             "test-commit",
             "minimal",
         )
+        self.problem = CallableProblem(
+            ProblemMetadata(
+                problem_id="sphere",
+                family="test",
+                search_space=SearchSpace.uniform(2, -5.0, 5.0),
+                known_optimum=0.0,
+            ),
+            lambda candidate: sum(value * value for value in candidate),
+        )
+        self.config = LegacyPSORunConfig(population_size=4, max_iterations=2)
+        self.policy = FixedInertia(0.6)
+        metadata = LegacyCompatiblePSO(
+            problem=self.problem,
+            config=self.config,
+            inertia_policy=self.policy,
+            rng=np.random.default_rng(0),
+        ).run_metadata
         instance_id = self.repository.add_problem_instance(
             "test", "sphere", 2, 0.0
         )
@@ -53,7 +71,7 @@ class TestExperimentRunExecutor(unittest.TestCase):
             "pso-fixed",
             "campaign",
             "PSO",
-            {"inertia_policy": "fixed_inertia", "w": 0.6},
+            dict(metadata.parameters),
             "hybrid",
             budget_evaluations=12,
             budget_iterations=2,
@@ -69,19 +87,10 @@ class TestExperimentRunExecutor(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_real_pso_result_is_persisted_without_seed_assignment(self):
-        problem = CallableProblem(
-            ProblemMetadata(
-                problem_id="sphere",
-                family="test",
-                search_space=SearchSpace.uniform(2, -5.0, 5.0),
-                known_optimum=0.0,
-            ),
-            lambda candidate: sum(value * value for value in candidate),
-        )
         optimizer = LegacyCompatiblePSO(
-            problem=problem,
-            config=LegacyPSORunConfig(population_size=4, max_iterations=2),
-            inertia_policy=FixedInertia(0.6),
+            problem=self.problem,
+            config=self.config,
+            inertia_policy=self.policy,
             rng=np.random.default_rng(123),
         )
 
@@ -100,9 +109,10 @@ class TestExperimentRunExecutor(unittest.TestCase):
         self.assertEqual(row["objective_best"], result.best_objective)
 
     def test_optimizer_failure_is_persisted_and_reraised(self):
+        metadata = self._matching_optimizer().run_metadata
         executor = ExperimentRunExecutor(self.repository, clock=Clock(1.0))
         with self.assertRaisesRegex(FloatingPointError, "synthetic failure"):
-            executor.execute(self.run_id, FailingOptimizer())
+            executor.execute(self.run_id, FailingOptimizer(metadata))
 
         row = self.connection.execute(
             "SELECT status, error_type, error_message FROM runs WHERE run_id = ?",
@@ -121,6 +131,8 @@ class TestExperimentRunExecutor(unittest.TestCase):
             evaluations: int = 12
 
         class InvalidOptimizer:
+            run_metadata = self._matching_optimizer().run_metadata
+
             def run(self):
                 return InvalidResult()
 
@@ -132,6 +144,29 @@ class TestExperimentRunExecutor(unittest.TestCase):
             "SELECT status FROM runs WHERE run_id = ?", (self.run_id,)
         ).fetchone()[0]
         self.assertEqual(status, "failed")
+
+    def test_plan_mismatch_is_rejected_before_run_starts(self):
+        mismatched = LegacyCompatiblePSO(
+            problem=self.problem,
+            config=LegacyPSORunConfig(population_size=5, max_iterations=2),
+            inertia_policy=self.policy,
+            rng=np.random.default_rng(9),
+        )
+        with self.assertRaisesRegex(RunBindingError, "population size"):
+            ExperimentRunExecutor(self.repository).execute(self.run_id, mismatched)
+
+        status = self.connection.execute(
+            "SELECT status FROM runs WHERE run_id = ?", (self.run_id,)
+        ).fetchone()[0]
+        self.assertEqual(status, "planned")
+
+    def _matching_optimizer(self):
+        return LegacyCompatiblePSO(
+            problem=self.problem,
+            config=self.config,
+            inertia_policy=self.policy,
+            rng=np.random.default_rng(5),
+        )
 
 
 if __name__ == "__main__":

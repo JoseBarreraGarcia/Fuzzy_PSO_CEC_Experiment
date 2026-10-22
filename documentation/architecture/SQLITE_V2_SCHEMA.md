@@ -24,6 +24,12 @@ como puentes de importación durante la transición.
 optimizador que implemente `RunnableOptimizer`. Actualmente persiste resultados
 finales y fallos estructurados; no inventa trazas ni asigna semillas.
 
+Antes de iniciar, el ejecutor compara el plan normalizado de SQLite con
+`OptimizerRunMetadata`: algoritmo, problema, dimensión, dirección, óptimo,
+parámetros, hash de datos, población y presupuestos. Una discrepancia detiene la
+ejecución y conserva la réplica como `planned`. La versión del optimizador aún
+no puede contrastarse porque el esquema inicial no tiene una columna específica.
+
 ## Modelo
 
 ```text

@@ -7,7 +7,11 @@ import math
 from time import perf_counter
 
 from afcs.experiments.contracts import RunnableOptimizer
-from afcs.persistence import ExperimentRepository
+from afcs.persistence import ExperimentRepository, PlannedRun, canonical_json
+
+
+class RunBindingError(ValueError):
+    """Raised when an executable object differs from its persisted plan."""
 
 
 class ExperimentRunExecutor:
@@ -38,6 +42,9 @@ class ExperimentRunExecutor:
         if not isinstance(optimizer, RunnableOptimizer):
             raise TypeError("optimizer must implement RunnableOptimizer")
 
+        self._validate_binding(
+            self._repository.get_planned_run(run_id), optimizer
+        )
         self._repository.start_run(run_id)
         try:
             started = self._read_clock()
@@ -67,6 +74,57 @@ class ExperimentRunExecutor:
 
     def _read_clock(self) -> float:
         return _finite_float(self._clock(), "clock value")
+
+    @staticmethod
+    def _validate_binding(plan: PlannedRun, optimizer: RunnableOptimizer) -> None:
+        actual = optimizer.run_metadata
+        problem = actual.problem
+        actual_problem_parameters = dict(problem.parameters)
+        actual_data_sha256 = actual_problem_parameters.pop("data_sha256", None)
+        mismatches: list[str] = []
+
+        exact_checks = (
+            ("algorithm", plan.algorithm, actual.optimizer.optimizer_id),
+            ("problem family", plan.problem_family, problem.family),
+            ("problem name", plan.problem_name, problem.problem_id),
+            ("dimension", plan.dimension, problem.dimension),
+            ("direction", plan.direction, problem.direction.value),
+            ("known optimum", plan.optimum, problem.known_optimum),
+            (
+                "algorithm parameters",
+                canonical_json(dict(plan.algorithm_parameters)),
+                canonical_json(dict(actual.parameters)),
+            ),
+            (
+                "problem parameters",
+                canonical_json(dict(plan.problem_parameters)),
+                canonical_json(actual_problem_parameters),
+            ),
+            ("problem data hash", plan.data_sha256, actual_data_sha256),
+            ("population size", plan.population_size, actual.population_size),
+        )
+        budget_checks = (
+            (
+                "evaluation budget",
+                plan.budget_evaluations,
+                actual.evaluation_budget,
+            ),
+            ("iteration budget", plan.budget_iterations, actual.iteration_budget),
+        )
+        for label, planned, observed in exact_checks:
+            if planned != observed:
+                mismatches.append(
+                    f"{label}: planned={planned!r}, executable={observed!r}"
+                )
+        for label, planned, observed in budget_checks:
+            if planned is not None and planned != observed:
+                mismatches.append(
+                    f"{label}: planned={planned!r}, executable={observed!r}"
+                )
+        if mismatches:
+            raise RunBindingError(
+                "Run does not match its persisted plan: " + "; ".join(mismatches)
+            )
 
 
 def _finite_float(value: float, label: str) -> float:

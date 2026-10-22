@@ -7,6 +7,8 @@ import math
 from types import MappingProxyType
 from typing import Any, Mapping
 
+from afcs.problems import ProblemMetadata
+
 
 @dataclass(frozen=True, slots=True)
 class OptimizerMetadata:
@@ -75,4 +77,36 @@ class SearchState:
     @property
     def progress(self) -> float:
         return self.evaluations / self.evaluation_budget
+
+
+@dataclass(frozen=True, slots=True)
+class OptimizerRunMetadata:
+    """Canonical description of one configured optimizer execution."""
+
+    optimizer: OptimizerMetadata
+    problem: ProblemMetadata
+    parameters: Mapping[str, Any]
+    evaluation_budget: int
+    iteration_budget: int | None
+    population_size: int | None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.optimizer, OptimizerMetadata):
+            raise TypeError("optimizer must be OptimizerMetadata")
+        if not isinstance(self.problem, ProblemMetadata):
+            raise TypeError("problem must be ProblemMetadata")
+        if not isinstance(self.parameters, Mapping):
+            raise TypeError("parameters must be a mapping")
+        for name, value, optional in (
+            ("evaluation_budget", self.evaluation_budget, False),
+            ("iteration_budget", self.iteration_budget, True),
+            ("population_size", self.population_size, True),
+        ):
+            if value is None and optional:
+                continue
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"{name} must be an integer")
+            if value <= 0:
+                raise ValueError(f"{name} must be positive")
+        object.__setattr__(self, "parameters", MappingProxyType(dict(self.parameters)))
 

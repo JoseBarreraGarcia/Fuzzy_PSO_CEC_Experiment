@@ -14,6 +14,7 @@ from .database import (
 )
 from .repository import (
     ExperimentRepository,
+    PlannedRun,
     RepositoryError,
     StoredValue,
     canonical_json,
@@ -27,6 +28,7 @@ __all__ = [
     "ExperimentRepository",
     "Migration",
     "MigrationError",
+    "PlannedRun",
     "RepositoryError",
     "StoredValue",
     "apply_migrations",

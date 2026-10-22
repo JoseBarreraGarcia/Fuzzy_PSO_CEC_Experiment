@@ -303,8 +303,10 @@ Avance ejecutado:
   de semillas: el optimizador no crea ni deriva semillas de campañas/réplicas.
 - [x] Se conectó un ejecutor mínimo de réplicas con SQLite v2: persiste resultado
   final o fallo estructurado y no reconstruye métricas ni asigna semillas.
-- [ ] Falta el constructor que valide la correspondencia entre plan, problema,
-  configuración de optimizador y presupuesto antes de ejecutar una campaña.
+- [x] Se valida antes de ejecutar la correspondencia entre plan, problema,
+  configuración del optimizador, política, población y presupuesto.
+- [ ] Falta persistir la versión del optimizador y construir planes/campañas
+  completos desde configuración validada.
 
 ### Ola 3 — separación de publicaciones
 
