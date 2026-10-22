@@ -12,7 +12,7 @@ import sqlite3
 from typing import Any
 
 from BD.persistence_v2 import configure_campaign_metrics, sync_metric_definitions
-from Util.metrics_registry import MetricRegistry
+from afcs.metrics import MetricRegistry
 
 
 class RepositoryError(RuntimeError):

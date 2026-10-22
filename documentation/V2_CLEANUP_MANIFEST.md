@@ -285,6 +285,8 @@ Avance ejecutado:
   dirección, espacio de búsqueda, evaluaciones, presupuesto NFE y problemas.
 - [x] Se migró CEC2017 al paquete `afcs`, conservando `data.pkl` sin cambios,
   exclusión de F2, dimensiones aprobadas y pruebas de equivalencia del adaptador.
+- [x] Se migraron el registro y el catálogo de métricas a `afcs.metrics`, con
+  datos incluidos en el paquete y un puente temporal para imports heredados.
 
 ### Ola 3 — separación de publicaciones
 

@@ -13,7 +13,7 @@ from pathlib import Path
 import re
 import sqlite3
 
-from Util.metrics_registry import MetricRegistry
+from afcs.metrics import MetricRegistry
 
 
 DEFAULT_MIGRATIONS_DIR = Path(__file__).with_name("migrations")

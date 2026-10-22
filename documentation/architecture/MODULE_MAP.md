@@ -37,7 +37,7 @@ Control System*. Cada carpeta responde a una pregunta concreta:
 | `Discretization/` | `src/afcs/binarization/` | pendiente de clasificar transferencias y reglas |
 | reparación en `Problem/SCP` | `src/afcs/binarization/repair/` o problema | decidir según dependencia del dominio |
 | `Diversity/` | `src/afcs/metrics/diversity/` | primera familia de métricas existente |
-| `Util/metrics_registry.py` | `src/afcs/metrics/registry.py` | preparado; mover al empaquetar |
+| `Util/metrics_registry.py` | `src/afcs/metrics/registry.py` | migrado; puente temporal en origen |
 | `BD/persistence_v2.py` | `src/afcs/persistence/database.py` | preparado; mover al empaquetar |
 | `BD/repository_v2.py` | `src/afcs/persistence/repository.py` | preparado; mover al empaquetar |
 | `BD/migrations/` | `src/afcs/persistence/migrations/` | preparado |

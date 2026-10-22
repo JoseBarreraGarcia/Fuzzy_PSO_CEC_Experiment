@@ -115,9 +115,9 @@ de la métrica del sistema.
 
 La primera versión del contrato está materializada en:
 
-- `config/metrics_registry.json`: catálogo versionado, métricas obligatorias y
+- `src/afcs/metrics/definitions.json`: catálogo versionado, métricas obligatorias y
   perfiles;
-- `Util/metrics_registry.py`: carga, validación y resolución sin efectos
+- `src/afcs/metrics/registry.py`: carga, validación y resolución sin efectos
   laterales;
 - `tests/fixtures/`: réplicas y trazas sintéticas;
 - `tests/test_metrics_registry.py`: pruebas de validez y selección.

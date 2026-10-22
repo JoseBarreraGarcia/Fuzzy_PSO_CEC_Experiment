@@ -1,9 +1,14 @@
 import copy
 import csv
 from pathlib import Path
+import sys
 import unittest
 
-from Util.metrics_registry import (
+SRC = Path(__file__).resolve().parents[1] / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from afcs.metrics import (
     MetricRegistryError,
     load_metric_registry,
     parse_metric_registry,

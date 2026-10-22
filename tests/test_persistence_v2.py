@@ -11,7 +11,7 @@ from BD.persistence_v2 import (
     initialize_v2_database,
     sync_metric_definitions,
 )
-from Util.metrics_registry import load_metric_registry
+from afcs.metrics import load_metric_registry
 
 
 HASH = "0" * 64

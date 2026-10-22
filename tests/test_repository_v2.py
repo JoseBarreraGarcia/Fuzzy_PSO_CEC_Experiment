@@ -4,7 +4,7 @@ import unittest
 
 from BD.persistence_v2 import initialize_v2_database
 from BD.repository_v2 import ExperimentRepository, RepositoryError, encode_metric_value
-from Util.metrics_registry import load_metric_registry
+from afcs.metrics import load_metric_registry
 
 
 class TestExperimentRepository(unittest.TestCase):
