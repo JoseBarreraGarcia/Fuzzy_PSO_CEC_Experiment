@@ -292,7 +292,8 @@ Avance ejecutado:
 - [x] Se documentó el contrato arquitectónico para metaheurísticas con o sin
   control externo y la separación entre políticas de parámetros y variantes
   adaptativas completas.
-- [ ] Falta auditar PSO/PSO-FCS/GA antes de implementar esos contratos.
+- [x] Se completó la auditoría inicial de PSO/PSO-FCS/GA, runner y dispatcher.
+- [ ] Falta aprobar las decisiones abiertas y extraer los contratos/núcleo PSO.
 
 ### Ola 3 — separación de publicaciones
 

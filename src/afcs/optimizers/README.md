@@ -18,3 +18,4 @@ adaptadores.
 Estado: destinos definidos; implementaciones aún en `Metaheuristics/`.
 
 Especificación: `documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md`.
+Auditoría legacy: `documentation/architecture/LEGACY_OPTIMIZER_AUDIT.md`.

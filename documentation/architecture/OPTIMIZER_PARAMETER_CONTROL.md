@@ -156,6 +156,9 @@ cobrarle un coste inexistente y medir el coste añadido por la adaptación.
 
 Cada paso requiere regresiones, documentación y un commit independiente.
 
+La auditoría inicial del paso 1 se encuentra en
+[LEGACY_OPTIMIZER_AUDIT.md](LEGACY_OPTIMIZER_AUDIT.md).
+
 ## 9. Decisiones todavía abiertas
 
 Este documento no aprueba:
