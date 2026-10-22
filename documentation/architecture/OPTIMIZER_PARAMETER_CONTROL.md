@@ -166,9 +166,9 @@ cobrarle un coste inexistente y medir el coste añadido por la adaptación.
 
 1. [Completado] Auditar PSO, PSO-FCS, GA, runner y consumidores actuales.
 2. [Completado] Congelar mediante pruebas el comportamiento relevante de PSO.
-3. Definir Optimizer, SearchState, ParameterPolicy y ParameterUpdate.
-4. Extraer el núcleo PSO sin cambiar fórmulas ni orden de operaciones.
-5. Implementar NoAdaptation, inercia fija y política legacy equivalente.
+3. [Completado] Definir Optimizer, SearchState, ParameterPolicy y ParameterUpdate.
+4. [Completado] Extraer el núcleo PSO sin cambiar fórmulas ni orden de operaciones.
+5. [Completado] Implementar NoAdaptation, inercia fija y política legacy equivalente.
 6. Conectar el runner y persistencia v2.
 7. Migrar PSO-FCS como política difusa.
 8. Incorporar las otras políticas de w tras aprobar sus fórmulas.
@@ -185,7 +185,11 @@ Avance de implementación:
 - contratos SearchState, ParameterPolicy y ParameterUpdate: implementados;
 - NoAdaptation y legacy_ldiw: implementados;
 - transición numérica común PSO: implementada;
-- ciclo completo del optimizador, política fija y runner en memoria: pendientes.
+- política de inercia fija: implementada;
+- ciclo PSO completo en memoria con NFE exacto: implementado;
+- generador NumPy inyectado por el llamador: implementado como desacoplamiento,
+  sin derivar ni asignar semillas;
+- runner de campañas, métricas y persistencia durante la corrida: pendientes.
 
 ## 9. Decisiones todavía abiertas
 

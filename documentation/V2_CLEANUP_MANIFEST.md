@@ -297,6 +297,10 @@ Avance ejecutado:
   legacy_ldiw, sin declararla recomendación para campañas nuevas.
 - [x] Se extrajeron contratos de control opcional, NoAdaptation, legacy_ldiw y
   el núcleo numérico PSO, manteniendo wrappers heredados y regresiones.
+- [x] Se implementaron `fixed_inertia` y un ciclo PSO en memoria con presupuesto
+  NFE exacto, clipping legacy, minimización/maximización y RNG inyectado.
+- [x] La inyección de RNG quedó explícitamente separada del protocolo pendiente
+  de semillas: el optimizador no crea ni deriva semillas de campañas/réplicas.
 
 ### Ola 3 — separación de publicaciones
 

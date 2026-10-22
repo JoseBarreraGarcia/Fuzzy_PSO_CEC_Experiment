@@ -1,0 +1,212 @@
+"""In-memory, legacy-compatible Particle Swarm Optimization cycle."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import math
+
+import numpy as np
+
+from afcs.controllers import ParameterPolicy
+from afcs.core import EvaluationBudget, OptimizationDirection
+from afcs.optimizers import SearchState
+from afcs.problems import OptimizationProblem
+
+from .core import PSOConfig, advance_swarm
+
+
+@dataclass(frozen=True, slots=True)
+class LegacyPSORunConfig:
+    """Execution settings that preserve the approved historical PSO rules."""
+
+    population_size: int
+    max_iterations: int
+    cognitive: float = 2.0
+    social: float = 2.0
+    velocity_factor: float = 0.1
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("population_size", self.population_size),
+            ("max_iterations", self.max_iterations),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"{name} must be an integer")
+            if value <= 0:
+                raise ValueError(f"{name} must be positive")
+        PSOConfig(cognitive=self.cognitive, social=self.social)
+        if isinstance(self.velocity_factor, bool):
+            raise TypeError("velocity_factor must be numeric")
+        try:
+            velocity_factor = float(self.velocity_factor)
+        except (TypeError, ValueError) as error:
+            raise TypeError("velocity_factor must be numeric") from error
+        if not math.isfinite(velocity_factor) or velocity_factor < 0:
+            raise ValueError("velocity_factor must be finite and non-negative")
+        object.__setattr__(self, "velocity_factor", velocity_factor)
+
+    @property
+    def evaluation_budget(self) -> int:
+        """Initial population plus one population per PSO iteration."""
+
+        return self.population_size * (self.max_iterations + 1)
+
+
+@dataclass(frozen=True, slots=True)
+class PSORunResult:
+    """Final immutable snapshot returned by an in-memory PSO execution."""
+
+    best_position: np.ndarray
+    best_objective: float
+    positions: np.ndarray
+    objective_values: np.ndarray
+    iterations: int
+    evaluations: int
+    inertia_history: tuple[float, ...]
+
+
+class LegacyCompatiblePSO:
+    """Run PSO without persistence, controllers, or seed derivation.
+
+    The caller owns and injects the NumPy generator. This is dependency
+    injection only: it intentionally does not define the campaign seed
+    protocol or derive per-replica random streams.
+    """
+
+    def __init__(
+        self,
+        *,
+        problem: OptimizationProblem,
+        config: LegacyPSORunConfig,
+        inertia_policy: ParameterPolicy,
+        rng: np.random.Generator,
+    ) -> None:
+        if not isinstance(problem, OptimizationProblem):
+            raise TypeError("problem must implement OptimizationProblem")
+        if not isinstance(config, LegacyPSORunConfig):
+            raise TypeError("config must be LegacyPSORunConfig")
+        if not isinstance(inertia_policy, ParameterPolicy):
+            raise TypeError("inertia_policy must implement ParameterPolicy")
+        if "w" not in inertia_policy.compatible_parameters:
+            raise ValueError("inertia_policy must declare compatibility with 'w'")
+        if not isinstance(rng, np.random.Generator):
+            raise TypeError("rng must be numpy.random.Generator")
+        self._problem = problem
+        self._config = config
+        self._inertia_policy = inertia_policy
+        self._rng = rng
+
+    def run(self) -> PSORunResult:
+        space = self._problem.metadata.search_space
+        lower = np.asarray(space.lower_bounds, dtype=float)
+        upper = np.asarray(space.upper_bounds, dtype=float)
+        maximum_velocity = self._config.velocity_factor * upper[0]
+        if maximum_velocity < 0:
+            raise ValueError(
+                "legacy Vmax requires the first upper bound to be non-negative"
+            )
+
+        budget = EvaluationBudget(self._config.evaluation_budget)
+        shape = (self._config.population_size, space.dimension)
+        positions = self._rng.uniform(lower, upper, size=shape)
+        velocities = np.zeros(shape, dtype=float)
+        objective_values = self._evaluate_population(positions, budget)
+        personal_best = positions.copy()
+        personal_best_values = objective_values.copy()
+        best_index = self._best_index(personal_best_values)
+        global_best = personal_best[best_index].copy()
+        global_best_value = float(personal_best_values[best_index])
+
+        inertia_history: list[float] = []
+        current_parameters: dict[str, float] = {}
+        movement_config = PSOConfig(
+            cognitive=self._config.cognitive,
+            social=self._config.social,
+        )
+
+        for iteration in range(1, self._config.max_iterations + 1):
+            state = SearchState(
+                iteration=iteration,
+                evaluations=budget.consumed,
+                evaluation_budget=budget.maximum,
+                best_objective=global_best_value,
+            )
+            update = self._inertia_policy.propose(state, current_parameters)
+            if update.policy_id != self._inertia_policy.policy_id:
+                raise ValueError("parameter update policy_id does not match its policy")
+            if update.policy_version != self._inertia_policy.policy_version:
+                raise ValueError(
+                    "parameter update policy_version does not match its policy"
+                )
+            if "w" not in update.values:
+                raise ValueError("inertia_policy must propose parameter 'w'")
+            inertia = float(update.values["w"])
+            current_parameters["w"] = inertia
+            inertia_history.append(inertia)
+
+            step = advance_swarm(
+                positions=positions,
+                velocities=velocities,
+                personal_best=personal_best,
+                global_best=global_best,
+                inertia=inertia,
+                cognitive_random=self._rng.random(shape),
+                social_random=self._rng.random(shape),
+                maximum_velocity=maximum_velocity,
+                config=movement_config,
+            )
+            positions = np.clip(step.positions, lower, upper)
+            velocities = step.velocities
+            objective_values = self._evaluate_population(positions, budget)
+
+            improved = self._improvement_mask(
+                objective_values, personal_best_values
+            )
+            personal_best[improved] = positions[improved]
+            personal_best_values[improved] = objective_values[improved]
+            candidate_index = self._best_index(personal_best_values)
+            candidate_value = float(personal_best_values[candidate_index])
+            if self._problem.metadata.direction.is_better(
+                candidate_value, global_best_value
+            ):
+                global_best = personal_best[candidate_index].copy()
+                global_best_value = candidate_value
+
+        if not budget.exhausted:
+            raise RuntimeError("PSO terminated before consuming its declared budget")
+        return PSORunResult(
+            best_position=_readonly_copy(global_best),
+            best_objective=global_best_value,
+            positions=_readonly_copy(positions),
+            objective_values=_readonly_copy(objective_values),
+            iterations=self._config.max_iterations,
+            evaluations=budget.consumed,
+            inertia_history=tuple(inertia_history),
+        )
+
+    def _evaluate_population(
+        self, positions: np.ndarray, budget: EvaluationBudget
+    ) -> np.ndarray:
+        values = np.empty(positions.shape[0], dtype=float)
+        for index, position in enumerate(positions):
+            budget.consume()
+            values[index] = self._problem.evaluate(position).objective
+        return values
+
+    def _best_index(self, values: np.ndarray) -> int:
+        if self._problem.metadata.direction is OptimizationDirection.MINIMIZE:
+            return int(np.argmin(values))
+        return int(np.argmax(values))
+
+    def _improvement_mask(
+        self, candidates: np.ndarray, incumbents: np.ndarray
+    ) -> np.ndarray:
+        if self._problem.metadata.direction is OptimizationDirection.MINIMIZE:
+            return candidates < incumbents
+        return candidates > incumbents
+
+
+def _readonly_copy(values: np.ndarray) -> np.ndarray:
+    snapshot = np.array(values, dtype=float, copy=True)
+    snapshot.setflags(write=False)
+    return snapshot

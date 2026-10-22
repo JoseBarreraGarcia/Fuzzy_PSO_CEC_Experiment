@@ -11,6 +11,44 @@ from afcs.optimizers import SearchState
 
 
 @dataclass(frozen=True, slots=True)
+class FixedInertia:
+    """Return the same inertia value at every PSO transition."""
+
+    value: float
+
+    policy_id = "fixed_inertia"
+    policy_version = "1"
+    compatible_parameters = ("w",)
+
+    def __post_init__(self) -> None:
+        if isinstance(self.value, bool):
+            raise TypeError("inertia value must be numeric")
+        try:
+            value = float(self.value)
+        except (TypeError, ValueError) as error:
+            raise TypeError("inertia value must be numeric") from error
+        if not math.isfinite(value):
+            raise ValueError("inertia value must be finite")
+        object.__setattr__(self, "value", value)
+
+    def propose(
+        self,
+        state: SearchState,
+        current_parameters: Mapping[str, float],
+    ) -> ParameterUpdate:
+        if not isinstance(state, SearchState):
+            raise TypeError("state must be SearchState")
+        if not isinstance(current_parameters, Mapping):
+            raise TypeError("current_parameters must be a mapping")
+        return ParameterUpdate(
+            policy_id=self.policy_id,
+            policy_version=self.policy_version,
+            values={"w": self.value},
+            reason="configured fixed inertia",
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class LegacyLinearInertia:
     """Historical 0.9→0.1 schedule retained only for compatibility."""
 

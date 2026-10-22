@@ -17,8 +17,15 @@ class PSOConfig:
 
     def __post_init__(self) -> None:
         for name, value in (("cognitive", self.cognitive), ("social", self.social)):
-            if not math.isfinite(float(value)) or value < 0:
+            if isinstance(value, bool):
+                raise TypeError(f"{name} must be numeric")
+            try:
+                normalized = float(value)
+            except (TypeError, ValueError) as error:
+                raise TypeError(f"{name} must be numeric") from error
+            if not math.isfinite(normalized) or normalized < 0:
                 raise ValueError(f"{name} must be finite and non-negative")
+            object.__setattr__(self, name, normalized)
 
 
 @dataclass(frozen=True, slots=True)
