@@ -184,3 +184,17 @@ heredado de semillas.
 - corrección y definición metodológica de GA;
 - presupuesto NFE definitivo y relación con maxIter.
 
+## 12. Resolución de transición
+
+Se aprobó una estrategia de compatibilidad primero:
+
+1. conservar c1 = c2 = 2, LDIW 0.9 → 0.1, Vmax y clipping actuales dentro de
+   una configuración identificada como legacy_ldiw;
+2. demostrar equivalencia antes de proponer mejoras;
+3. no presentar legacy_ldiw como baseline recomendado automáticamente;
+4. crear políticas nuevas para cualquier cambio metodológico;
+5. mantener GA fuera de esta extracción.
+
+Permanecen abiertas las decisiones sobre configuraciones recomendadas para
+nuevas campañas.
+

@@ -1,7 +1,27 @@
 # Metaheurísticas y control opcional de parámetros
 
-**Estado:** decisión arquitectónica aprobada; implementación pendiente.  
+**Estado:** decisión arquitectónica aprobada; implementación incremental.  
 **Fecha:** 22 de octubre de 2026.
+
+## Decisión de transición aprobada
+
+El 22 de octubre de 2026 se autorizó extraer el PSO conservando inicialmente
+su matemática histórica bajo la identidad explícita **legacy_ldiw**:
+
+- wMax = 0.9 y wMin = 0.1;
+- c1 = c2 = 2;
+- calendario lineal histórico por iteración;
+- Vmax = 0.1 × límite superior escalar;
+- clipping de posición realizado posteriormente por el solver;
+- parada histórica por maxIter, registrando el NFE observado.
+
+Esta política existe para regresión y trazabilidad. No es una recomendación
+metodológica para campañas nuevas. Cualquier cambio de coeficientes, velocidad,
+fronteras o presupuesto se introducirá como configuración/política distinta y
+en un cambio separado.
+
+La autorización no incluye corregir GA ni implementar el nuevo protocolo de
+semillas.
 
 ## 1. Propósito
 
@@ -143,8 +163,8 @@ cobrarle un coste inexistente y medir el coste añadido por la adaptación.
 
 ## 8. Secuencia de implementación
 
-1. Auditar PSO, PSO-FCS, GA, runner y consumidores actuales.
-2. Congelar mediante pruebas el comportamiento relevante de PSO.
+1. [Completado] Auditar PSO, PSO-FCS, GA, runner y consumidores actuales.
+2. [Completado] Congelar mediante pruebas el comportamiento relevante de PSO.
 3. Definir Optimizer, SearchState, ParameterPolicy y ParameterUpdate.
 4. Extraer el núcleo PSO sin cambiar fórmulas ni orden de operaciones.
 5. Implementar NoAdaptation, inercia fija y política legacy equivalente.

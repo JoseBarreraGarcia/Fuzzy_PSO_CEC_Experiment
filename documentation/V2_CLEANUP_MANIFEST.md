@@ -293,7 +293,9 @@ Avance ejecutado:
   control externo y la separación entre políticas de parámetros y variantes
   adaptativas completas.
 - [x] Se completó la auditoría inicial de PSO/PSO-FCS/GA, runner y dispatcher.
-- [ ] Falta aprobar las decisiones abiertas y extraer los contratos/núcleo PSO.
+- [x] Se aprobó la extracción de PSO mediante la configuración de compatibilidad
+  legacy_ldiw, sin declararla recomendación para campañas nuevas.
+- [ ] Falta extraer los contratos y el núcleo PSO con equivalencia probada.
 
 ### Ola 3 — separación de publicaciones
 
