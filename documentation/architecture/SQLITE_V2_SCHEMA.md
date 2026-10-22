@@ -11,11 +11,14 @@ automáticamente bases históricas.
 
 Archivos:
 
-- `BD/migrations/001_initial_schema.sql`;
-- `BD/persistence_v2.py`;
-- `BD/repository_v2.py`;
+- `src/afcs/persistence/migrations/001_initial_schema.sql`;
+- `src/afcs/persistence/database.py`;
+- `src/afcs/persistence/repository.py`;
 - `tests/test_persistence_v2.py`.
 - `tests/test_repository_v2.py`.
+
+Las rutas `BD/persistence_v2.py` y `BD/repository_v2.py` permanecen sólo
+como puentes de importación durante la transición.
 
 ## Modelo
 

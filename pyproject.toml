@@ -21,4 +21,5 @@ where = ["src"]
 [tool.setuptools.package-data]
 "afcs.problems.benchmarks.cec2017" = ["data.pkl", "LICENSE.txt"]
 "afcs.metrics" = ["definitions.json"]
+"afcs.persistence" = ["migrations/*.sql"]
 

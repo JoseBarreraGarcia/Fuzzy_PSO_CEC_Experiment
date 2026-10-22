@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 import unittest
 
-from BD.persistence_v2 import (
+from afcs.persistence import (
     MigrationError,
     apply_migrations,
     configure_campaign_metrics,

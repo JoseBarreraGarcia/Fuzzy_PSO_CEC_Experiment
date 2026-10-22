@@ -287,6 +287,8 @@ Avance ejecutado:
   exclusión de F2, dimensiones aprobadas y pruebas de equivalencia del adaptador.
 - [x] Se migraron el registro y el catálogo de métricas a `afcs.metrics`, con
   datos incluidos en el paquete y un puente temporal para imports heredados.
+- [x] Se migraron la persistencia SQLite v2, el repositorio transaccional y la
+  migración SQL a `afcs.persistence`, conservando puentes heredados.
 
 ### Ola 3 — separación de publicaciones
 

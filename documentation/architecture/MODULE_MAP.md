@@ -38,9 +38,9 @@ Control System*. Cada carpeta responde a una pregunta concreta:
 | reparación en `Problem/SCP` | `src/afcs/binarization/repair/` o problema | decidir según dependencia del dominio |
 | `Diversity/` | `src/afcs/metrics/diversity/` | primera familia de métricas existente |
 | `Util/metrics_registry.py` | `src/afcs/metrics/registry.py` | migrado; puente temporal en origen |
-| `BD/persistence_v2.py` | `src/afcs/persistence/database.py` | preparado; mover al empaquetar |
-| `BD/repository_v2.py` | `src/afcs/persistence/repository.py` | preparado; mover al empaquetar |
-| `BD/migrations/` | `src/afcs/persistence/migrations/` | preparado |
+| `BD/persistence_v2.py` | `src/afcs/persistence/database.py` | migrado; puente temporal en origen |
+| `BD/repository_v2.py` | `src/afcs/persistence/repository.py` | migrado; puente temporal en origen |
+| `BD/migrations/` | `src/afcs/persistence/migrations/` | migrado |
 | `Solver/` | `src/afcs/experiments/` + optimizadores | requiere separar loop, problema y persistencia |
 | `analysis_modules*` | `src/afcs/analysis/` | rescate guiado por `V2_ANALYSIS_RESCUE_MAP.md` |
 | scripts numerados raíz | CLI + `scripts/` | no retirar hasta tener reemplazo probado |
