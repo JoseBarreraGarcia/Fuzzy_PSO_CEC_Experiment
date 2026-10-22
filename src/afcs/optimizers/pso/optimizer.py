@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import math
 
 import numpy as np
 
 from afcs.controllers import ParameterPolicy
-from afcs.core import EvaluationBudget, OptimizationDirection
+from afcs.core import EvaluationBudget, OptimizationDirection, ReplicaRandomStreams
 from afcs.optimizers import OptimizerMetadata, OptimizerRunMetadata, SearchState
 from afcs.problems import OptimizationProblem
 
@@ -65,6 +66,8 @@ class PSORunResult:
     iterations: int
     evaluations: int
     inertia_history: tuple[float, ...]
+    initial_population_sha256: str
+    initial_velocity_sha256: str
 
 
 class LegacyCompatiblePSO:
@@ -81,7 +84,8 @@ class LegacyCompatiblePSO:
         problem: OptimizationProblem,
         config: LegacyPSORunConfig,
         inertia_policy: ParameterPolicy,
-        rng: np.random.Generator,
+        rng: np.random.Generator | None = None,
+        random_streams: ReplicaRandomStreams | None = None,
     ) -> None:
         if not isinstance(problem, OptimizationProblem):
             raise TypeError("problem must implement OptimizationProblem")
@@ -91,12 +95,27 @@ class LegacyCompatiblePSO:
             raise TypeError("inertia_policy must implement ParameterPolicy")
         if "w" not in inertia_policy.compatible_parameters:
             raise ValueError("inertia_policy must declare compatibility with 'w'")
-        if not isinstance(rng, np.random.Generator):
+        if (rng is None) == (random_streams is None):
+            raise ValueError("provide exactly one of rng or random_streams")
+        if rng is not None and not isinstance(rng, np.random.Generator):
             raise TypeError("rng must be numpy.random.Generator")
+        if random_streams is not None and not isinstance(
+            random_streams, ReplicaRandomStreams
+        ):
+            raise TypeError("random_streams must be ReplicaRandomStreams")
         self._problem = problem
         self._config = config
         self._inertia_policy = inertia_policy
-        self._rng = rng
+        if random_streams is None:
+            self._initialization_rng = rng
+            self._dynamics_rng = rng
+            self._replica_seed = None
+            self._rng_engine = None
+        else:
+            self._initialization_rng = random_streams.generator("initialization")
+            self._dynamics_rng = random_streams.generator("dynamics")
+            self._replica_seed = random_streams.replica_seed
+            self._rng_engine = random_streams.engine
 
     @property
     def run_metadata(self) -> OptimizerRunMetadata:
@@ -126,6 +145,8 @@ class LegacyCompatiblePSO:
             evaluation_budget=self._config.evaluation_budget,
             iteration_budget=self._config.max_iterations,
             population_size=self._config.population_size,
+            replica_seed=self._replica_seed,
+            rng_engine=self._rng_engine,
         )
 
     def run(self) -> PSORunResult:
@@ -140,8 +161,10 @@ class LegacyCompatiblePSO:
 
         budget = EvaluationBudget(self._config.evaluation_budget)
         shape = (self._config.population_size, space.dimension)
-        positions = self._rng.uniform(lower, upper, size=shape)
+        positions = self._initialization_rng.uniform(lower, upper, size=shape)
         velocities = np.zeros(shape, dtype=float)
+        initial_population_sha256 = _array_sha256(positions)
+        initial_velocity_sha256 = _array_sha256(velocities)
         objective_values = self._evaluate_population(positions, budget)
         personal_best = positions.copy()
         personal_best_values = objective_values.copy()
@@ -182,8 +205,8 @@ class LegacyCompatiblePSO:
                 personal_best=personal_best,
                 global_best=global_best,
                 inertia=inertia,
-                cognitive_random=self._rng.random(shape),
-                social_random=self._rng.random(shape),
+                cognitive_random=self._dynamics_rng.random(shape),
+                social_random=self._dynamics_rng.random(shape),
                 maximum_velocity=maximum_velocity,
                 config=movement_config,
             )
@@ -214,6 +237,8 @@ class LegacyCompatiblePSO:
             iterations=self._config.max_iterations,
             evaluations=budget.consumed,
             inertia_history=tuple(inertia_history),
+            initial_population_sha256=initial_population_sha256,
+            initial_velocity_sha256=initial_velocity_sha256,
         )
 
     def _evaluate_population(
@@ -242,3 +267,13 @@ def _readonly_copy(values: np.ndarray) -> np.ndarray:
     snapshot = np.array(values, dtype=float, copy=True)
     snapshot.setflags(write=False)
     return snapshot
+
+
+def _array_sha256(values: np.ndarray) -> str:
+    canonical = np.ascontiguousarray(values, dtype="<f8")
+    payload = (
+        str(canonical.shape).encode("ascii")
+        + canonical.dtype.str.encode("ascii")
+        + canonical.tobytes()
+    )
+    return hashlib.sha256(payload).hexdigest()

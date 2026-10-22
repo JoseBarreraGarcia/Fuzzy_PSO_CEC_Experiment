@@ -187,12 +187,11 @@ Avance de implementación:
 - transición numérica común PSO: implementada;
 - política de inercia fija: implementada;
 - ciclo PSO completo en memoria con NFE exacto: implementado;
-- generador NumPy inyectado por el llamador: implementado como desacoplamiento,
-  sin derivar ni asignar semillas;
+- protocolo pareado, semilla persistida y subflujos NumPy de PSO: implementados;
 - runner de campañas, métricas y persistencia durante la corrida: pendientes.
 - ejecutor mínimo de una réplica y persistencia del resultado/fallo: implementado;
 - validación automática plan ↔ problema ↔ optimizador: implementada para los
-  campos disponibles en el esquema v1;
+  campos disponibles en el esquema v2, incluida semilla y motor RNG;
 - persistencia y validación de la versión del optimizador: pendiente de una
   migración futura del esquema.
 
@@ -204,7 +203,6 @@ Este documento no aprueba:
 - métricas definitivas de estado para cada controlador;
 - límites o políticas de clipping de parámetros;
 - política de fronteras o velocidad de PSO;
-- protocolo de semillas y subflujos;
 - presupuesto de las campañas;
 - qué MH legacy se considerarán soportadas.
 

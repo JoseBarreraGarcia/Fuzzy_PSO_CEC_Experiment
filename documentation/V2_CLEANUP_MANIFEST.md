@@ -299,10 +299,12 @@ Avance ejecutado:
   el núcleo numérico PSO, manteniendo wrappers heredados y regresiones.
 - [x] Se implementaron `fixed_inertia` y un ciclo PSO en memoria con presupuesto
   NFE exacto, clipping legacy, minimización/maximización y RNG inyectado.
-- [x] La inyección de RNG quedó explícitamente separada del protocolo pendiente
-  de semillas: el optimizador no crea ni deriva semillas de campañas/réplicas.
+- [x] Se implementó el protocolo `paired_by_replica_v1`: 31 réplicas iniciales
+  usan 42–72 y comparten semilla entre tratamientos por índice de réplica.
+- [x] PSO usa subflujos `SeedSequence` separados para inicialización y dinámica,
+  y persiste hashes SHA-256 de sus condiciones iniciales.
 - [x] Se conectó un ejecutor mínimo de réplicas con SQLite v2: persiste resultado
-  final o fallo estructurado y no reconstruye métricas ni asigna semillas.
+  final o fallo estructurado y no reconstruye métricas.
 - [x] Se valida antes de ejecutar la correspondencia entre plan, problema,
   configuración del optimizador, política, población y presupuesto.
 - [ ] Falta persistir la versión del optimizador y construir planes/campañas
@@ -326,7 +328,8 @@ Avance ejecutado:
 1. Introducir `pyproject.toml` y el paquete `src/`.
 2. Migrar problemas, optimizadores, controladores, runner y persistencia en
    cambios pequeños.
-3. Implementar después, en commit independiente, la propuesta de semillas.
+3. [Completado en v2 modular] Implementar la propuesta de semillas; queda
+   pendiente migrar los solvers heredados y ejecutar el piloto paralelo.
 
 ## 11. Criterios de aceptación de la limpieza
 

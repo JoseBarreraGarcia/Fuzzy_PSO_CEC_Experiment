@@ -102,6 +102,9 @@ también el nuevo máximo histórico de diversidad.
 - La semilla heredada depende del ID de experimento. Su sustitución permanece
   fuera de este bloque, según la propuesta de semillas.
 
+Actualización: el flujo modular v2 ya implementa `paired_by_replica_v1`; este
+hallazgo continúa vigente únicamente para el runner y los solvers heredados.
+
 ## 6. Hallazgos de instrumentación
 
 - solverBEN registra correctamente el NFE de la población inicial y de las

@@ -1,9 +1,18 @@
 # Propuesta de implementación del sistema de semillas reproducibles
 
-**Estado:** propuesta; no implementada.  
-**Fecha:** 19 de octubre de 2026.  
+**Estado:** contrato aprobado e implementado en la arquitectura v2.
+
+**Fecha:** 19 de octubre de 2026.
+
+**Implementación v2:** 22 de octubre de 2026.
 **Alcance:** generación, persistencia y aplicación de semillas para campañas
 experimentales. Esta propuesta no modifica las funciones CEC 2017.
+
+La implementación vigente utiliza `runs.random_seed` como semilla maestra de
+la réplica, conserva `replica_index` y registra en la campaña `base_seed`,
+`seed_protocol` y `rng_engine`. Los nombres físicos difieren de la propuesta
+inicial, pero mantienen su semántica. El runner y los optimizadores legacy aún
+no se han migrado; la garantía aplica al flujo modular `src/afcs/`.
 
 ## 1. Problema actual
 
@@ -288,16 +297,17 @@ La implementación se considerará terminada cuando:
 - las pruebas unitarias y de integración pasen;
 - la política quede registrada en resultados y documentación.
 
-## 11. Decisiones pendientes antes de implementar
+## 11. Decisiones resueltas para v2
 
-1. Confirmar si el contrato 42-72 se aplicará solo a BEN/CEC2017 o también a
-   SCP y USCP.
-2. Confirmar si el emparejamiento exige únicamente población inicial idéntica o
-   también el mismo flujo dinámico común entre PSO y PSO_FCS.
-3. Decidir si la primera entrega usará los RNG globales como transición o si se
-   realizará directamente la migración completa a `Generator`.
-4. Definir si los hashes de condiciones iniciales se almacenarán en SQLite, en
-   los CSV o en ambos.
+1. El contrato es general para campañas v2, no exclusivo de CEC2017.
+2. Se usan subflujos comunes separados para inicialización y dinámica; el
+   controlador dispone de un tercer subflujo independiente.
+3. La implementación v2 usa directamente `numpy.random.Generator` construido
+   mediante `SeedSequence`; no recurre al estado global.
+4. Los hashes SHA-256 de población y velocidades iniciales se almacenan en
+   SQLite para cada réplica completada.
+5. Con 31 réplicas y `base_seed=42` se persisten exactamente las semillas
+   42–72, compartidas por todas las configuraciones del mismo índice.
 
-La recomendación es implementar primero la Fase A, validarla con un piloto y
-abordar después la Fase B en un cambio separado y auditable.
+Continúan pendientes la migración de los solvers heredados, las pruebas reales
+de paralelismo y el piloto científico antes de una campaña exhaustiva.

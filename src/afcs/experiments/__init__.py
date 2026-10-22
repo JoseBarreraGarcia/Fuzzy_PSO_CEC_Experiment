@@ -7,6 +7,12 @@ from .planning import (
     PersistedCampaignPlan,
     TreatmentDefinition,
 )
+from afcs.core import (
+    NUMPY_RNG_ENGINE,
+    PAIRED_SEED_PROTOCOL,
+    RandomnessConfig,
+    ReplicaRandomStreams,
+)
 from .runner import ExperimentRunExecutor, RunBindingError
 
 __all__ = [
@@ -15,6 +21,10 @@ __all__ = [
     "ExperimentRunExecutor",
     "OptimizationRunResult",
     "PersistedCampaignPlan",
+    "NUMPY_RNG_ENGINE",
+    "PAIRED_SEED_PROTOCOL",
+    "RandomnessConfig",
+    "ReplicaRandomStreams",
     "RunBindingError",
     "RunnableOptimizer",
     "TreatmentDefinition",

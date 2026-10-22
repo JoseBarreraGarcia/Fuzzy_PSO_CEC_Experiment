@@ -62,6 +62,12 @@ class ExperimentRunExecutor:
                 solution=solution,
                 evaluations=evaluations,
                 runtime_total_seconds=runtime,
+                initial_population_sha256=getattr(
+                    result, "initial_population_sha256", None
+                ),
+                initial_velocity_sha256=getattr(
+                    result, "initial_velocity_sha256", None
+                ),
             )
             return result
         except Exception as error:
@@ -102,6 +108,8 @@ class ExperimentRunExecutor:
             ),
             ("problem data hash", plan.data_sha256, actual_data_sha256),
             ("population size", plan.population_size, actual.population_size),
+            ("replica seed", plan.random_seed, actual.replica_seed),
+            ("RNG engine", plan.rng_engine, actual.rng_engine),
         )
         budget_checks = (
             (

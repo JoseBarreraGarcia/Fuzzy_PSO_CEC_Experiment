@@ -34,8 +34,9 @@ runner conozca sus operadores internos.
 ## Límites deliberados
 
 - El runner no construye el optimizador ni genera aleatoriedad.
-- No crea, deriva ni asigna semillas. Recibe un optimizador cuyo RNG ya fue
-  proporcionado por el nivel de planificación.
+- El planificador asigna `base_seed + replica_index`; el constructor del
+  optimizador recibe `ReplicaRandomStreams` creado desde esa semilla.
+- El runner contrasta semilla y motor RNG con SQLite antes de ejecutar.
 - No reconstruye trazas ni métricas que no fueron observadas durante la corrida.
 - La versión del optimizador está presente en sus metadatos, pero el esquema
   SQLite v1 todavía no tiene una columna dedicada para validarla y persistirla.

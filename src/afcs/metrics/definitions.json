@@ -80,15 +80,15 @@
       "missing_policy": "forbidden"
     },
     "random_seed": {
-      "version": 1,
+      "version": 2,
       "name": "Semilla de réplica",
-      "description": "Semilla persistida de la réplica; su derivación se definirá en la implementación independiente de semillas.",
+      "description": "Semilla pareada persistida de la réplica, calculada como base_seed + replica_index y compartida entre tratamientos comparables.",
       "scope": ["replica"],
       "source": "experiment.seeding",
       "dtype": "integer",
       "unit": "seed",
       "direction": "identifier",
-      "valid_range": "implementation_defined_non_negative_integer",
+      "valid_range": ">= 0; paired_by_replica_v1 requires base_seed + replica_index",
       "sampling": "once",
       "aggregation": "none",
       "missing_policy": "forbidden_in_v2"

@@ -89,6 +89,8 @@ class OptimizerRunMetadata:
     evaluation_budget: int
     iteration_budget: int | None
     population_size: int | None
+    replica_seed: int | None = None
+    rng_engine: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.optimizer, OptimizerMetadata):
@@ -108,5 +110,16 @@ class OptimizerRunMetadata:
                 raise TypeError(f"{name} must be an integer")
             if value <= 0:
                 raise ValueError(f"{name} must be positive")
+        if self.replica_seed is not None:
+            if isinstance(self.replica_seed, bool) or not isinstance(
+                self.replica_seed, int
+            ):
+                raise TypeError("replica_seed must be an integer or None")
+            if self.replica_seed < 0:
+                raise ValueError("replica_seed must be non-negative")
+            if not isinstance(self.rng_engine, str) or not self.rng_engine:
+                raise ValueError("rng_engine is required with replica_seed")
+        elif self.rng_engine is not None:
+            raise ValueError("rng_engine requires replica_seed")
         object.__setattr__(self, "parameters", MappingProxyType(dict(self.parameters)))
 

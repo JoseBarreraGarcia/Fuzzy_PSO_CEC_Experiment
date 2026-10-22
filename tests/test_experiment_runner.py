@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from afcs.core import SearchSpace
+from afcs.core import ReplicaRandomStreams, SearchSpace
 from afcs.experiments import ExperimentRunExecutor, RunBindingError
 from afcs.metrics import load_metric_registry
 from afcs.optimizers.pso import FixedInertia, LegacyCompatiblePSO, LegacyPSORunConfig
@@ -86,12 +86,25 @@ class TestExperimentRunExecutor(unittest.TestCase):
         self.connection.close()
         self.temp_dir.cleanup()
 
-    def test_real_pso_result_is_persisted_without_seed_assignment(self):
+    def test_seeded_pso_result_and_initial_condition_hashes_are_persisted(self):
+        self.connection.execute(
+            """
+            UPDATE campaigns
+            SET base_seed = 42,
+                seed_protocol = 'paired_by_replica_v1',
+                rng_engine = 'numpy_seedsequence_pcg64_v1'
+            WHERE campaign_id = 'campaign'
+            """
+        )
+        self.connection.execute(
+            "UPDATE runs SET random_seed = 42 WHERE run_id = ?", (self.run_id,)
+        )
+        self.connection.commit()
         optimizer = LegacyCompatiblePSO(
             problem=self.problem,
             config=self.config,
             inertia_policy=self.policy,
-            rng=np.random.default_rng(123),
+            random_streams=ReplicaRandomStreams(42),
         )
 
         result = ExperimentRunExecutor(
@@ -104,7 +117,9 @@ class TestExperimentRunExecutor(unittest.TestCase):
         self.assertEqual(row["status"], "completed")
         self.assertEqual(row["evaluations"], 12)
         self.assertEqual(row["runtime_total_seconds"], 0.25)
-        self.assertIsNone(row["random_seed"])
+        self.assertEqual(row["random_seed"], 42)
+        self.assertEqual(len(row["initial_population_sha256"]), 64)
+        self.assertEqual(len(row["initial_velocity_sha256"]), 64)
         self.assertEqual(json.loads(row["solution_json"]), result.best_position.tolist())
         self.assertEqual(row["objective_best"], result.best_objective)
 

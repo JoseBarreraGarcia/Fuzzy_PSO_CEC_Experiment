@@ -34,11 +34,11 @@ inválida; no la sustituye silenciosamente por otra metodología.
 
 ## Aleatoriedad y semillas
 
-El constructor exige un `numpy.random.Generator` creado por el llamador. Esta
-inyección elimina el estado aleatorio global del nuevo ciclo, pero **no**
-implementa el protocolo de semillas: no genera semillas maestras, no deriva
-subflujos y no asigna semillas a campañas o réplicas. Esa integración sigue
-reservada para su fase independiente.
+El flujo v2 recibe `ReplicaRandomStreams`, construido desde la semilla persistida
+de la réplica. Deriva mediante `SeedSequence` subflujos independientes para
+`initialization` y `dynamics`; el consumo de uno no desplaza al otro. La vía
+`rng=` se conserva temporalmente para pruebas y compatibilidad incremental, pero
+no identifica una réplica reproducible y no debe usarse en campañas v2.
 
 ## Identidad de ejecución
 
@@ -50,9 +50,9 @@ Cada objeto PSO expone `OptimizerRunMetadata`, que describe de forma canónica:
 - identidad, versión y configuración completa de la política de inercia;
 - población y presupuestos de iteraciones y evaluaciones.
 
-El runner compara estos datos con SQLite antes de iniciar una réplica. El RNG
-no forma parte de esta configuración mientras el protocolo de semillas siga
-pendiente.
+El runner compara estos datos con SQLite antes de iniciar una réplica. La
+semilla y el motor RNG forman parte de los metadatos de ejecución, aunque no de
+la firma compartida de la configuración algorítmica.
 
 ## Límites actuales
 

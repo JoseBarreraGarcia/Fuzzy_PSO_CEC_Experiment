@@ -9,6 +9,7 @@ from typing import Any
 
 from afcs.optimizers import OptimizerRunMetadata
 from afcs.persistence import ExperimentRepository, canonical_json
+from afcs.core import RandomnessConfig
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,6 +21,7 @@ class CampaignDefinition:
     source_config: Mapping[str, Any]
     code_commit: str
     replicas: int
+    randomness: RandomnessConfig = RandomnessConfig()
     metric_selection: object = "minimal"
     notes: str | None = None
 
@@ -37,6 +39,8 @@ class CampaignDefinition:
             raise TypeError("replicas must be an integer")
         if self.replicas <= 0:
             raise ValueError("replicas must be positive")
+        if not isinstance(self.randomness, RandomnessConfig):
+            raise TypeError("randomness must be RandomnessConfig")
         object.__setattr__(
             self, "source_config", MappingProxyType(dict(self.source_config))
         )
@@ -94,6 +98,9 @@ class CampaignPlanner:
                 code_commit=campaign.code_commit,
                 metric_selection=campaign.metric_selection,
                 notes=campaign.notes,
+                base_seed=campaign.randomness.base_seed,
+                seed_protocol=campaign.randomness.protocol,
+                rng_engine=campaign.randomness.engine,
             )
             for treatment in normalized:
                 metadata = treatment.run_metadata
@@ -133,7 +140,9 @@ class CampaignPlanner:
                             configuration_id=treatment.configuration_id,
                             instance_id=problem_ids[problem_key],
                             replica_index=replica_index,
-                            random_seed=None,
+                            random_seed=campaign.randomness.seed_for_replica(
+                                replica_index
+                            ),
                         )
                     )
 

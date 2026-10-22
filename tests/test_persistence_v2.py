@@ -72,7 +72,7 @@ class TestPersistenceV2(unittest.TestCase):
         return instance_id
 
     def test_migration_is_idempotent(self):
-        self.assertEqual(current_schema_version(self.connection), 1)
+        self.assertEqual(current_schema_version(self.connection), 2)
         self.assertEqual(apply_migrations(self.connection), ())
 
     def test_expected_tables_exist(self):
@@ -145,7 +145,7 @@ class TestPersistenceV2(unittest.TestCase):
                 ("other", "pso-fixture", instance_id, 0, "planned"),
             )
 
-    def test_seed_is_reserved_but_not_generated_by_schema(self):
+    def test_legacy_campaign_may_keep_seed_null(self):
         instance_id = self._insert_campaign_graph()
         self.connection.execute(
             """
@@ -158,6 +158,27 @@ class TestPersistenceV2(unittest.TestCase):
         )
         seed = self.connection.execute("SELECT random_seed FROM runs").fetchone()[0]
         self.assertIsNone(seed)
+
+    def test_paired_campaign_enforces_replica_seed_formula(self):
+        instance_id = self._insert_campaign_graph()
+        self.connection.execute(
+            """
+            UPDATE campaigns
+            SET base_seed = 42,
+                seed_protocol = 'paired_by_replica_v1',
+                rng_engine = 'numpy_seedsequence_pcg64_v1'
+            WHERE campaign_id = 'fixture'
+            """
+        )
+        sql = """
+            INSERT INTO runs (
+                campaign_id, configuration_id, instance_id,
+                replica_index, random_seed, status
+            ) VALUES ('fixture', 'pso-fixture', ?, 0, ?, 'planned')
+        """
+        with self.assertRaisesRegex(sqlite3.IntegrityError, "base_seed"):
+            self.connection.execute(sql, (instance_id, 43))
+        self.connection.execute(sql, (instance_id, 42))
 
     def test_metric_value_requires_exactly_one_typed_value(self):
         instance_id = self._insert_campaign_graph()

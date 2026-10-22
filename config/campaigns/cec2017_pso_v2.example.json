@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "campaign": {
+    "id": "cec2017-pso-v2-example",
+    "name": "CEC2017 paired PSO example",
+    "replicas": 31,
+    "metrics": "optimizer"
+  },
+  "randomness": {
+    "protocol": "paired_by_replica_v1",
+    "base_seed": 42,
+    "engine": "numpy_seedsequence_pcg64_v1"
+  },
+  "problems": [
+    {
+      "family": "CEC2017",
+      "functions": [1, 3],
+      "dimensions": [10]
+    }
+  ],
+  "treatments": [
+    {
+      "id": "pso-fiw-07",
+      "optimizer": "PSO",
+      "parameters": {
+        "population_size": 20,
+        "max_iterations": 500,
+        "cognitive": 2.0,
+        "social": 2.0,
+        "velocity_factor": 0.1
+      },
+      "parameter_policy": {
+        "id": "fixed_inertia",
+        "parameters": {"value": 0.7}
+      }
+    },
+    {
+      "id": "pso-legacy-ldiw",
+      "optimizer": "PSO",
+      "parameters": {
+        "population_size": 20,
+        "max_iterations": 500,
+        "cognitive": 2.0,
+        "social": 2.0,
+        "velocity_factor": 0.1
+      },
+      "parameter_policy": {
+        "id": "legacy_ldiw",
+        "parameters": {"maximum": 0.9, "minimum": 0.1}
+      }
+    }
+  ],
+  "execution": {
+    "parallel_workers": 1
+  }
+}

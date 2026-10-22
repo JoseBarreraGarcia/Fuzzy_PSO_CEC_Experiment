@@ -16,6 +16,7 @@ from typing import Any
 from afcs.metrics import MetricRegistry
 from afcs.persistence.database import (
     configure_campaign_metrics,
+    current_schema_version,
     sync_metric_definitions,
 )
 
@@ -62,6 +63,10 @@ class PlannedRun:
     direction: str
     problem_parameters: Mapping[str, Any]
     data_sha256: str | None
+    random_seed: int | None
+    base_seed: int | None
+    seed_protocol: str | None
+    rng_engine: str | None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -156,7 +161,23 @@ class ExperimentRepository:
         metric_selection: object = "minimal",
         created_at: str | None = None,
         notes: str | None = None,
+        base_seed: int | None = None,
+        seed_protocol: str | None = None,
+        rng_engine: str | None = None,
     ) -> tuple[str, ...]:
+        randomness = (base_seed, seed_protocol, rng_engine)
+        if any(value is not None for value in randomness) and not all(
+            value is not None for value in randomness
+        ):
+            raise RepositoryError(
+                "base_seed, seed_protocol and rng_engine must be set together"
+            )
+        if base_seed is not None and (
+            isinstance(base_seed, bool)
+            or not isinstance(base_seed, int)
+            or base_seed < 0
+        ):
+            raise RepositoryError("base_seed must be a non-negative integer")
         config_payload = canonical_json(config)
         timestamp = created_at or utc_now()
         with self._write_scope():
@@ -164,8 +185,9 @@ class ExperimentRepository:
                 """
                 INSERT INTO campaigns (
                     campaign_id, name, config_json, config_sha256, code_commit,
-                    metric_registry_version, schema_version, created_at, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+                    metric_registry_version, schema_version, created_at, notes,
+                    base_seed, seed_protocol, rng_engine
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     campaign_id,
@@ -174,8 +196,12 @@ class ExperimentRepository:
                     sha256_text(config_payload),
                     code_commit,
                     self.registry.schema_version,
+                    current_schema_version(self.connection),
                     timestamp,
                     notes,
+                    base_seed,
+                    seed_protocol,
+                    rng_engine,
                 ),
             )
             sync_metric_definitions(self.connection, self.registry)
@@ -294,13 +320,15 @@ class ExperimentRepository:
         row = self.connection.execute(
             """
             SELECT
-                r.run_id, r.status,
+                r.run_id, r.status, r.random_seed,
                 ac.algorithm, ac.parameters_json AS algorithm_parameters_json,
                 ac.budget_evaluations, ac.budget_iterations, ac.population_size,
                 pi.problem_family, pi.name AS problem_name, pi.dimension,
                 pi.optimum, pi.direction,
-                pi.parameters_json AS problem_parameters_json, pi.data_sha256
+                pi.parameters_json AS problem_parameters_json, pi.data_sha256,
+                c.base_seed, c.seed_protocol, c.rng_engine
             FROM runs AS r
+            JOIN campaigns AS c ON c.campaign_id = r.campaign_id
             JOIN algorithm_configurations AS ac
               ON ac.configuration_id = r.configuration_id
              AND ac.campaign_id = r.campaign_id
@@ -326,6 +354,10 @@ class ExperimentRepository:
             direction=str(row["direction"]),
             problem_parameters=json.loads(row["problem_parameters_json"]),
             data_sha256=row["data_sha256"],
+            random_seed=row["random_seed"],
+            base_seed=row["base_seed"],
+            seed_protocol=row["seed_protocol"],
+            rng_engine=row["rng_engine"],
         )
 
     def start_campaign(self, campaign_id: str, started_at: str | None = None) -> None:
@@ -407,12 +439,16 @@ class ExperimentRepository:
         constraint_violation: float | None = None,
         metrics: Mapping[str, Any] | None = None,
         finished_at: str | None = None,
+        initial_population_sha256: str | None = None,
+        initial_velocity_sha256: str | None = None,
     ) -> None:
         row = self._get_run(run_id)
         if row["status"] != "running":
             raise RepositoryError(f"Run {run_id} is not running")
         if not math.isfinite(objective_best):
             raise RepositoryError("Completed objective_best must be finite")
+        _validate_sha256(initial_population_sha256, "initial_population_sha256")
+        _validate_sha256(initial_velocity_sha256, "initial_velocity_sha256")
         selected_metrics = metrics or {}
         self._validate_selected_metrics(row["campaign_id"], selected_metrics, "replica")
 
@@ -422,7 +458,8 @@ class ExperimentRepository:
                 UPDATE runs
                 SET status = 'completed', finished_at = ?, objective_best = ?,
                     solution_json = ?, evaluations = ?, runtime_total_seconds = ?,
-                    feasible = ?, constraint_violation = ?
+                    feasible = ?, constraint_violation = ?,
+                    initial_population_sha256 = ?, initial_velocity_sha256 = ?
                 WHERE run_id = ?
                 """,
                 (
@@ -433,6 +470,8 @@ class ExperimentRepository:
                     runtime_total_seconds,
                     None if feasible is None else int(feasible),
                     constraint_violation,
+                    initial_population_sha256,
+                    initial_velocity_sha256,
                     run_id,
                 ),
             )
@@ -591,3 +630,14 @@ class ExperimentRepository:
                 encoded.value_json,
             ),
         )
+
+
+def _validate_sha256(value: str | None, label: str) -> None:
+    if value is None:
+        return
+    if (
+        not isinstance(value, str)
+        or len(value) != 64
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise RepositoryError(f"{label} must be a lowercase SHA-256 digest")

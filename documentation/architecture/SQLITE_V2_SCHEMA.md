@@ -21,8 +21,8 @@ Las rutas `BD/persistence_v2.py` y `BD/repository_v2.py` permanecen sólo
 como puentes de importación durante la transición.
 
 `src/afcs/experiments/runner.py` conecta una réplica planificada con cualquier
-optimizador que implemente `RunnableOptimizer`. Actualmente persiste resultados
-finales y fallos estructurados; no inventa trazas ni asigna semillas.
+optimizador que implemente `RunnableOptimizer`. Actualmente persiste resultados,
+hashes de condiciones iniciales y fallos estructurados; no inventa trazas.
 
 Antes de iniciar, el ejecutor compara el plan normalizado de SQLite con
 `OptimizerRunMetadata`: algoritmo, problema, dimensión, dirección, óptimo,
@@ -32,8 +32,8 @@ no puede contrastarse porque el esquema inicial no tiene una columna específica
 
 `CampaignPlanner` persiste de forma atómica campañas ya validadas, elimina
 duplicados de instancias/configuraciones y expande tratamientos por índice de
-réplica. Las semillas permanecen nulas. El lector del futuro esquema humano de
-`config/` aún no está implementado.
+réplica. Asigna semillas pareadas mediante `base_seed + replica_index`. El lector
+del futuro esquema humano de `config/` aún no está implementado.
 
 ## Modelo
 
@@ -68,9 +68,13 @@ parámetros y hash opcional del dato funcional.
 ### `runs`
 
 Una fila representa una réplica. La combinación campaña, configuración,
-instancia y `replica_index` es única. `random_seed` está reservada pero admite
-`NULL`: el esquema no calcula ni asigna semillas antes de implementar el
-contrato específico.
+instancia y `replica_index` es única. En campañas `paired_by_replica_v1`, un
+trigger exige `random_seed = base_seed + replica_index`. Las campañas anteriores
+pueden conservar `NULL` y no se reinterpretan como pareadas.
+
+La migración 002 añade además protocolo, motor RNG y hashes SHA-256 de población
+y velocidades iniciales. Los hashes permiten auditar condiciones comunes sin
+almacenar matrices completas.
 
 ### Métricas
 
@@ -107,8 +111,8 @@ repositorio.
 
 ## Decisiones todavía no implementadas
 
-- derivación y persistencia definitiva de semillas;
 - API de planificación y ejecución completa de campañas;
+- prueba real de invariancia ante ejecución paralela;
 - frecuencia predeterminada de trazas;
 - fórmula v2 definitiva de error, GAP y RDP;
 - forma de agregación de violaciones por familia de problemas;
@@ -124,7 +128,7 @@ runner heredado:
 
 1. crear campaña y congelar su configuración canónica;
 2. registrar instancias y configuraciones;
-3. planificar réplicas sin generar semillas;
+3. planificar réplicas y persistir su semilla pareada;
 4. iniciar campaña y réplica;
 5. registrar puntos de control y métricas seleccionadas;
 6. completar o marcar como fallida cada réplica;

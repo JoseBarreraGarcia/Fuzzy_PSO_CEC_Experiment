@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from afcs.core import OptimizationDirection, SearchSpace
+from afcs.core import OptimizationDirection, ReplicaRandomStreams, SearchSpace
 from afcs.optimizers.pso import (
     FixedInertia,
     LegacyCompatiblePSO,
@@ -72,6 +72,28 @@ class TestPSOInMemory(unittest.TestCase):
         ).run()
 
         np.testing.assert_allclose(result.inertia_history, (0.7, 0.5, 0.3, 0.1))
+
+    def test_pso_policies_share_initial_conditions_for_a_paired_replica(self):
+        config = LegacyPSORunConfig(population_size=5, max_iterations=3)
+        fixed = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=FixedInertia(0.6),
+            random_streams=ReplicaRandomStreams(42),
+        ).run()
+        linear = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=LegacyLinearInertia(config.max_iterations),
+            random_streams=ReplicaRandomStreams(42),
+        ).run()
+
+        self.assertEqual(
+            fixed.initial_population_sha256, linear.initial_population_sha256
+        )
+        self.assertEqual(
+            fixed.initial_velocity_sha256, linear.initial_velocity_sha256
+        )
 
     def test_maximization_direction_is_supported(self):
         result = LegacyCompatiblePSO(

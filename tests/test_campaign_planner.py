@@ -31,7 +31,7 @@ class TestCampaignPlanner(unittest.TestCase):
         self.connection.close()
         self.temp_dir.cleanup()
 
-    def test_compact_definition_expands_replicas_without_assigning_seeds(self):
+    def test_compact_definition_expands_replicas_with_paired_seeds(self):
         treatments = (
             self._treatment("pso-fixed", dimension=2),
             self._treatment("pso-fixed", dimension=3),
@@ -47,7 +47,31 @@ class TestCampaignPlanner(unittest.TestCase):
         self.assertEqual(
             [row["replica_index"] for row in rows], [0, 1, 2, 0, 1, 2]
         )
-        self.assertTrue(all(row["random_seed"] is None for row in rows))
+        self.assertEqual(
+            [row["random_seed"] for row in rows], [42, 43, 44, 42, 43, 44]
+        )
+
+    def test_31_replicas_use_seeds_42_through_72_for_every_treatment(self):
+        treatments = (
+            self._treatment("pso-fixed-04", dimension=2, inertia=0.4),
+            self._treatment("pso-fixed-08", dimension=2, inertia=0.8),
+        )
+        self.planner.persist(self._campaign(replicas=31), treatments)
+
+        rows = self.connection.execute(
+            """
+            SELECT configuration_id, replica_index, random_seed
+            FROM runs ORDER BY configuration_id, replica_index
+            """
+        ).fetchall()
+        by_configuration = {}
+        for row in rows:
+            by_configuration.setdefault(row["configuration_id"], []).append(
+                row["random_seed"]
+            )
+        self.assertEqual(set(by_configuration), {"pso-fixed-04", "pso-fixed-08"})
+        for seeds in by_configuration.values():
+            self.assertEqual(seeds, list(range(42, 73)))
 
     def test_conflicting_configuration_is_rejected_before_database_writes(self):
         first = self._treatment("same-id", dimension=2, inertia=0.4)

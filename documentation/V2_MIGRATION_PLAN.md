@@ -165,14 +165,14 @@ Antes de retirarlos de v2 se debe confirmar que están presentes en `f864913`.
 
 ### Fase D — Reproducibilidad y semillas
 
-Implementar `config/PROPUESTA_IMPLEMENTACION_SEMILLAS.md` como un cambio
-independiente:
+Implementación modular completada de
+`config/PROPUESTA_IMPLEMENTACION_SEMILLAS.md`:
 
-1. Persistir `replica_index` y `master_seed`.
-2. Eliminar la dependencia de `id_experimento`.
-3. Validar orden de inserción y paralelismo.
-4. Migrar a generadores explícitos y subflujos.
-5. Registrar procedencia y hashes de condiciones iniciales.
+1. [Completado] Persistir `replica_index` y semilla de réplica.
+2. [Completado en v2] Eliminar la dependencia de `id_experimento`.
+3. [Parcial] El orden de inserción es independiente; falta el piloto paralelo.
+4. [Completado en PSO v2] Usar generadores explícitos y subflujos.
+5. [Completado] Registrar protocolo, motor y hashes de condiciones iniciales.
 
 ### Fase E — Ejecutor y persistencia
 

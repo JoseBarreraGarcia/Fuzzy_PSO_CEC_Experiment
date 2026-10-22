@@ -35,10 +35,11 @@ posterior también revierte la transacción completa, evitando campañas parcial
 
 ## Semillas
 
-El planificador asigna índices de réplica consecutivos desde cero, pero persiste
-`random_seed = NULL`. No interpreta los campos heredados `use_seed` o `seed`, no
-genera semillas maestras y no deriva subflujos. El contrato descrito en
-`config/PROPUESTA_IMPLEMENTACION_SEMILLAS.md` seguirá siendo un cambio separado.
+El planificador asigna índices consecutivos desde cero y calcula
+`random_seed = base_seed + replica_index`. Con la configuración inicial aprobada
+de 31 réplicas y `base_seed=42`, cada tratamiento recibe 42–72. El protocolo
+`paired_by_replica_v1` y el motor `numpy_seedsequence_pcg64_v1` quedan
+persistidos en la campaña. Los JSON heredados aún no se reinterpretan.
 
 ## Trabajo pendiente
 
@@ -48,5 +49,5 @@ genera semillas maestras y no deriva subflujos. El contrato descrito en
 - Decidir la migración de los JSON heredados; no deben interpretarse
   silenciosamente con semántica nueva.
 - Añadir la versión del optimizador como campo normalizado del esquema SQLite.
-- Incorporar reanudación y ejecución completa de campañas después de aprobar el
-  protocolo de semillas.
+- Incorporar reanudación y ejecución completa de campañas y validar el piloto
+  secuencial/paralelo.
