@@ -5,9 +5,9 @@
 La planificación no sustituye `config/`. Separa cuatro etapas:
 
 ```text
-config/*.json (declaración humana)
+config/campaigns/*.json (declaración humana)
           ↓
-lector y esquema validado (pendiente)
+load_campaign_config + campaign_v1.schema.json
           ↓
 CampaignDefinition + TreatmentDefinition
           ↓
@@ -41,11 +41,21 @@ de 31 réplicas y `base_seed=42`, cada tratamiento recibe 42–72. El protocolo
 `paired_by_replica_v1` y el motor `numpy_seedsequence_pcg64_v1` quedan
 persistidos en la campaña. Los JSON heredados aún no se reinterpretan.
 
+## Configuración validada
+
+El contrato v1 está definido en `config/schemas/campaign_v1.schema.json` y su
+plantilla ejecutable en `config/campaigns/cec2017_pso_v2.example.json`. El
+lector rechaza claves desconocidas, valida las opciones contra los catálogos
+vigentes y genera una configuración resuelta con todos los valores por defecto.
+Esa versión resuelta, no la plantilla con valores implícitos, es la que se
+entrega a `CampaignDefinition.source_config` para persistirla.
+
+Actualmente el catálogo ejecutable incluye CEC2017, PSO, `fixed_inertia` y
+`legacy_ldiw`. La ampliación a otros problemas, optimizadores y controladores
+debe incorporar conjuntamente implementación, esquema, documentación y pruebas.
+
 ## Trabajo pendiente
 
-- Definir el esquema v2 legible por humanos para campañas, problemas,
-  algoritmos, políticas, métricas y recursos de ejecución.
-- Implementar el lector que traduzca ese esquema a las definiciones tipadas.
 - Decidir la migración de los JSON heredados; no deben interpretarse
   silenciosamente con semántica nueva.
 - Añadir la versión del optimizador como campo normalizado del esquema SQLite.

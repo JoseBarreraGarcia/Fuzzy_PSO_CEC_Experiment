@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://afcs.local/schemas/campaign_v1.schema.json",
+  "title": "AFCS v2 campaign configuration",
+  "description": "Declaración reproducible de una campaña experimental AFCS v2.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "campaign", "randomness", "problems", "treatments", "execution"],
+  "properties": {
+    "$schema": {"type": "string", "description": "Ruta al esquema para validación y ayuda del editor."},
+    "_documentation": {"type": "object", "description": "Ayuda humana ignorada por el ejecutor; no altera el experimento."},
+    "schema_version": {"const": 1, "description": "Versión del contrato de configuración."},
+    "campaign": {"$ref": "#/$defs/campaign"},
+    "randomness": {"$ref": "#/$defs/randomness"},
+    "problems": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/cec2017Problems"}},
+    "treatments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/psoTreatment"}},
+    "execution": {"$ref": "#/$defs/execution"}
+  },
+  "$defs": {
+    "campaign": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "replicas", "metrics"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "description": "Identificador estable y único de la campaña."},
+        "name": {"type": "string", "minLength": 1, "description": "Nombre legible de la campaña."},
+        "replicas": {"type": "integer", "minimum": 1, "default": 31, "description": "Cantidad de corridas independientes por tratamiento."},
+        "metrics": {"$ref": "#/$defs/metricSelection"},
+        "notes": {"type": ["string", "null"], "description": "Notas metodológicas opcionales."}
+      }
+    },
+    "metricSelection": {
+      "description": "Perfil, 'all', lista explícita o selección con include/exclude. Las métricas obligatorias siempre se registran.",
+      "oneOf": [
+        {"type": "string", "enum": ["minimal", "convergence", "optimizer", "fuzzy", "all"]},
+        {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        {"type": "object", "additionalProperties": false, "properties": {
+          "profile": {"type": "string", "enum": ["minimal", "convergence", "optimizer", "fuzzy", "all"], "default": "minimal"},
+          "include": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "exclude": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }}
+      ]
+    },
+    "randomness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["protocol", "base_seed", "engine"],
+      "properties": {
+        "protocol": {"const": "paired_by_replica_v1", "description": "Comparte la semilla de cada índice de réplica entre todos los tratamientos."},
+        "base_seed": {"type": "integer", "minimum": 0, "default": 42, "description": "Semilla de la réplica 0; las siguientes son base_seed + replica_index."},
+        "engine": {"const": "numpy_seedsequence_pcg64_v1", "description": "Motor y estrategia versionados para crear subflujos reproducibles."}
+      }
+    },
+    "cec2017Problems": {
+      "type": "object", "additionalProperties": false,
+      "required": ["family", "functions", "dimensions"],
+      "properties": {
+        "family": {"const": "CEC2017"},
+        "functions": {"type": "array", "minItems": 1, "uniqueItems": true, "description": "Funciones válidas: F1 y F3-F30; F2 está excluida por la definición oficial.", "items": {"type": "integer", "minimum": 1, "maximum": 30, "not": {"const": 2}}},
+        "dimensions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "enum": [10, 30, 50, 100]}}
+      }
+    },
+    "psoTreatment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "optimizer", "parameters", "parameter_policy"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "description": "Identificador único de la configuración algorítmica."},
+        "optimizer": {"const": "PSO"},
+        "parameters": {"$ref": "#/$defs/psoParameters"},
+        "parameter_policy": {"oneOf": [{"$ref": "#/$defs/fixedInertia"}, {"$ref": "#/$defs/legacyLdiw"}]}
+      }
+    },
+    "psoParameters": {
+      "type": "object", "additionalProperties": false,
+      "required": ["population_size", "max_iterations"],
+      "properties": {
+        "population_size": {"type": "integer", "minimum": 1},
+        "max_iterations": {"type": "integer", "minimum": 1},
+        "cognitive": {"type": "number", "default": 2.0, "description": "Coeficiente cognitivo c1."},
+        "social": {"type": "number", "default": 2.0, "description": "Coeficiente social c2."},
+        "velocity_factor": {"type": "number", "minimum": 0, "default": 0.1, "description": "Fracción del rango usada como velocidad máxima."}
+      }
+    },
+    "fixedInertia": {
+      "type": "object", "additionalProperties": false, "required": ["id", "parameters"],
+      "properties": {"id": {"const": "fixed_inertia"}, "parameters": {"type": "object", "additionalProperties": false, "required": ["value"], "properties": {"value": {"type": "number"}}}}
+    },
+    "legacyLdiw": {
+      "type": "object", "additionalProperties": false, "required": ["id", "parameters"],
+      "properties": {"id": {"const": "legacy_ldiw"}, "parameters": {"type": "object", "additionalProperties": false, "properties": {"maximum": {"type": "number", "default": 0.9}, "minimum": {"type": "number", "default": 0.1}}}}
+    },
+    "execution": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"parallel_workers": {"type": "integer", "minimum": 1, "default": 1, "description": "Procesos de ejecución; 1 conserva ejecución secuencial."}}
+    }
+  }
+}
