@@ -9,6 +9,12 @@ from .configuration import (
     load_campaign_config,
     parse_campaign_config,
 )
+from .factory import OptimizerFactory
+from .orchestration import (
+    CampaignExecutionSummary,
+    CampaignRecoveryRequired,
+    SequentialCampaignOrchestrator,
+)
 from .planning import (
     CampaignDefinition,
     CampaignPlanner,
@@ -25,12 +31,15 @@ from .runner import ExperimentRunExecutor, RunBindingError
 
 __all__ = [
     "CampaignDefinition",
+    "CampaignExecutionSummary",
     "CampaignPlanner",
+    "CampaignRecoveryRequired",
     "CampaignSummary",
     "ConfigurationError",
     "ExecutionConfig",
     "ExperimentRunExecutor",
     "OptimizationRunResult",
+    "OptimizerFactory",
     "LoadedCampaignConfig",
     "PersistedCampaignPlan",
     "NUMPY_RNG_ENGINE",
@@ -39,6 +48,7 @@ __all__ = [
     "ReplicaRandomStreams",
     "RunBindingError",
     "RunnableOptimizer",
+    "SequentialCampaignOrchestrator",
     "TreatmentDefinition",
     "load_campaign_config",
     "parse_campaign_config",

@@ -38,6 +38,7 @@ class TestExperimentRepository(unittest.TestCase):
             "pso-fuzzy",
             "campaign",
             "PSO_FCS",
+            "test-version",
             {"w_set": "O1"},
             "hybrid",
             budget_evaluations=100,

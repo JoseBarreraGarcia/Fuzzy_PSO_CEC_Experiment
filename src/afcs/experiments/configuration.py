@@ -47,6 +47,7 @@ class CampaignSummary:
     algorithm_configurations: int
     replicas: int
     total_runs: int
+    total_evaluations: int
     first_seed: int
     last_seed: int
 
@@ -182,6 +183,10 @@ def parse_campaign_config(
         algorithm_configurations=len(treatment_specs),
         replicas=replicas,
         total_runs=len(treatments) * replicas,
+        total_evaluations=sum(
+            treatment.run_metadata.evaluation_budget for treatment in treatments
+        )
+        * replicas,
         first_seed=randomness.seed_for_replica(0),
         last_seed=randomness.seed_for_replica(replicas - 1),
     )
@@ -331,9 +336,15 @@ def _parse_execution(raw: Any) -> ExecutionConfig:
         path="execution",
     )
     try:
-        return ExecutionConfig(execution.get("parallel_workers", 1))
+        parsed = ExecutionConfig(execution.get("parallel_workers", 1))
     except (TypeError, ValueError) as error:
         raise ConfigurationError(str(error)) from error
+    if parsed.parallel_workers != 1:
+        raise ConfigurationError(
+            "execution.parallel_workers: only sequential execution (1) is "
+            "available until the parallel reproducibility pilot is approved"
+        )
+    return parsed
 
 
 def _resolved_config(**parts: Any) -> dict[str, Any]:

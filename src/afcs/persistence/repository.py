@@ -52,6 +52,7 @@ class PlannedRun:
     run_id: int
     status: str
     algorithm: str
+    optimizer_version: str | None
     algorithm_parameters: Mapping[str, Any]
     budget_evaluations: int | None
     budget_iterations: int | None
@@ -255,6 +256,7 @@ class ExperimentRepository:
         configuration_id: str,
         campaign_id: str,
         algorithm: str,
+        optimizer_version: str,
         parameters: Mapping[str, Any],
         budget_type: str,
         budget_evaluations: int | None = None,
@@ -263,20 +265,24 @@ class ExperimentRepository:
         created_at: str | None = None,
     ) -> None:
         self._require_campaign_status(campaign_id, "draft")
+        if not isinstance(optimizer_version, str) or not optimizer_version.strip():
+            raise RepositoryError("optimizer_version must be a non-empty string")
         parameters_json = canonical_json(parameters)
         with self._write_scope():
             self.connection.execute(
                 """
                 INSERT INTO algorithm_configurations (
-                    configuration_id, campaign_id, algorithm, parameters_json,
+                    configuration_id, campaign_id, algorithm, optimizer_version,
+                    parameters_json,
                     parameters_sha256, budget_type, budget_evaluations,
                     budget_iterations, population_size, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     configuration_id,
                     campaign_id,
                     algorithm,
+                    optimizer_version,
                     parameters_json,
                     sha256_text(parameters_json),
                     budget_type,
@@ -321,7 +327,8 @@ class ExperimentRepository:
             """
             SELECT
                 r.run_id, r.status, r.random_seed,
-                ac.algorithm, ac.parameters_json AS algorithm_parameters_json,
+                ac.algorithm, ac.optimizer_version,
+                ac.parameters_json AS algorithm_parameters_json,
                 ac.budget_evaluations, ac.budget_iterations, ac.population_size,
                 pi.problem_family, pi.name AS problem_name, pi.dimension,
                 pi.optimum, pi.direction,
@@ -343,6 +350,7 @@ class ExperimentRepository:
             run_id=int(row["run_id"]),
             status=str(row["status"]),
             algorithm=str(row["algorithm"]),
+            optimizer_version=row["optimizer_version"],
             algorithm_parameters=json.loads(row["algorithm_parameters_json"]),
             budget_evaluations=row["budget_evaluations"],
             budget_iterations=row["budget_iterations"],
@@ -359,6 +367,31 @@ class ExperimentRepository:
             seed_protocol=row["seed_protocol"],
             rng_engine=row["rng_engine"],
         )
+
+    def campaign_status(self, campaign_id: str) -> str:
+        row = self.connection.execute(
+            "SELECT status FROM campaigns WHERE campaign_id = ?", (campaign_id,)
+        ).fetchone()
+        if row is None:
+            raise RepositoryError(f"Unknown campaign: {campaign_id!r}")
+        return str(row["status"])
+
+    def run_ids_by_status(
+        self, campaign_id: str, status: str = "planned"
+    ) -> tuple[int, ...]:
+        allowed = {"planned", "running", "completed", "failed", "cancelled"}
+        if status not in allowed:
+            raise RepositoryError(f"Unsupported run status: {status!r}")
+        self.campaign_status(campaign_id)
+        rows = self.connection.execute(
+            """
+            SELECT run_id FROM runs
+            WHERE campaign_id = ? AND status = ?
+            ORDER BY run_id
+            """,
+            (campaign_id, status),
+        ).fetchall()
+        return tuple(int(row["run_id"]) for row in rows)
 
     def start_campaign(self, campaign_id: str, started_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "draft")

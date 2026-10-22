@@ -51,15 +51,17 @@ class TestPersistenceV2(unittest.TestCase):
         self.connection.execute(
             """
             INSERT INTO algorithm_configurations (
-                configuration_id, campaign_id, algorithm, parameters_json,
+                configuration_id, campaign_id, algorithm, optimizer_version,
+                parameters_json,
                 parameters_sha256, budget_type, budget_evaluations,
                 population_size, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 "pso-fixture",
                 "fixture",
                 "PSO",
+                "fixture-version",
                 "{}",
                 HASH,
                 "evaluations",
@@ -72,7 +74,7 @@ class TestPersistenceV2(unittest.TestCase):
         return instance_id
 
     def test_migration_is_idempotent(self):
-        self.assertEqual(current_schema_version(self.connection), 2)
+        self.assertEqual(current_schema_version(self.connection), 3)
         self.assertEqual(apply_migrations(self.connection), ())
 
     def test_expected_tables_exist(self):

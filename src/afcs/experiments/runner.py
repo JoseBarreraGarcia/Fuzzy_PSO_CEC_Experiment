@@ -91,6 +91,7 @@ class ExperimentRunExecutor:
 
         exact_checks = (
             ("algorithm", plan.algorithm, actual.optimizer.optimizer_id),
+            ("optimizer version", plan.optimizer_version, actual.optimizer.version),
             ("problem family", plan.problem_family, problem.family),
             ("problem name", plan.problem_name, problem.problem_id),
             ("dimension", plan.dimension, problem.dimension),

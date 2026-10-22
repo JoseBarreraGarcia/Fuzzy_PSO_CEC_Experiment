@@ -43,7 +43,11 @@ total_runs = problem_instances × algorithm_configurations × replicas
 
 `CampaignSummary` permite revisar estos números y el intervalo de semillas
 antes de escribir en la base de datos. Para la plantilla actual el resumen es
-2 instancias, 2 configuraciones, 31 réplicas, 124 ejecuciones y semillas 42-72.
+2 instancias, 2 configuraciones, 31 réplicas, 124 ejecuciones, 1.242.480
+evaluaciones y semillas 42-72.
+
+La interfaz `afcs-campaign preview` presenta este resumen sin tocar SQLite.
+`plan` persiste la expansión y `run` ejecuta exclusivamente las filas pendientes.
 
 ## Reglas de extensión
 

@@ -22,6 +22,7 @@ class TestCampaignConfiguration(unittest.TestCase):
         self.assertEqual(loaded.summary.algorithm_configurations, 2)
         self.assertEqual(loaded.summary.replicas, 31)
         self.assertEqual(loaded.summary.total_runs, 124)
+        self.assertEqual(loaded.summary.total_evaluations, 1_242_480)
         self.assertEqual(loaded.summary.first_seed, 42)
         self.assertEqual(loaded.summary.last_seed, 72)
         self.assertEqual(len(loaded.treatments), 4)
@@ -77,6 +78,12 @@ class TestCampaignConfiguration(unittest.TestCase):
         with self.assertRaisesRegex(
             ConfigurationError, "schema_version must be exactly 1"
         ):
+            parse_campaign_config(raw, code_commit="abc123")
+
+    def test_parallel_execution_is_not_advertised_before_validation(self) -> None:
+        raw = _example()
+        raw["execution"]["parallel_workers"] = 2
+        with self.assertRaisesRegex(ConfigurationError, "only sequential execution"):
             parse_campaign_config(raw, code_commit="abc123")
 
 

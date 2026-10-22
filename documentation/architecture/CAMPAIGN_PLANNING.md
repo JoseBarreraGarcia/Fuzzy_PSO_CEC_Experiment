@@ -58,6 +58,5 @@ debe incorporar conjuntamente implementación, esquema, documentación y pruebas
 
 - Decidir la migración de los JSON heredados; no deben interpretarse
   silenciosamente con semántica nueva.
-- Añadir la versión del optimizador como campo normalizado del esquema SQLite.
-- Incorporar reanudación y ejecución completa de campañas y validar el piloto
-  secuencial/paralelo.
+- Definir la recuperación explícita de filas abandonadas en `running` y validar
+  el piloto de equivalencia secuencial/paralelo.

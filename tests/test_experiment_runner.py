@@ -71,6 +71,7 @@ class TestExperimentRunExecutor(unittest.TestCase):
             "pso-fixed",
             "campaign",
             "PSO",
+            metadata.optimizer.version,
             dict(metadata.parameters),
             "hybrid",
             budget_evaluations=12,

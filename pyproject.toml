@@ -12,6 +12,9 @@ dependencies = [
     "numpy>=2.0",
 ]
 
+[project.scripts]
+afcs-campaign = "afcs.experiments.cli:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 

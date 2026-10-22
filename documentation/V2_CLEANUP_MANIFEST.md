@@ -307,13 +307,19 @@ Avance ejecutado:
   final o fallo estructurado y no reconstruye métricas.
 - [x] Se valida antes de ejecutar la correspondencia entre plan, problema,
   configuración del optimizador, política, población y presupuesto.
-- [ ] Falta persistir la versión del optimizador; la construcción de
-  planes/campañas desde configuración validada ya está implementada.
+- [x] La versión del optimizador se persiste y se valida al reconstruir cada
+  réplica desde el plan canónico de SQLite.
 - [x] Se implementó la expansión y persistencia atómica de campañas tipadas,
   con detección previa de tratamientos duplicados o configuraciones en conflicto.
 - [x] Se definió el JSON Schema v1, el lector estricto, la plantilla documentada
   y el resumen previo de la matriz de campaña. Los JSON heredados no se
   reinterpretan ni migran automáticamente.
+- [x] Se conectó el flujo secuencial `preview → plan → run`, con reanudación de
+  filas pendientes y smoke test integral CEC2017/PSO/SQLite.
+- [ ] Falta aprobar e implementar una política explícita para recuperar réplicas
+  abandonadas en estado `running` tras una interrupción abrupta.
+- [ ] Falta persistir trazas de iteración y conectar la instrumentación completa
+  de los perfiles métricos antes de campañas exhaustivas.
 
 ### Ola 3 — separación de publicaciones
 

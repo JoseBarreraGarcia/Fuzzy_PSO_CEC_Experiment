@@ -123,6 +123,7 @@ class CampaignPlanner:
                         configuration_id=treatment.configuration_id,
                         campaign_id=campaign.campaign_id,
                         algorithm=metadata.optimizer.optimizer_id,
+                        optimizer_version=metadata.optimizer.version,
                         parameters=dict(metadata.parameters),
                         budget_type=(
                             "hybrid"

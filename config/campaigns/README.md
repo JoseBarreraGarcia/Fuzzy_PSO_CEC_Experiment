@@ -19,7 +19,7 @@ informativa y el lector la ignora.
 | `randomness` | Pareamiento y reproducibilidad | `paired_by_replica_v1`, semilla base no negativa, `numpy_seedsequence_pcg64_v1` |
 | `problems` | Matriz de problemas | `CEC2017`; F1 y F3-F30; dimensiones 10, 30, 50, 100 |
 | `treatments` | Configuraciones del optimizador | `PSO`; políticas `fixed_inertia` y `legacy_ldiw` |
-| `execution` | Recursos de ejecución | `parallel_workers >= 1` (el piloto validado sigue usando 1) |
+| `execution` | Recursos de ejecución | `parallel_workers=1`; otros valores se rechazan hasta validar el piloto paralelo |
 
 Los parámetros PSO obligatorios son `population_size` y `max_iterations`. Los
 opcionales y sus valores efectivos por defecto son `cognitive=2.0`,
@@ -54,4 +54,32 @@ instancias de problema × configuraciones algorítmicas × réplicas
 ```
 
 La plantilla actual declara 2 problemas, 2 configuraciones y 31 réplicas: 124
-ejecuciones.
+ejecuciones y 1.242.480 evaluaciones de función objetivo.
+
+## Flujo de uso seguro
+
+La previsualización no crea ni modifica una base de datos:
+
+```powershell
+afcs-campaign preview `
+  --config config/campaigns/cec2017_pso_v2.example.json `
+  --code-commit <commit-git>
+```
+
+La planificación y la ejecución son acciones separadas deliberadamente. Esto
+permite revisar el tamaño de la campaña antes de consumir recursos:
+
+```powershell
+afcs-campaign plan `
+  --config config/campaigns/cec2017_pso_v2.example.json `
+  --code-commit <commit-git> `
+  --database Resultados/cec2017_v2.db
+
+afcs-campaign run `
+  --database Resultados/cec2017_v2.db `
+  --campaign-id cec2017-pso-v2-example
+```
+
+`run` ejecuta únicamente filas `planned`, por lo que puede retomarse después de
+una detención entre réplicas. Una fila que haya quedado en estado `running`
+requiere una decisión explícita de recuperación y nunca se reinicia sola.
