@@ -1,0 +1,49 @@
+1. Variantes que pediría programar
+Comparación controlada: mismo PSO, distinta política para \(w\)
+Estas son las comparaciones fundamentales porque permiten atribuir las diferencias al mecanismo de control.
+Código	Variante	Política de \(w\)	Función experimental
+PSO-FIW	Inercia fija	\(w=0.7298\), o el valor fijo que definan	Control negativo
+PSO-LDIW	Inercia lineal decreciente	\(w_t=w_{\max}-(w_{\max}-w_{\min})t/T\)	Baseline temporal
+PSO-NDIW	Inercia no lineal decreciente	Calendario curvo, sin retroalimentación	Comprueba si basta una trayectoria temporal mejor
+PSO-AIW-SR	Inercia adaptativa por tasa de éxito	\(w\) responde a la proporción de partículas que mejoran	Competidor adaptativo basado en desempeño
+PSO-AIW-D	Inercia adaptativa por diversidad	\(w\) responde directamente a la diversidad normalizada	Competidor directo del controlador difuso
+PSO-FCS	Controlador difuso propuesto	Diversidad + razón de iteración \(\rightarrow w\)	Método propuesto
+
+
+La variante AIW-SR de Nickabadi et al. es particularmente importante porque adapta la inercia utilizando la tasa de éxito del enjambre como retroalimentación. Así representa una alternativa adaptativa genuina sin cambiar completamente PSO. ScienceDirect
+PSO-AIW-D puede implementarse como un controlador determinista sencillo:
+\[
+w_t=w_{\min}+(w_{\max}-w_{\min})D_t,
+\]
+donde \(D_t\in[0,1]\) es exactamente la misma medida de diversidad normalizada utilizada como entrada en PSO-FCS.
+Esta variante es una ablación especialmente valiosa. Si PSO-FCS supera a AIW-D, la mejora no puede atribuirse solamente a que ambos utilizan diversidad, sino a la forma en que el sistema difuso combina diversidad y progreso temporal.
+Comparación externa: algoritmos adaptativos completos
+Agregaría una o, como máximo, dos variantes completas:
+Código	Variante	Qué adapta	Advertencia
+APSO	Adaptive PSO de Zhan et al.	\(w\), \(c_1\), \(c_2\), estado evolutivo y aprendizaje elitista	No aísla el efecto de \(w\)
+HPSO-TVAC	PSO jerárquico con coeficientes variables	\(c_1\), \(c_2\) y estructura de búsqueda	Comparación externa, no ablación
+
+
+APSO es el competidor externo más importante. Identifica estados de exploración, explotación, convergencia y escape mediante información sobre la distribución del enjambre; luego adapta varios parámetros e incorpora aprendizaje elitista. eprints.gla.ac.uk
+Pero APSO no debe presentarse como una comparación directa del controlador de \(w\), porque modifica simultáneamente:
+- La inercia.
+- Los coeficientes de aceleración.
+- El comportamiento frente a convergencia.
+- El mejor individuo mediante aprendizaje elitista.
+Por tanto, si APSO supera a PSO-FCS, no significa necesariamente que su política de \(w\) sea mejor.
+2. Conjunto mínimo que realmente programaría
+Para no inflar innecesariamente el estudio, pediría implementar estos seis algoritmos:
+1. PSO-FIW.
+2. PSO-LDIW.
+3. PSO-AIW-SR.
+4. PSO-AIW-D.
+5. PSO-FCS.
+6. APSO de Zhan.
+Dejaría PSO-NDIW y HPSO-TVAC como opcionales.
+Esta selección cubre:
+- Inercia constante.
+- Ajuste temporal.
+- Adaptación basada en desempeño.
+- Adaptación basada en diversidad.
+- Control difuso.
+- Adaptación completa del estado evolutivo.

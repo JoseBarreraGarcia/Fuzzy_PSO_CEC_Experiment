@@ -5,6 +5,14 @@ parámetro del optimizador. Mantiene la separación entre adaptación semántica
 adaptación de parámetros.
 
 No contiene el paso interno de PSO/GA ni implementa por sí mismo Mamdani.
+El control es opcional: una metaheurística puede ejecutarse sin adaptación
+externa. Las políticas generales no deben asumir nombres como `w` o
+`mutation_rate`; cada optimizador declara los parámetros compatibles.
+
+`NoAdaptation`, políticas temporales, adaptación por métricas y control difuso
+deben ser configuraciones identificables y persistibles. Las especializaciones
+como `InertiaPolicy` pertenecen a la familia del optimizador, aunque puedan
+delegar en este módulo.
 
 Estado: planificado; parte de esta responsabilidad está mezclada actualmente en
 `FUZZY/` y `PSO_FCS.py`.

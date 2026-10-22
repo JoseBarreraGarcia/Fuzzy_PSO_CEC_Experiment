@@ -10,6 +10,7 @@ Control System*. Cada carpeta responde a una pregunta concreta:
 | modelos compartidos, contratos y contexto de ejecución | `src/afcs/core/` |
 | una función benchmark o problema de ingeniería | `src/afcs/problems/` |
 | PSO, GA u otra metaheurística | `src/afcs/optimizers/` |
+| políticas opcionales de ajuste de parámetros | `src/afcs/controllers/` y especializaciones del optimizador |
 | calcular indicadores del proceso de búsqueda | `src/afcs/metrics/` |
 | particiones, reglas o inferencia Mamdani | `src/afcs/fuzzy/` |
 | elegir dinámicamente un esquema difuso | `src/afcs/selectors/` |
@@ -56,3 +57,6 @@ Control System*. Cada carpeta responde a una pregunta concreta:
 
 No se mantendrán indefinidamente dos implementaciones autoritativas de la misma
 capacidad.
+
+La relación entre optimizadores, políticas opcionales y runner se especifica
+en [`OPTIMIZER_PARAMETER_CONTROL.md`](OPTIMIZER_PARAMETER_CONTROL.md).

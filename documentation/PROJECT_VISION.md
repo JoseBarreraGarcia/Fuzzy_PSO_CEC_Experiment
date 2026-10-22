@@ -96,6 +96,15 @@ se incorporarán selección semántica, GA y dominios discretos. Los problemas
 previstos incluyen CEC, benchmarks clásicos, SCP, USCP, KP y selección de
 características.
 
+El control de parámetros es opcional. La plataforma debe ejecutar tanto
+metaheurísticas sin control externo como tratamientos con parámetros fijos,
+calendarios, adaptación basada en estado, control difuso o variantes
+adaptativas completas. Configuración inicial y adaptación dinámica se modelan
+y registran por separado.
+
+La especificación se mantiene en
+`documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md`.
+
 ## Métricas futuras que deben tener un hogar definido
 
 Además de las métricas ya registradas, la arquitectura reserva responsabilidades

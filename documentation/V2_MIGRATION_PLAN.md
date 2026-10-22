@@ -3,8 +3,8 @@
 **Rama:** `Solver_CEC_Fuzzy_PSO_v2`  
 **Punto de partida:** `f8649134362f9a7b5e04f2f2bf032eb4b5938172`  
 **Fecha:** 19 de octubre de 2026  
-**Estado:** limpieza inicial, contratos de métricas y persistencia completados;
-migración del código operativo al paquete v2 pendiente.
+**Estado:** limpieza inicial, CEC2017, contratos, métricas y persistencia
+migrados; auditoría y separación de optimizadores/runner pendiente.
 
 ## 1. Propósito
 
@@ -37,10 +37,10 @@ La primera etapa incluyó:
 - propuesta de limpieza y arquitectura objetivo.
 
 En etapas posteriores ya se retiraron artefactos regenerables aprobados y se
-prepararon el registro de métricas y la persistencia SQLite v2. Todavía no se
-incluyen:
+migraron CEC2017, el registro de métricas y la persistencia SQLite v2. Todavía
+no se incluyen:
 
-- movimientos de módulos;
+- migración de optimizadores y runner;
 - cambios al sistema de semillas;
 - cambios en resultados o análisis del artículo.
 
@@ -180,6 +180,13 @@ independiente:
 3. Marcar `NaN`, `inf` y excepciones como fallos.
 4. Versionar el esquema de base de datos mediante migraciones.
 5. Añadir ejecución reanudable e idempotente.
+6. Permitir optimizadores con o sin política externa de parámetros.
+7. Separar configuración inicial, adaptación dinámica e instrumentación.
+8. Registrar costes del evaluador, optimizador, métricas y controlador.
+
+La separación de optimizadores seguirá
+`documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md`. PSO será la
+primera integración, pero los contratos no se limitarán al parámetro `w`.
 
 ### Fase F — Calidad compartible
 

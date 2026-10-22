@@ -27,6 +27,7 @@ retroactivamente al artículo.
 |---|---|
 | visión científica y alcance de la tesis | [`documentation/PROJECT_VISION.md`](documentation/PROJECT_VISION.md) |
 | mapa de módulos y migración de rutas | [`documentation/architecture/MODULE_MAP.md`](documentation/architecture/MODULE_MAP.md) |
+| optimizadores y control opcional de parámetros | [`documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md`](documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md) |
 | plan general de migración | [`documentation/V2_MIGRATION_PLAN.md`](documentation/V2_MIGRATION_PLAN.md) |
 | decisiones de limpieza por archivo | [`documentation/V2_CLEANUP_MANIFEST.md`](documentation/V2_CLEANUP_MANIFEST.md) |
 | contrato experimental y estadístico | [`documentation/lessons_learned/EXPERIMENT_DATA_AND_ANALYSIS.md`](documentation/lessons_learned/EXPERIMENT_DATA_AND_ANALYSIS.md) |

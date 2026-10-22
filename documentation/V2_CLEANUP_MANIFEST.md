@@ -289,6 +289,10 @@ Avance ejecutado:
   datos incluidos en el paquete y un puente temporal para imports heredados.
 - [x] Se migraron la persistencia SQLite v2, el repositorio transaccional y la
   migración SQL a `afcs.persistence`, conservando puentes heredados.
+- [x] Se documentó el contrato arquitectónico para metaheurísticas con o sin
+  control externo y la separación entre políticas de parámetros y variantes
+  adaptativas completas.
+- [ ] Falta auditar PSO/PSO-FCS/GA antes de implementar esos contratos.
 
 ### Ola 3 — separación de publicaciones
 
