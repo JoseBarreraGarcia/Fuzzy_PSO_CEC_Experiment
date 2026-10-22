@@ -295,7 +295,8 @@ Avance ejecutado:
 - [x] Se completó la auditoría inicial de PSO/PSO-FCS/GA, runner y dispatcher.
 - [x] Se aprobó la extracción de PSO mediante la configuración de compatibilidad
   legacy_ldiw, sin declararla recomendación para campañas nuevas.
-- [ ] Falta extraer los contratos y el núcleo PSO con equivalencia probada.
+- [x] Se extrajeron contratos de control opcional, NoAdaptation, legacy_ldiw y
+  el núcleo numérico PSO, manteniendo wrappers heredados y regresiones.
 
 ### Ola 3 — separación de publicaciones
 

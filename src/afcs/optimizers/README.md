@@ -15,7 +15,9 @@ GA será la segunda integración. Las demás implementaciones se conservarán co
 experimentales y podrán ejecutarse inicialmente sin control mediante
 adaptadores.
 
-Estado: destinos definidos; implementaciones aún en `Metaheuristics/`.
+Estado: contratos, política legacy_ldiw y transición numérica PSO extraídos.
+Los wrappers operativos y el ciclo completo permanecen temporalmente en
+`Metaheuristics/` y `Solver/`.
 
 Especificación: `documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md`.
 Auditoría legacy: `documentation/architecture/LEGACY_OPTIMIZER_AUDIT.md`.

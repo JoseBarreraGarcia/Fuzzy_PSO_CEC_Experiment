@@ -2,6 +2,7 @@ import numpy as np
 
 from Diversity.Codes.diversity import calculate_diversity
 from FUZZY.fuzzy_controller_w_3L import FuzzyInertiaController_3L
+from afcs.optimizers.pso import PSOConfig, advance_swarm
 
 
 def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
@@ -14,8 +15,6 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
                      Si fcs tiene un w_set diferente, se crea uno nuevo localmente.
     """
     Vmax = 0.1 * ub0
-    c1 = 2.0
-    c2 = 2.0
 
     # Si el set del controlador no coincide, crear uno local
     if fcs.w_set.upper() != w_set.upper():
@@ -35,20 +34,15 @@ def iterarPSO_FCS(maxIter, iter, dim, population, best, pBest, vel, ub0,
     r1 = np.random.rand(population.shape[0], dim)
     r2 = np.random.rand(population.shape[0], dim)
 
-    # Asegurar broadcasting estable si best es (dim,)
-    best = np.asarray(best).reshape(1, -1)
-
-    # --- 5) Update velocities ---
-    vel = (
-        w * vel
-        + c1 * r1 * (pBest - population)
-        + c2 * r2 * (best - population)
+    step = advance_swarm(
+        positions=population,
+        velocities=vel,
+        personal_best=pBest,
+        global_best=best,
+        inertia=w,
+        cognitive_random=r1,
+        social_random=r2,
+        maximum_velocity=Vmax,
+        config=PSOConfig(cognitive=2.0, social=2.0),
     )
-
-    # --- 6) Clip vel ---
-    vel = np.clip(vel, -Vmax, Vmax)
-
-    # --- 7) Update positions ---
-    population = population + vel
-
-    return population, vel, maxDiversity
+    return step.positions, step.velocities, maxDiversity

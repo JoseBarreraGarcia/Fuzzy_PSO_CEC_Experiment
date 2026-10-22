@@ -14,5 +14,5 @@ deben ser configuraciones identificables y persistibles. Las especializaciones
 como `InertiaPolicy` pertenecen a la familia del optimizador, aunque puedan
 delegar en este módulo.
 
-Estado: planificado; parte de esta responsabilidad está mezclada actualmente en
-`FUZZY/` y `PSO_FCS.py`.
+Estado: contratos ParameterPolicy/ParameterUpdate y NoAdaptation implementados.
+La orquestación difusa continúa mezclada en `FUZZY/` y `PSO_FCS.py`.

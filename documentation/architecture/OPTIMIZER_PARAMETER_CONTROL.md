@@ -106,9 +106,10 @@ futura.
 
 ### ParameterUpdate
 
-Debe registrar valores propuestos, política y versión, instante de aplicación,
-valores anteriores y efectivos, validación/clipping/rechazo y diagnóstico
-opcional.
+Representa una propuesta inmutable e incluye valores propuestos, identidad y
+versión de la política y diagnóstico opcional. El futuro runner producirá un
+evento separado de aplicación con instante, valores anteriores y efectivos,
+validación, clipping o rechazo. No se debe confundir propuesta con aplicación.
 
 ## 5. Familia PSO para comparaciones controladas
 
@@ -178,6 +179,13 @@ Cada paso requiere regresiones, documentación y un commit independiente.
 
 La auditoría inicial del paso 1 se encuentra en
 [LEGACY_OPTIMIZER_AUDIT.md](LEGACY_OPTIMIZER_AUDIT.md).
+
+Avance de implementación:
+
+- contratos SearchState, ParameterPolicy y ParameterUpdate: implementados;
+- NoAdaptation y legacy_ldiw: implementados;
+- transición numérica común PSO: implementada;
+- ciclo completo del optimizador, política fija y runner en memoria: pendientes.
 
 ## 9. Decisiones todavía abiertas
 
