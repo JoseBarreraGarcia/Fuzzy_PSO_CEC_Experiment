@@ -4,6 +4,17 @@
 
 **Estado:** roadmap actualizado el 19 de octubre de 2026; plan de trabajo, no protocolo ejecutado. **Decisión vigente:** CEC 2017 como candidato principal condicionado a auditoría y F1–F23 como bloque secundario. **Documento asociado:** `Diagnostico_CEC2017_PreExperimentos_Paper2.md`. **Journal objetivo:** por confirmar; evaluación editorial provisional. **Tipo:** artículo original de investigación metodológica y experimental en optimización computacional.
 
+**Decisiones de integración confirmadas el 23 de octubre de 2026:** conservar
+los niveles principales `o={0,0.5,1}` —sin sustituir 0 % por 1 %—; aplicar
+`nearest centre` con `tie → upper label` en las fronteras de 0 %; usar overlap
+compartido entre diversidad, progreso y salida en el factorial principal,
+manteniendo configuración independiente para ablaciones; conservar diversidad
+de Hussain normalizada por máximo histórico y progreso `iter/maxIter`; registrar
+la población inicial ya evaluada como checkpoint 0 sin aplicar `w`; mantener
+Mamdani min–max, centroide y triangulares en el estudio principal. La familia
+gaussiana queda preparada para estudios posteriores mediante la convención
+geométrica ±2σ descrita en la sección 4.
+
 ## 1. Posicionamiento y contribución
 
 **Artículo previo:** análisis de sensibilidad estructural de 32 controladores de inercia Mamdani para PSO, definidos por cuatro granularidades (3, 5, 7, 9) y ocho bases de reglas (R1–R8), con particiones triangulares Ruspini, 62 instancias F1–F23 y 31 corridas.
@@ -44,6 +55,14 @@ Centros equiespaciados `c_i`, distancia entre centros `Delta = c_(i+1)-c_i`. Par
 En el punto medio entre dos centros, las dos triangulares adyacentes pueden alcanzar pertenencia 0: ninguna regla se activa y el denominador del centroide puede anularse. **Definir antes de ejecutar** una política que garantice cobertura operacional. Opción primaria: convención determinista de etiqueta superior en el punto medio (`tie → upper label`) con activación puntual de pertenencia 1 o asignación categórica al antecedente seleccionado, definida expresamente como extensión del operador de fuzzificación. Opción de sensibilidad: `tie → lower label`; una tercera opción es comparar con una función tipo *nearest centre*. Documentar que estas convenciones introducen discontinuidades y **no equivalen** a una partición triangular continua ni recuperan la condición Ruspini. Validar los extremos `x=0,1`, hombros, clipping y casos de flotantes próximos al límite.
 
 **Alternativa más conservadora:** definir una tolerancia operacional o límites semiabiertos para evitar activación nula y garantizar una sola regla; explicar que sigue siendo una fuzzificación con política de frontera. Nunca tratar como resultado natural de las ecuaciones triangulares algo que depende de la política de implementación.
+
+**Decisión confirmada:** se adopta la opción primaria
+`nearest_center_tie_upper`. La etiqueta seleccionada recibe activación
+categórica 1 en el punto sin cobertura. Un caso sin activación después de esta
+política es un error, no un fallback silencioso a `w=0.5`. Se registrarán los
+eventos de frontera, ausencia de activación y fallback. El nivel 1 % puede
+examinarse como sensibilidad secundaria, pero no reemplaza el nivel 0 % ni se
+incorpora al factorial principal.
 
 ### Propiedades formales y pruebas
 
@@ -155,6 +174,8 @@ Medir dos realizaciones del **mismo** controlador, sin cambiar sus decisiones:
 - `sparse`: detecta etiquetas activas y evalúa únicamente pares antecedentes activados, con reglas de frontera idénticas.
 
 **Control esencial:** para cada `(o,n,R,d,p)` comparar `w_dense` y `w_sparse` con tolerancia numérica fijada. **No duplicar** toda la campaña principal CEC 2017 (174.406 corridas previstas) solo por método de inferencia si se ha demostrado equivalencia de salida y la diferencia únicamente afecta ejecución: realizar un microbenchmark separado y representativo de los estados visitados, con suficientes repeticiones de temporización, orden aleatorizado y control del entorno. Si no hay equivalencia, tratarla como factor algorítmico adicional, no como mera optimización de código.
+
+**Estado de implementación v2:** `dense_v1` y `sparse_v1` están disponibles y una regresión automatizada exige equivalencia de salida y reglas activas para familias triangular/gaussiana, `o={0,0.5,1}` y una malla de entradas. También se instrumentan tiempo exclusivo del FIS y reglas evaluadas/omitidas. Esto no reemplaza el microbenchmark representativo, que continúa pendiente antes del piloto.
 
 Tiempo de inferencia y tiempo total deben medirse por separado; además contar etiquetas y reglas activas, evaluadas y saltadas. La reducción teórica de activaciones no implica automáticamente ventaja de tiempo si domina la defuzzificación sobre una malla de 501 puntos u otros costos de Python/vectorización.
 

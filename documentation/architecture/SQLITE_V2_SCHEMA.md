@@ -1,7 +1,7 @@
 # Esquema SQLite v2
 
-**Estado:** infraestructura preparada y probada; conectada al ejecutor mínimo
-de réplicas v2, todavía no a los solvers heredados ni a un runner de campañas.
+**Estado:** infraestructura preparada y probada; conectada al runner secuencial
+de campañas v2 y al optimizador PSO. Otros solvers heredados siguen pendientes.
 
 ## Propósito
 
@@ -22,18 +22,20 @@ como puentes de importación durante la transición.
 
 `src/afcs/experiments/runner.py` conecta una réplica planificada con cualquier
 optimizador que implemente `RunnableOptimizer`. Actualmente persiste resultados,
-hashes de condiciones iniciales y fallos estructurados; no inventa trazas.
+hashes de condiciones iniciales, trazas seleccionadas, métricas de réplica y
+fallos estructurados.
 
 Antes de iniciar, el ejecutor compara el plan normalizado de SQLite con
 `OptimizerRunMetadata`: algoritmo, problema, dimensión, dirección, óptimo,
 parámetros, hash de datos, población y presupuestos. Una discrepancia detiene la
-ejecución y conserva la réplica como `planned`. La versión del optimizador aún
-no puede contrastarse porque el esquema inicial no tiene una columna específica.
+ejecución y conserva la réplica como `planned`. La migración 003 añadió la
+versión del optimizador y el runner también la contrasta.
 
 `CampaignPlanner` persiste de forma atómica campañas ya validadas, elimina
 duplicados de instancias/configuraciones y expande tratamientos por índice de
-réplica. Asigna semillas pareadas mediante `base_seed + replica_index`. El lector
-del futuro esquema humano de `config/` aún no está implementado.
+réplica. Asigna semillas pareadas mediante `base_seed + replica_index`. El
+lector estricto y el JSON Schema de campañas están implementados en
+`afcs.experiments.configuration` y `config/schemas/`.
 
 ## Modelo
 

@@ -16,6 +16,7 @@ from afcs.core import RandomnessConfig
 from afcs.metrics import MetricRegistry, load_metric_registry
 from afcs.optimizers.pso import (
     FixedInertia,
+    FuzzyInertiaPolicy,
     LegacyCompatiblePSO,
     LegacyLinearInertia,
     LegacyPSORunConfig,
@@ -347,9 +348,78 @@ def _parse_policy(raw: Any, path: str):
         return lambda max_iterations: LegacyLinearInertia(
             max_iterations, maximum=maximum, minimum=minimum
         )
+    if policy["id"] == "fuzzy_inertia_mamdani":
+        _keys(
+            parameters,
+            required={
+                "minimum",
+                "maximum",
+                "granularity",
+                "rule_base",
+                "membership_family",
+                "overlap",
+                "zero_overlap_boundary_policy",
+            },
+            optional={"centroid_grid_points", "inference_evaluation_mode"},
+            path=f"{path}.parameters",
+        )
+        overlap = _parse_overlap(parameters["overlap"], f"{path}.parameters.overlap")
+        common = {
+            "minimum": _finite_number(parameters["minimum"], f"{path}.parameters.minimum"),
+            "maximum": _finite_number(parameters["maximum"], f"{path}.parameters.maximum"),
+            "granularity": parameters["granularity"],
+            "rule_base": parameters["rule_base"],
+            "membership_family": parameters["membership_family"],
+            "zero_overlap_boundary_policy": parameters["zero_overlap_boundary_policy"],
+            "centroid_grid_points": parameters.get("centroid_grid_points", 501),
+            "inference_evaluation_mode": parameters.get(
+                "inference_evaluation_mode", "dense_v1"
+            ),
+            **overlap,
+        }
+        try:
+            FuzzyInertiaPolicy(max_iterations=1, **common)
+        except (TypeError, ValueError) as error:
+            raise ConfigurationError(f"{path}.parameters: {error}") from error
+        return lambda max_iterations: FuzzyInertiaPolicy(
+            max_iterations=max_iterations, **common
+        )
     raise ConfigurationError(
-        f"{path}.id: supported options are ['fixed_inertia', 'legacy_ldiw']"
+        f"{path}.id: supported options are "
+        "['fixed_inertia', 'legacy_ldiw', 'fuzzy_inertia_mamdani']"
     )
+
+
+def _parse_overlap(raw: Any, path: str) -> dict[str, Any]:
+    overlap = _object(raw, path)
+    mode = overlap.get("mode")
+    if mode == "shared":
+        _keys(overlap, required={"mode", "value"}, optional=set(), path=path)
+        return {
+            "overlap_mode": "shared",
+            "overlap": _bounded_overlap(overlap["value"], f"{path}.value"),
+        }
+    if mode == "independent":
+        _keys(
+            overlap,
+            required={"mode", "diversity", "progress", "output"},
+            optional=set(),
+            path=path,
+        )
+        return {
+            "overlap_mode": "independent",
+            "diversity_overlap": _bounded_overlap(overlap["diversity"], f"{path}.diversity"),
+            "progress_overlap": _bounded_overlap(overlap["progress"], f"{path}.progress"),
+            "output_overlap": _bounded_overlap(overlap["output"], f"{path}.output"),
+        }
+    raise ConfigurationError(f"{path}.mode must be 'shared' or 'independent'")
+
+
+def _bounded_overlap(value: Any, path: str) -> float:
+    overlap = _finite_number(value, path)
+    if not 0.0 <= overlap <= 1.0:
+        raise ConfigurationError(f"{path} must be between 0 and 1")
+    return overlap
 
 
 def _parse_execution(raw: Any) -> ExecutionConfig:

@@ -258,12 +258,12 @@ class TestPersistenceV2(unittest.TestCase):
 
     def test_registry_snapshots_are_immutable_and_idempotent(self):
         registry = load_metric_registry()
-        self.assertEqual(sync_metric_definitions(self.connection, registry), 28)
+        self.assertEqual(sync_metric_definitions(self.connection, registry), 36)
         self.assertEqual(sync_metric_definitions(self.connection, registry), 0)
         count = self.connection.execute(
             "SELECT COUNT(*) FROM metric_definitions"
         ).fetchone()[0]
-        self.assertEqual(count, 28)
+        self.assertEqual(count, 36)
 
     def test_campaign_metric_profile_is_persisted(self):
         self._insert_campaign_graph()

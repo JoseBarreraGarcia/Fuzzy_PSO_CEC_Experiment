@@ -66,7 +66,7 @@
         "id": {"type": "string", "minLength": 1, "description": "Identificador único de la configuración algorítmica."},
         "optimizer": {"const": "PSO"},
         "parameters": {"$ref": "#/$defs/psoParameters"},
-        "parameter_policy": {"oneOf": [{"$ref": "#/$defs/fixedInertia"}, {"$ref": "#/$defs/legacyLdiw"}]}
+        "parameter_policy": {"oneOf": [{"$ref": "#/$defs/fixedInertia"}, {"$ref": "#/$defs/legacyLdiw"}, {"$ref": "#/$defs/fuzzyInertiaMamdani"}]}
       }
     },
     "psoParameters": {
@@ -87,6 +87,49 @@
     "legacyLdiw": {
       "type": "object", "additionalProperties": false, "required": ["id", "parameters"],
       "properties": {"id": {"const": "legacy_ldiw"}, "parameters": {"type": "object", "additionalProperties": false, "properties": {"maximum": {"type": "number", "default": 0.9}, "minimum": {"type": "number", "default": 0.1}}}}
+    },
+    "fuzzyInertiaMamdani": {
+      "type": "object", "additionalProperties": false, "required": ["id", "parameters"],
+      "properties": {
+        "id": {"const": "fuzzy_inertia_mamdani"},
+        "parameters": {
+          "type": "object", "additionalProperties": false,
+          "required": ["minimum", "maximum", "granularity", "rule_base", "membership_family", "overlap", "zero_overlap_boundary_policy"],
+          "properties": {
+            "minimum": {"type": "number", "description": "Límite inferior efectivo de w."},
+            "maximum": {"type": "number", "description": "Límite superior efectivo de w."},
+            "granularity": {"type": "integer", "enum": [3, 5, 7, 9]},
+            "rule_base": {"type": "string", "enum": ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"]},
+            "membership_family": {"type": "string", "enum": ["triangular_v1", "gaussian_v1"], "description": "El factorial principal aprobado utiliza triangular_v1; gaussian_v1 queda disponible para estudios posteriores."},
+            "overlap": {"$ref": "#/$defs/fuzzyOverlap"},
+            "zero_overlap_boundary_policy": {"const": "nearest_center_tie_upper"},
+            "centroid_grid_points": {"type": "integer", "minimum": 101, "default": 501},
+            "inference_evaluation_mode": {"type": "string", "enum": ["dense_v1", "sparse_v1"], "default": "dense_v1", "description": "La campaña principal usa dense_v1; sparse_v1 requiere equivalencia validada y se compara en microbenchmarks."}
+          }
+        }
+      }
+    },
+    "fuzzyOverlap": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["mode", "value"],
+          "properties": {
+            "mode": {"const": "shared"},
+            "value": {"type": "number", "minimum": 0, "maximum": 1, "description": "0, 0.5 y 1 son los niveles aprobados para el factorial principal."}
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["mode", "diversity", "progress", "output"],
+          "properties": {
+            "mode": {"const": "independent"},
+            "diversity": {"type": "number", "minimum": 0, "maximum": 1},
+            "progress": {"type": "number", "minimum": 0, "maximum": 1},
+            "output": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      ]
     },
     "execution": {
       "type": "object", "additionalProperties": false,

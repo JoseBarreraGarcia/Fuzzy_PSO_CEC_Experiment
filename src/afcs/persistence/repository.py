@@ -413,6 +413,16 @@ class ExperimentRepository:
             metric_id for metric_id in self.registry.metrics if metric_id in selected
         )
 
+    def selected_metric_ids_for_run(self, run_id: int) -> tuple[str, ...]:
+        """Return the metric contract of the campaign that owns ``run_id``."""
+
+        row = self.connection.execute(
+            "SELECT campaign_id FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if row is None:
+            raise RepositoryError(f"Unknown run: {run_id}")
+        return self.selected_metric_ids(str(row["campaign_id"]))
+
     def start_campaign(self, campaign_id: str, started_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "draft")
         run_count = self.connection.execute(

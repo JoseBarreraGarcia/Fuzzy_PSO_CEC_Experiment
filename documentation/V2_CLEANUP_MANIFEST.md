@@ -263,9 +263,9 @@ Avance ejecutado:
   selección de métricas y análisis jerárquico con familias Holm explícitas.
 - [x] Se inventariaron las capacidades estadísticas y sus fuentes actuales en
   `documentation/V2_ANALYSIS_RESCUE_MAP.md`.
-- [x] Se identificaron reconstrucciones de métricas que deberán etiquetarse y
-  el defecto de trazas `Divj_max0` pendiente de corrección.
-- [x] Se implementó el registro versionado inicial de 28 métricas y el
+- [x] Se identificaron reconstrucciones de métricas que deberán etiquetarse; el
+  defecto de trazas `Divj_max0` fue corregido en el colector v2.
+- [x] Se implementó el registro versionado de 36 métricas y el
   resolvedor validado para perfiles, `all` y listas explícitas.
 - [x] Se crearon fixtures tabulares sintéticos para réplicas y trazas.
 - [x] Se preparó un esquema SQLite v2 paralelo, versionado e idempotente, con
@@ -274,7 +274,8 @@ Avance ejecutado:
   de métricas al iniciar una campaña.
 - [x] Se preparó la API transaccional del ciclo de vida de campañas, réplicas y
   métricas, con validación de selección, ámbito, tipo y monotonicidad.
-- [ ] Falta crear el adaptador entre esta API y el runner/solvers actuales.
+- [x] Se creó el adaptador entre la API transaccional y el runner PSO v2;
+  faltan los demás solvers heredados.
 - [ ] Falta migrar las funciones autoritativas de análisis sobre los fixtures.
 - [ ] No se ha retirado todavía ningún árbol histórico de análisis.
 - [x] Se incorporó el contexto doctoral y se creó una estructura `src/afcs/`
@@ -323,8 +324,16 @@ Avance ejecutado:
 - [x] Las métricas poblacionales v2 tienen versión explícita y pruebas de
   equivalencia con las fórmulas heredadas; `Divj_max` ya no reutiliza el valor
   de la iteración cero.
-- [ ] Falta instrumentar las métricas internas del controlador difuso y extender
-  el contrato de observación a GA y las demás metaheurísticas.
+- [x] Se integraron primitivas difusas versionadas, la política PSO-FCS y las
+  métricas internas por iteración: entradas, membresías, reglas, salida y casos
+  de frontera.
+- [x] Se agregaron tiempo exclusivo del FIS, resúmenes por réplica, inferencia
+  densa/dispersa y pruebas de equivalencia numérica, con conteo de reglas
+  evaluadas y omitidas.
+- [ ] Falta extender el contrato de observación a GA y las demás
+  metaheurísticas. El microbenchmark controlado se conserva como validación
+  técnica opcional y como preparación de una campaña futura, no como condición
+  para continuar la implementación estructural.
 
 ### Ola 3 — separación de publicaciones
 
@@ -341,7 +350,8 @@ Avance ejecutado:
 2. Migrar problemas, optimizadores, controladores, runner y persistencia en
    cambios pequeños.
 3. [Completado en v2 modular] Implementar la propuesta de semillas; queda
-   pendiente migrar los solvers heredados y ejecutar el piloto paralelo.
+   pendiente migrar los solvers heredados y validar ejecución paralela con un
+   smoke test técnico reproducible.
 
 ## 11. Criterios de aceptación de la limpieza
 

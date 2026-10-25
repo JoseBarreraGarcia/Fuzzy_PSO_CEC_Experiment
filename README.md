@@ -5,9 +5,11 @@ investigar control difuso adaptativo de metaheurísticas. El desarrollo inicial
 se concentra en PSO y benchmarks continuos, pero la arquitectura contempla GA,
 otros optimizadores clásicos y problemas discretos como SCP, USCP y Knapsack.
 
-> **Estado:** transición a v2. La infraestructura de métricas y persistencia ya
-> cuenta con pruebas; el runner heredado todavía no ha sido migrado al nuevo
-> paquete. No debe considerarse aún una versión de producción.
+> **Estado:** transición avanzada a v2. CEC2017, PSO, control difuso, semillas,
+> campañas secuenciales, métricas y persistencia SQLite ya operan en el paquete
+> nuevo y cuentan con pruebas. Todavía no es una versión de producción: faltan
+> endurecimiento, paralelismo validado, más familias de problemas/optimizadores,
+> análisis reutilizable y limpieza final.
 
 ## Preservación del artículo MDPI
 
@@ -29,10 +31,11 @@ retroactivamente al artículo.
 | mapa de módulos y migración de rutas | [`documentation/architecture/MODULE_MAP.md`](documentation/architecture/MODULE_MAP.md) |
 | optimizadores y control opcional de parámetros | [`documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md`](documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md) |
 | plan general de migración | [`documentation/V2_MIGRATION_PLAN.md`](documentation/V2_MIGRATION_PLAN.md) |
+| ruta para terminar la plataforma | [`documentation/V2_PLATFORM_COMPLETION_PLAN.md`](documentation/V2_PLATFORM_COMPLETION_PLAN.md) |
 | decisiones de limpieza por archivo | [`documentation/V2_CLEANUP_MANIFEST.md`](documentation/V2_CLEANUP_MANIFEST.md) |
 | contrato experimental y estadístico | [`documentation/lessons_learned/EXPERIMENT_DATA_AND_ANALYSIS.md`](documentation/lessons_learned/EXPERIMENT_DATA_AND_ANALYSIS.md) |
 | diseño de SQLite v2 | [`documentation/architecture/SQLITE_V2_SCHEMA.md`](documentation/architecture/SQLITE_V2_SCHEMA.md) |
-| propuesta pendiente sobre semillas | [`config/PROPUESTA_IMPLEMENTACION_SEMILLAS.md`](config/PROPUESTA_IMPLEMENTACION_SEMILLAS.md) |
+| contrato implementado de semillas | [`config/PROPUESTA_IMPLEMENTACION_SEMILLAS.md`](config/PROPUESTA_IMPLEMENTACION_SEMILLAS.md) |
 | diagnóstico y uso de CEC2017 | [`Problem/Benchmark/CEC/cec2017/CEC2017_OPERATIONAL.md`](Problem/Benchmark/CEC/cec2017/CEC2017_OPERATIONAL.md) |
 | contexto doctoral incorporado | [`Tesis/CONTEXTO_TESIS_DOCTORAL_CODEX.md`](Tesis/CONTEXTO_TESIS_DOCTORAL_CODEX.md) |
 
@@ -51,10 +54,11 @@ pruebas y una sustitución funcional.
 - mapa de rescate del análisis estadístico reutilizable;
 - estructura modular para lógica difusa, selectores, controladores,
   binarización, problemas, optimizadores y análisis.
-
-La generación y gestión de semillas aún **no está implementada**. Su propuesta
-se mantiene separada para que el cambio de reproducibilidad sea explícito y no
-altere silenciosamente la metodología histórica.
+- semillas pareadas por réplica, subflujos explícitos y hashes de condiciones
+  iniciales;
+- PSO v2 con políticas fija, lineal heredada y control Mamdani de `w`;
+- campañas configurables con `preview`, planificación y ejecución secuencial;
+- trazas y diagnósticos internos del controlador difuso.
 
 ## Validación del estado actual
 
@@ -66,9 +70,10 @@ instale el paquete v2 en modo editable y ejecute las pruebas:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Las campañas reales no deben iniciarse todavía desde la nueva arquitectura:
-primero falta conectar el runner/solvers con la persistencia v2 y realizar un
-smoke test extremo a extremo.
+La arquitectura ya permite validaciones técnicas pequeñas, pero las campañas
+científicas no deben iniciarse hasta terminar la plataforma y congelar el
+protocolo metodológico correspondiente. La validación técnica actual no es
+evidencia para artículos.
 
 ## Regla de evolución
 

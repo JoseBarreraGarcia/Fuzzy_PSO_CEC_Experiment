@@ -170,7 +170,7 @@ cobrarle un coste inexistente y medir el coste añadido por la adaptación.
 4. [Completado] Extraer el núcleo PSO sin cambiar fórmulas ni orden de operaciones.
 5. [Completado] Implementar NoAdaptation, inercia fija y política legacy equivalente.
 6. [En progreso] Conectar el runner y persistencia v2.
-7. Migrar PSO-FCS como política difusa.
+7. [En progreso] Migrar PSO-FCS como política difusa.
 8. Incorporar las otras políticas de w tras aprobar sus fórmulas.
 9. Adaptar GA y después inventariar las demás MH legacy.
 10. Implementar comparadores completos en módulos separados.
@@ -188,12 +188,26 @@ Avance de implementación:
 - política de inercia fija: implementada;
 - ciclo PSO completo en memoria con NFE exacto: implementado;
 - protocolo pareado, semilla persistida y subflujos NumPy de PSO: implementados;
-- runner de campañas, métricas y persistencia durante la corrida: pendientes.
+- runner de campañas, métricas y persistencia durante la corrida: implementados
+  para PSO v2;
 - ejecutor mínimo de una réplica y persistencia del resultado/fallo: implementado;
 - validación automática plan ↔ problema ↔ optimizador: implementada para los
   campos disponibles en el esquema v2, incluida semilla y motor RNG;
 - persistencia y validación de la versión del optimizador: pendiente de una
   migración futura del esquema.
+- primitivas difusas triangulares y gaussianas, reglas R1-R8 e inferencia
+  Mamdani min-max-centroide: implementadas en `afcs.fuzzy`;
+- política `fuzzy_inertia_mamdani` con diversidad Hussain, máximo histórico y
+  progreso `iter/maxIter`: integrada al núcleo PSO y a la configuración v1;
+- diagnósticos internos del FCS conectados a las trazas por iteración;
+- tiempo exclusivo del FIS, agregados por corrida y conteos de reglas
+  evaluadas/omitidas: implementados y persistidos según el perfil de métricas;
+- inferencia `dense_v1` y `sparse_v1`: implementadas con regresión de
+  equivalencia numérica. Sigue pendiente el microbenchmark representativo antes
+  del piloto.
+
+Las decisiones metodológicas congeladas para esta integración se documentan en
+[FUZZY_CONTROLLER_METHODOLOGY.md](FUZZY_CONTROLLER_METHODOLOGY.md).
 
 ## 9. Decisiones todavía abiertas
 

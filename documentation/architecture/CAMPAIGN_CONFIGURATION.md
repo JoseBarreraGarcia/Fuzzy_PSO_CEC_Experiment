@@ -26,6 +26,8 @@ LoadedCampaignConfig
   contratos internos.
 - `src/afcs/metrics/definitions.json`: IDs y perfiles de métricas.
 - `config/campaigns/cec2017_pso_v2.example.json`: plantilla de partida.
+- `config/campaigns/cec2017_pso_fcs_overlap.example.json`: integración mínima
+  del controlador difuso aprobada para pruebas, no campaña exhaustiva.
 
 El esquema facilita la edición, pero el lector Python sigue siendo la barrera
 obligatoria antes de planificar o persistir una campaña. Ambos contratos deben
@@ -67,3 +69,15 @@ nueva familia, metaheurística o política debe aportar:
 
 Los JSON heredados de `config/` permanecen congelados y no se reinterpretan
 automáticamente con esta semántica.
+
+## Política difusa PSO-FCS
+
+`fuzzy_inertia_mamdani` materializa en la configuración resuelta todas las
+decisiones que afectan la inferencia: límites de `w`, granularidad, R1-R8,
+familia de membresía, definición y acoplamiento de overlap, frontera en cero,
+Hussain v1, máximo histórico, `iter/maxIter`, Mamdani min-max y centroide.
+
+El modo compartido es el aprobado para el factorial 0/50/100. El esquema admite
+un modo independiente para diversidad/progreso/salida sin convertirlo en valor
+predeterminado ni incorporarlo silenciosamente al estudio. Véase
+[FUZZY_CONTROLLER_METHODOLOGY.md](FUZZY_CONTROLLER_METHODOLOGY.md).

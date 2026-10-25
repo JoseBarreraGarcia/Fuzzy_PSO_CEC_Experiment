@@ -38,6 +38,20 @@ RNG ni modifica el estado del enjambre. Actualmente produce:
 - diversidad media, mínima y máxima por dimensión;
 - peso de inercia efectivamente aplicado.
 
+Para `fuzzy_inertia_mamdani` también persiste desde la primera transición:
+
+- progreso exacto `iter/maxIter` y entrada Hussain normalizada;
+- grados de pertenencia por antecedente;
+- reglas activas y sus fuerzas de disparo;
+- salida normalizada anterior al escalamiento de `w`;
+- reglas evaluadas y omitidas por el modo de inferencia;
+- tiempo exclusivo de cada llamada al FIS;
+- eventos de frontera `tie → upper`, ausencia de activación y fallbacks.
+
+Estas variables no aparecen en el checkpoint 0 porque el controlador todavía
+no ha sido consultado. La diversidad poblacional de ese checkpoint sí se
+registra y sirve para inicializar el máximo histórico de la primera decisión.
+
 Las fórmulas se migraron a `afcs.metrics.tracing` con sufijo de versión `v1` y
 pruebas de equivalencia frente al código heredado. Sus definiciones pasaron a
 versión 2 en el registro, y el registro completo a `schema_version=2`.
@@ -55,12 +69,15 @@ fallida. Cada valor conserva el ID y la versión de su definición.
 
 ## Pendiente
 
-- instrumentar entradas, pertenencias, reglas, activaciones y salida del
-  controlador difuso;
 - medir el costo de instrumentación en campañas representativas;
 - validar estrategias de reducción de frecuencia para experimentos masivos;
 - implementar métricas equivalentes para GA y otras metaheurísticas;
 - acordar la política de recuperación de una réplica interrumpida en `running`.
+
+El tiempo exclusivo del FIS y los resúmenes por réplica ya están implementados.
+También se registran reglas evaluadas y omitidas para distinguir el costo lógico
+de `dense_v1` y `sparse_v1`; su comparación de rendimiento requiere todavía el
+microbenchmark controlado.
 
 ## Fundamento metodológico
 

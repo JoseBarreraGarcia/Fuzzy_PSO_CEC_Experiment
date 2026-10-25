@@ -20,6 +20,9 @@ from afcs.experiments.cli import campaign_preview, main
 
 
 EXAMPLE_PATH = Path("config/campaigns/cec2017_pso_v2.example.json")
+FUZZY_EXAMPLE_PATH = Path(
+    "config/campaigns/cec2017_pso_fcs_overlap.example.json"
+)
 
 
 def _smoke_config(campaign_id: str = "smoke", metrics: str = "minimal"):
@@ -122,6 +125,66 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertEqual(summary.executed_now, 3)
         self.assertEqual(summary.completed, 4)
         self.assertEqual(summary.campaign_status, "completed")
+
+    def test_fuzzy_campaign_executes_and_persists_controller_diagnostics(self) -> None:
+        raw = json.loads(FUZZY_EXAMPLE_PATH.read_text(encoding="utf-8"))
+        raw["campaign"].update({"id": "fuzzy-smoke", "replicas": 1})
+        raw["treatments"] = [raw["treatments"][0]]
+        raw["treatments"][0]["parameters"].update(
+            {"population_size": 4, "max_iterations": 2}
+        )
+        loaded = parse_campaign_config(raw, code_commit="test-commit")
+
+        summary = SequentialCampaignOrchestrator(
+            self.repository
+        ).plan_and_execute(loaded)
+
+        self.assertEqual(summary.completed, 1)
+        self.assertEqual(summary.failed, 0)
+        recorded = self.connection.execute(
+            """
+            SELECT metric_id, checkpoint_index
+            FROM trace_metric_values
+            WHERE metric_id IN (
+                'progress_ratio', 'fuzzy_input_diversity',
+                'fuzzy_boundary_event_count', 'fuzzy_no_activation_count',
+                'fuzzy_fallback_count'
+            )
+            ORDER BY metric_id, checkpoint_index
+            """
+        ).fetchall()
+        by_metric = {}
+        for row in recorded:
+            by_metric.setdefault(row["metric_id"], []).append(
+                row["checkpoint_index"]
+            )
+        self.assertEqual(
+            set(by_metric),
+            {
+                "progress_ratio",
+                "fuzzy_input_diversity",
+                "fuzzy_boundary_event_count",
+                "fuzzy_no_activation_count",
+                "fuzzy_fallback_count",
+            },
+        )
+        self.assertTrue(all(points == [1, 2] for points in by_metric.values()))
+        run_metrics = self.connection.execute(
+            """
+            SELECT metric_id, value_real, value_integer
+            FROM run_metric_values
+            WHERE metric_id LIKE 'fuzzy_%'
+            """
+        ).fetchall()
+        persisted = {row["metric_id"]: row for row in run_metrics}
+        self.assertEqual(persisted["fuzzy_inference_call_count"]["value_integer"], 2)
+        self.assertEqual(persisted["fuzzy_evaluated_rule_count"]["value_integer"], 18)
+        self.assertEqual(persisted["fuzzy_skipped_rule_count"]["value_integer"], 0)
+        self.assertGreaterEqual(
+            persisted["fuzzy_runtime_total_seconds"]["value_real"], 0.0
+        )
+        self.assertEqual(persisted["fuzzy_no_activation_count"]["value_integer"], 0)
+        self.assertEqual(persisted["fuzzy_fallback_count"]["value_integer"], 0)
 
     def test_stale_running_run_requires_explicit_recovery(self) -> None:
         orchestrator = SequentialCampaignOrchestrator(self.repository)

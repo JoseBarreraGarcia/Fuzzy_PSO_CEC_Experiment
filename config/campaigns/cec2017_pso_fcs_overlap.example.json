@@ -1,0 +1,88 @@
+{
+  "$schema": "../schemas/campaign_v1.schema.json",
+  "_documentation": {
+    "purpose": "Ejemplo pequeño de integración PSO-FCS; no autoriza la campaña factorial completa.",
+    "methodology": "El estudio principal usa triangulares, overlap compartido 0/0.5/1, Hussain normalizada por máximo histórico, progreso iter/maxIter, Mamdani min-max y centroide.",
+    "boundary": "En overlap 0, un punto de unión se asigna a la etiqueta superior y el evento debe quedar instrumentado.",
+    "gaussian": "gaussian_v1 implementa la convención geométrica ±2 sigma, pero queda fuera del factorial principal aprobado."
+  },
+  "schema_version": 1,
+  "campaign": {
+    "id": "cec2017-pso-fcs-overlap-smoke",
+    "name": "CEC2017 PSO-FCS overlap integration smoke",
+    "replicas": 31,
+    "metrics": "fuzzy",
+    "notes": "Ejemplo de configuración, no protocolo experimental final."
+  },
+  "randomness": {
+    "protocol": "paired_by_replica_v1",
+    "base_seed": 42,
+    "engine": "numpy_seedsequence_pcg64_v1"
+  },
+  "problems": [
+    {
+      "family": "CEC2017",
+      "functions": [1],
+      "dimensions": [10]
+    }
+  ],
+  "treatments": [
+    {
+      "id": "fcs-o0-n3-r1",
+      "optimizer": "PSO",
+      "parameters": {
+        "population_size": 20,
+        "max_iterations": 500,
+        "cognitive": 2.0,
+        "social": 2.0,
+        "velocity_factor": 0.1
+      },
+      "parameter_policy": {
+        "id": "fuzzy_inertia_mamdani",
+        "parameters": {
+          "minimum": 0.1,
+          "maximum": 0.9,
+          "granularity": 3,
+          "rule_base": "R1",
+          "membership_family": "triangular_v1",
+          "overlap": {"mode": "shared", "value": 0.0},
+          "zero_overlap_boundary_policy": "nearest_center_tie_upper",
+          "centroid_grid_points": 501,
+          "inference_evaluation_mode": "dense_v1"
+        }
+      }
+    },
+    {
+      "id": "fcs-o100-n3-r1",
+      "optimizer": "PSO",
+      "parameters": {
+        "population_size": 20,
+        "max_iterations": 500,
+        "cognitive": 2.0,
+        "social": 2.0,
+        "velocity_factor": 0.1
+      },
+      "parameter_policy": {
+        "id": "fuzzy_inertia_mamdani",
+        "parameters": {
+          "minimum": 0.1,
+          "maximum": 0.9,
+          "granularity": 3,
+          "rule_base": "R1",
+          "membership_family": "triangular_v1",
+          "overlap": {"mode": "shared", "value": 1.0},
+          "zero_overlap_boundary_policy": "nearest_center_tie_upper",
+          "centroid_grid_points": 501,
+          "inference_evaluation_mode": "dense_v1"
+        }
+      }
+    }
+  ],
+  "execution": {"parallel_workers": 1},
+  "trace": {
+    "enabled": true,
+    "every_iterations": 1,
+    "include_initial": true,
+    "include_final": true
+  }
+}

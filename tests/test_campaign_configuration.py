@@ -55,7 +55,7 @@ class TestCampaignConfiguration(unittest.TestCase):
             (lambda raw: raw["problems"][0]["functions"].append(2), "F2 is excluded"),
             (lambda raw: raw["problems"][0].update({"dimensions": [20]}), "unsupported values [20]"),
             (lambda raw: raw["treatments"][0].update({"optimizer": "GA"}), "supported options are ['PSO']"),
-            (lambda raw: raw["treatments"][0]["parameter_policy"].update({"id": "fuzzy"}), "supported options are ['fixed_inertia', 'legacy_ldiw']"),
+            (lambda raw: raw["treatments"][0]["parameter_policy"].update({"id": "fuzzy"}), "supported options are ['fixed_inertia', 'legacy_ldiw', 'fuzzy_inertia_mamdani']"),
             (lambda raw: raw["campaign"].update({"metrics": "unknown"}), "Unknown metric profile"),
         )
         for mutation, message in cases:
@@ -84,6 +84,46 @@ class TestCampaignConfiguration(unittest.TestCase):
         raw = _example()
         raw["execution"]["parallel_workers"] = 2
         with self.assertRaisesRegex(ConfigurationError, "only sequential execution"):
+            parse_campaign_config(raw, code_commit="abc123")
+
+    def test_fuzzy_policy_is_resolved_with_explicit_methodology(self) -> None:
+        raw = _example()
+        raw["treatments"] = [deepcopy(raw["treatments"][0])]
+        raw["treatments"][0]["id"] = "fcs-o0-n3-r1"
+        raw["treatments"][0]["parameter_policy"] = {
+            "id": "fuzzy_inertia_mamdani",
+            "parameters": {
+                "minimum": 0.1,
+                "maximum": 0.9,
+                "granularity": 3,
+                "rule_base": "R1",
+                "membership_family": "triangular_v1",
+                "overlap": {"mode": "shared", "value": 0.0},
+                "zero_overlap_boundary_policy": "nearest_center_tie_upper",
+            },
+        }
+        resolved = parse_campaign_config(raw, code_commit="abc123").resolved_config
+        parameters = resolved["treatments"][0]["parameter_policy"]["parameters"]
+        self.assertEqual(parameters["diversity_metric"], "hussain_diversity_v1")
+        self.assertEqual(parameters["progress"], "iteration_over_max_iterations_v1")
+        self.assertEqual(parameters["overlap"], {"mode": "shared", "value": 0.0})
+
+    def test_independent_overlap_requires_all_variables(self) -> None:
+        raw = _example()
+        raw["treatments"] = [deepcopy(raw["treatments"][0])]
+        raw["treatments"][0]["parameter_policy"] = {
+            "id": "fuzzy_inertia_mamdani",
+            "parameters": {
+                "minimum": 0.1,
+                "maximum": 0.9,
+                "granularity": 3,
+                "rule_base": "R1",
+                "membership_family": "triangular_v1",
+                "overlap": {"mode": "independent", "diversity": 0.0},
+                "zero_overlap_boundary_policy": "nearest_center_tie_upper",
+            },
+        }
+        with self.assertRaisesRegex(ConfigurationError, "missing=.*output"):
             parse_campaign_config(raw, code_commit="abc123")
 
 

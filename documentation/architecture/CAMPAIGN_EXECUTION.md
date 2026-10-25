@@ -18,7 +18,8 @@ completed o failed por réplica → campaña completed
 
 La fábrica reconstruye cada ejecución desde SQLite, no desde estado transitorio
 del proceso. En la primera versión soporta CEC2017, PSO
-`2.0.0a0-legacy-compatible`, `fixed_inertia` y `legacy_ldiw`. La versión del
+`2.0.0a0-legacy-compatible`, `fixed_inertia`, `legacy_ldiw` y
+`fuzzy_inertia_mamdani`. La versión del
 optimizador queda normalizada en `algorithm_configurations` mediante la migración
 003 y se comprueba antes de ejecutar.
 
@@ -39,10 +40,12 @@ réplica es una decisión metodológica aún pendiente.
   esquema como en el lector.
 - La ejecución se detiene ante el primer error, después de registrar la réplica
   como `failed`. Una invocación posterior continúa con las demás pendientes.
-- Las trazas PSO y las métricas de los perfiles `convergence` y `optimizer` ya
-  se persisten. Falta instrumentar las salidas internas del controlador difuso.
-- El controlador difuso aún no forma parte del catálogo ejecutable.
-- El piloto de equivalencia secuencial/paralela continúa pendiente.
+- Las trazas PSO, las métricas poblacionales y los diagnósticos internos del
+  controlador difuso se persisten según el perfil seleccionado.
+- La validación técnica acotada del controlador se mantiene separada del piloto
+  y de la campaña confirmatoria.
+- La validación técnica de equivalencia secuencial/paralela continúa pendiente;
+  no requiere ni autoriza una campaña científica.
 
 Estas restricciones evitan anunciar capacidades que todavía no han sido
 verificadas experimentalmente.

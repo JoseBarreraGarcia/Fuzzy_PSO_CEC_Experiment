@@ -25,6 +25,18 @@ PSO_TRACE_METRICS = frozenset(
         "diversity_dimension_mean",
         "diversity_dimension_min",
         "diversity_dimension_max",
+        "progress_ratio",
+        "fuzzy_input_diversity",
+        "fuzzy_membership_degrees",
+        "fuzzy_active_rules",
+        "fuzzy_rule_firing_strengths",
+        "fuzzy_output_normalized",
+        "fuzzy_inference_time_seconds",
+        "fuzzy_evaluated_rule_count",
+        "fuzzy_skipped_rule_count",
+        "fuzzy_boundary_event_count",
+        "fuzzy_no_activation_count",
+        "fuzzy_fallback_count",
         "inertia_weight",
     }
 )
@@ -119,6 +131,7 @@ class PSOTraceCollector:
         best_objective: float,
         elapsed_seconds: float,
         inertia_weight: float | None,
+        policy_diagnostics: Mapping[str, object] | None = None,
     ) -> None:
         diversity_metrics = {
             "diversity_hussain",
@@ -170,6 +183,28 @@ class PSOTraceCollector:
             )
         if inertia_weight is not None:
             candidates["inertia_weight"] = inertia_weight
+        if policy_diagnostics:
+            candidates.update(
+                {
+                    "progress_ratio": policy_diagnostics.get("progress_ratio"),
+                    "fuzzy_input_diversity": policy_diagnostics.get("diversity_ratio"),
+                    "fuzzy_membership_degrees": policy_diagnostics.get("membership_degrees"),
+                    "fuzzy_active_rules": policy_diagnostics.get("active_rules"),
+                    "fuzzy_rule_firing_strengths": policy_diagnostics.get("rule_firing_strengths"),
+                    "fuzzy_output_normalized": policy_diagnostics.get("normalized_output"),
+                    "fuzzy_inference_time_seconds": policy_diagnostics.get("inference_time_seconds"),
+                    "fuzzy_evaluated_rule_count": policy_diagnostics.get("evaluated_rule_count"),
+                    "fuzzy_skipped_rule_count": policy_diagnostics.get("skipped_rule_count"),
+                    "fuzzy_boundary_event_count": policy_diagnostics.get("boundary_event_count"),
+                    "fuzzy_no_activation_count": policy_diagnostics.get("no_activation_count"),
+                    "fuzzy_fallback_count": policy_diagnostics.get("fallback_count"),
+                }
+            )
+            candidates = {
+                metric_id: value
+                for metric_id, value in candidates.items()
+                if value is not None
+            }
         metrics = {
             metric_id: value
             for metric_id, value in candidates.items()

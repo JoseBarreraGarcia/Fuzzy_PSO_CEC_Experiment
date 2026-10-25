@@ -42,9 +42,8 @@ class ExperimentRunExecutor:
         if not isinstance(optimizer, RunnableOptimizer):
             raise TypeError("optimizer must implement RunnableOptimizer")
 
-        self._validate_binding(
-            self._repository.get_planned_run(run_id), optimizer
-        )
+        plan = self._repository.get_planned_run(run_id)
+        self._validate_binding(plan, optimizer)
         self._repository.start_run(run_id)
         try:
             started = self._read_clock()
@@ -56,6 +55,12 @@ class ExperimentRunExecutor:
             runtime = finished - started
             if runtime < 0:
                 raise ValueError("clock must be monotonic")
+            selected_metric_ids = self._repository.selected_metric_ids_for_run(run_id)
+            selected_run_metrics = {
+                metric_id: value
+                for metric_id, value in getattr(result, "run_metrics", {}).items()
+                if metric_id in selected_metric_ids
+            }
             with self._repository.transaction():
                 for point in getattr(result, "trace_points", ()):
                     self._repository.record_trace(
@@ -72,6 +77,7 @@ class ExperimentRunExecutor:
                     solution=solution,
                     evaluations=evaluations,
                     runtime_total_seconds=runtime,
+                    metrics=selected_run_metrics,
                     initial_population_sha256=getattr(
                         result, "initial_population_sha256", None
                     ),

@@ -1,0 +1,69 @@
+{
+  "$schema": "../schemas/campaign_v1.schema.json",
+  "_documentation": {
+    "purpose": "Validación técnica acotada del flujo CEC2017/PSO/FCS/SQLite. No constituye piloto, estudio confirmatorio ni evidencia publicable.",
+    "coverage": "Ejercita una función simple y una composición, semillas pareadas, baseline fijo, overlap 0/0.5/1 e inferencia dense_v1/sparse_v1.",
+    "budget": "42 corridas y 8820 evaluaciones: 2 funciones x 7 tratamientos x 3 réplicas x 210 evaluaciones.",
+    "limitations": "Granularidad 3 y regla R1 son casos de integración; no representan el factorial del artículo."
+  },
+  "schema_version": 1,
+  "campaign": {
+    "id": "cec2017-pso-fcs-validation-smoke-v1",
+    "name": "CEC2017 PSO-FCS bounded technical validation",
+    "replicas": 3,
+    "metrics": "fuzzy",
+    "notes": "Smoke test técnico y descartable; no usar para inferencia científica."
+  },
+  "randomness": {
+    "protocol": "paired_by_replica_v1",
+    "base_seed": 42,
+    "engine": "numpy_seedsequence_pcg64_v1"
+  },
+  "problems": [{"family": "CEC2017", "functions": [1, 21], "dimensions": [10]}],
+  "treatments": [
+    {
+      "id": "pso-fixed-w07",
+      "optimizer": "PSO",
+      "parameters": {"population_size": 10, "max_iterations": 20, "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1},
+      "parameter_policy": {"id": "fixed_inertia", "parameters": {"value": 0.7}}
+    },
+    {
+      "id": "fcs-o0-n3-r1-dense",
+      "optimizer": "PSO",
+      "parameters": {"population_size": 10, "max_iterations": 20, "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1},
+      "parameter_policy": {"id": "fuzzy_inertia_mamdani", "parameters": {"minimum": 0.1, "maximum": 0.9, "granularity": 3, "rule_base": "R1", "membership_family": "triangular_v1", "overlap": {"mode": "shared", "value": 0.0}, "zero_overlap_boundary_policy": "nearest_center_tie_upper", "centroid_grid_points": 501, "inference_evaluation_mode": "dense_v1"}}
+    },
+    {
+      "id": "fcs-o50-n3-r1-dense",
+      "optimizer": "PSO",
+      "parameters": {"population_size": 10, "max_iterations": 20, "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1},
+      "parameter_policy": {"id": "fuzzy_inertia_mamdani", "parameters": {"minimum": 0.1, "maximum": 0.9, "granularity": 3, "rule_base": "R1", "membership_family": "triangular_v1", "overlap": {"mode": "shared", "value": 0.5}, "zero_overlap_boundary_policy": "nearest_center_tie_upper", "centroid_grid_points": 501, "inference_evaluation_mode": "dense_v1"}}
+    },
+    {
+      "id": "fcs-o100-n3-r1-dense",
+      "optimizer": "PSO",
+      "parameters": {"population_size": 10, "max_iterations": 20, "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1},
+      "parameter_policy": {"id": "fuzzy_inertia_mamdani", "parameters": {"minimum": 0.1, "maximum": 0.9, "granularity": 3, "rule_base": "R1", "membership_family": "triangular_v1", "overlap": {"mode": "shared", "value": 1.0}, "zero_overlap_boundary_policy": "nearest_center_tie_upper", "centroid_grid_points": 501, "inference_evaluation_mode": "dense_v1"}}
+    },
+    {
+      "id": "fcs-o0-n3-r1-sparse",
+      "optimizer": "PSO",
+      "parameters": {"population_size": 10, "max_iterations": 20, "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1},
+      "parameter_policy": {"id": "fuzzy_inertia_mamdani", "parameters": {"minimum": 0.1, "maximum": 0.9, "granularity": 3, "rule_base": "R1", "membership_family": "triangular_v1", "overlap": {"mode": "shared", "value": 0.0}, "zero_overlap_boundary_policy": "nearest_center_tie_upper", "centroid_grid_points": 501, "inference_evaluation_mode": "sparse_v1"}}
+    },
+    {
+      "id": "fcs-o50-n3-r1-sparse",
+      "optimizer": "PSO",
+      "parameters": {"population_size": 10, "max_iterations": 20, "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1},
+      "parameter_policy": {"id": "fuzzy_inertia_mamdani", "parameters": {"minimum": 0.1, "maximum": 0.9, "granularity": 3, "rule_base": "R1", "membership_family": "triangular_v1", "overlap": {"mode": "shared", "value": 0.5}, "zero_overlap_boundary_policy": "nearest_center_tie_upper", "centroid_grid_points": 501, "inference_evaluation_mode": "sparse_v1"}}
+    },
+    {
+      "id": "fcs-o100-n3-r1-sparse",
+      "optimizer": "PSO",
+      "parameters": {"population_size": 10, "max_iterations": 20, "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1},
+      "parameter_policy": {"id": "fuzzy_inertia_mamdani", "parameters": {"minimum": 0.1, "maximum": 0.9, "granularity": 3, "rule_base": "R1", "membership_family": "triangular_v1", "overlap": {"mode": "shared", "value": 1.0}, "zero_overlap_boundary_policy": "nearest_center_tie_upper", "centroid_grid_points": 501, "inference_evaluation_mode": "sparse_v1"}}
+    }
+  ],
+  "execution": {"parallel_workers": 1},
+  "trace": {"enabled": true, "every_iterations": 1, "include_initial": true, "include_final": true}
+}

@@ -9,6 +9,7 @@ from afcs.core import ReplicaRandomStreams
 from afcs.metrics import PSOTraceCollector, TraceSampling
 from afcs.optimizers.pso import (
     FixedInertia,
+    FuzzyInertiaPolicy,
     LegacyCompatiblePSO,
     LegacyLinearInertia,
     LegacyPSORunConfig,
@@ -137,5 +138,37 @@ def _build_inertia_policy(raw: Mapping, max_iterations: int):
             max_iterations=max_iterations,
             maximum=configuration.get("maximum", 0.9),
             minimum=configuration.get("minimum", 0.1),
+        )
+    if policy_id == "fuzzy_inertia_mamdani":
+        persisted_iterations = configuration.get("max_iterations")
+        if persisted_iterations != max_iterations:
+            raise ValueError("fuzzy policy iteration budget does not match the plan")
+        overlap = configuration.get("overlap")
+        if not isinstance(overlap, Mapping):
+            raise ValueError("fuzzy policy requires persisted overlap configuration")
+        overlap_arguments = {"overlap_mode": overlap.get("mode")}
+        if overlap.get("mode") == "shared":
+            overlap_arguments["overlap"] = overlap.get("value")
+        else:
+            overlap_arguments.update(
+                diversity_overlap=overlap.get("diversity"),
+                progress_overlap=overlap.get("progress"),
+                output_overlap=overlap.get("output"),
+            )
+        return FuzzyInertiaPolicy(
+            max_iterations=max_iterations,
+            minimum=configuration.get("minimum"),
+            maximum=configuration.get("maximum"),
+            granularity=configuration.get("granularity"),
+            rule_base=configuration.get("rule_base"),
+            membership_family=configuration.get("membership_family"),
+            zero_overlap_boundary_policy=configuration.get(
+                "zero_overlap_boundary_policy"
+            ),
+            centroid_grid_points=configuration.get("centroid_grid_points", 501),
+            inference_evaluation_mode=configuration.get(
+                "inference_evaluation_mode", "dense_v1"
+            ),
+            **overlap_arguments,
         )
     raise ValueError(f"Unsupported inertia policy: {policy_id!r}")

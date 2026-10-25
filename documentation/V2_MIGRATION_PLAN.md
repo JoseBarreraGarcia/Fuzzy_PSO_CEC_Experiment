@@ -3,8 +3,10 @@
 **Rama:** `Solver_CEC_Fuzzy_PSO_v2`  
 **Punto de partida:** `f8649134362f9a7b5e04f2f2bf032eb4b5938172`  
 **Fecha:** 19 de octubre de 2026  
-**Estado:** limpieza inicial, CEC2017, contratos, métricas y persistencia
-migrados; auditoría y separación de optimizadores/runner pendiente.
+**Estado:** limpieza inicial, CEC2017, contratos, métricas, semillas,
+persistencia, runner secuencial y primera integración PSO-FCS migrados. La
+prioridad es completar la plataforma según `V2_PLATFORM_COMPLETION_PLAN.md`;
+las campañas de artículos constituyen una etapa futura.
 
 ## 1. Propósito
 
@@ -37,12 +39,11 @@ La primera etapa incluyó:
 - propuesta de limpieza y arquitectura objetivo.
 
 En etapas posteriores ya se retiraron artefactos regenerables aprobados y se
-migraron CEC2017, el registro de métricas y la persistencia SQLite v2. Todavía
-no se incluyen:
-
-- migración de optimizadores y runner;
-- cambios al sistema de semillas;
-- cambios en resultados o análisis del artículo.
+migraron CEC2017, PSO, control difuso, semillas, configuración de campañas, el
+registro de métricas, el runner secuencial y la persistencia SQLite v2. Todavía
+faltan generalización a otras familias de problemas y optimizadores, análisis
+reutilizable, paralelismo validado, endurecimiento operativo y limpieza final.
+Los resultados históricos del artículo no se reinterpretan ni se migran.
 
 ## 4. Arquitectura objetivo
 
@@ -158,8 +159,8 @@ Antes de retirarlos de v2 se debe confirmar que están presentes en `f864913`.
 
 1. Introducir `pyproject.toml`.
 2. Definir paquete `src/` e imports absolutos estables.
-3. Añadir esquema de configuración validado. La expansión/persistencia tipada ya
-   está implementada; falta la entrada humana y su lector.
+3. [Completado] Añadir esquema de configuración validado, lector estricto,
+   expansión y persistencia tipada.
 4. Sustituir scripts numerados por una CLI documentada.
 5. Separar configuración de benchmark, algoritmo, campaña y análisis.
 
@@ -170,7 +171,8 @@ Implementación modular completada de
 
 1. [Completado] Persistir `replica_index` y semilla de réplica.
 2. [Completado en v2] Eliminar la dependencia de `id_experimento`.
-3. [Parcial] El orden de inserción es independiente; falta el piloto paralelo.
+3. [Parcial] El orden de inserción es independiente; falta validar replay y
+   equivalencia bajo ejecución paralela.
 4. [Completado en PSO v2] Usar generadores explícitos y subflujos.
 5. [Completado] Registrar protocolo, motor y hashes de condiciones iniciales.
 
@@ -184,6 +186,10 @@ Implementación modular completada de
 6. Permitir optimizadores con o sin política externa de parámetros.
 7. Separar configuración inicial, adaptación dinámica e instrumentación.
 8. Registrar costes del evaluador, optimizador, métricas y controlador.
+
+Estado: los puntos 1–7 están implementados para el flujo secuencial
+CEC2017–PSO; el registro de costes es parcial y faltan recuperación explícita de
+interrupciones, validación paralela y generalización a otros solvers.
 
 La separación de optimizadores seguirá
 `documentation/architecture/OPTIMIZER_PARAMETER_CONTROL.md`. PSO será la
@@ -225,6 +231,11 @@ La limpieza estructural no se considera terminada hasta que:
 - las funciones CEC2017 conserven su batería de regresión;
 - la configuración inválida falle antes de crear experimentos;
 - la ejecución secuencial y paralela sea reproducible.
+
+La lista operativa actual y el orden de cierre se mantienen en
+[`V2_PLATFORM_COMPLETION_PLAN.md`](V2_PLATFORM_COMPLETION_PLAN.md). Este plan de
+migración no usa como puerta de aceptación la ejecución de una campaña para un
+artículo.
 
 ## 9. Decisiones aprobadas
 

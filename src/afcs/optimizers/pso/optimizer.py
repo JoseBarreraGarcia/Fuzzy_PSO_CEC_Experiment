@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import math
 from time import perf_counter
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from types import MappingProxyType
 
 import numpy as np
 
@@ -72,6 +73,10 @@ class PSORunResult:
     initial_population_sha256: str
     initial_velocity_sha256: str
     trace_points: tuple[OptimizationTracePoint, ...] = ()
+    run_metrics: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "run_metrics", MappingProxyType(dict(self.run_metrics)))
 
 
 class LegacyCompatiblePSO:
@@ -210,6 +215,7 @@ class LegacyCompatiblePSO:
                 evaluations=budget.consumed,
                 evaluation_budget=budget.maximum,
                 best_objective=global_best_value,
+                observations={"positions": _readonly_copy(positions)},
             )
             update = self._inertia_policy.propose(state, current_parameters)
             if update.policy_id != self._inertia_policy.policy_id:
@@ -259,6 +265,9 @@ class LegacyCompatiblePSO:
                 best_objective=global_best_value,
                 elapsed_seconds=self._clock() - iteration_started,
                 inertia_weight=inertia,
+                policy_diagnostics=getattr(
+                    self._inertia_policy, "last_diagnostics", None
+                ),
             )
 
         if not budget.exhausted:
@@ -278,6 +287,7 @@ class LegacyCompatiblePSO:
                 if self._trace_collector is not None
                 else ()
             ),
+            run_metrics=getattr(self._inertia_policy, "summary_metrics", {}),
         )
 
     def _observe(self, **observation) -> None:

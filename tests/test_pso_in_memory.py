@@ -6,6 +6,7 @@ from afcs.core import OptimizationDirection, ReplicaRandomStreams, SearchSpace
 from afcs.metrics import PSOTraceCollector, TraceSampling
 from afcs.optimizers.pso import (
     FixedInertia,
+    FuzzyInertiaPolicy,
     LegacyCompatiblePSO,
     LegacyLinearInertia,
     LegacyPSORunConfig,
@@ -126,6 +127,47 @@ class TestPSOInMemory(unittest.TestCase):
         self.assertEqual(
             fixed.initial_velocity_sha256, linear.initial_velocity_sha256
         )
+
+    def test_fuzzy_policy_uses_initial_population_then_persists_diagnostics(self):
+        config = LegacyPSORunConfig(population_size=5, max_iterations=2)
+        selected = (
+            "iteration_index",
+            "progress_ratio",
+            "fuzzy_input_diversity",
+            "fuzzy_boundary_event_count",
+            "fuzzy_no_activation_count",
+            "fuzzy_fallback_count",
+            "inertia_weight",
+        )
+        collector = PSOTraceCollector(
+            selected_metrics=selected,
+            sampling=TraceSampling(),
+            maximum_iteration=config.max_iterations,
+            lower_bounds=(-5.0, -5.0),
+            upper_bounds=(5.0, 5.0),
+        )
+        result = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=FuzzyInertiaPolicy(
+                max_iterations=config.max_iterations,
+                granularity=3,
+                rule_base="R1",
+                overlap_mode="shared",
+                overlap=0.0,
+            ),
+            random_streams=ReplicaRandomStreams(42),
+            trace_collector=collector,
+        ).run()
+
+        self.assertNotIn("inertia_weight", result.trace_points[0].metrics)
+        self.assertNotIn("progress_ratio", result.trace_points[0].metrics)
+        first = result.trace_points[1].metrics
+        self.assertEqual(first["progress_ratio"], 0.5)
+        self.assertEqual(first["fuzzy_input_diversity"], 1.0)
+        self.assertEqual(first["fuzzy_no_activation_count"], 0)
+        self.assertEqual(first["fuzzy_fallback_count"], 0)
+        self.assertIn("inertia_weight", first)
 
     def test_maximization_direction_is_supported(self):
         result = LegacyCompatiblePSO(
