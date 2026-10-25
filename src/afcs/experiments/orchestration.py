@@ -96,6 +96,24 @@ class SequentialCampaignOrchestrator:
             self._repository.finish_campaign(campaign_id)
         return self._summary(campaign_id, executed_now=executed)
 
+    def recover_interrupted(
+        self, campaign_id: str, run_ids: tuple[int, ...], reason: str
+    ) -> CampaignExecutionSummary:
+        """Explicitly abandon active attempts and requeue their logical runs."""
+
+        if not run_ids:
+            raise ValueError("At least one run_id is required for recovery")
+        if len(run_ids) != len(set(run_ids)):
+            raise ValueError("Recovery run_ids must be unique")
+        with self._repository.transaction():
+            for run_id in run_ids:
+                self._repository.recover_interrupted_run(
+                    campaign_id=campaign_id,
+                    run_id=run_id,
+                    reason=reason,
+                )
+        return self._summary(campaign_id, executed_now=0)
+
     def _summary(
         self, campaign_id: str, *, executed_now: int
     ) -> CampaignExecutionSummary:

@@ -93,6 +93,85 @@ class TestExperimentRepository(unittest.TestCase):
         self.assertEqual(run["status"], "completed")
         self.assertIsNone(run["random_seed"])
         self.assertEqual(run["objective_best"], 0.1)
+        attempt = self.connection.execute(
+            """
+            SELECT attempt_index, status, started_at, finished_at
+            FROM run_attempts WHERE run_id = ?
+            """,
+            (run_id,),
+        ).fetchone()
+        self.assertEqual(attempt["attempt_index"], 1)
+        self.assertEqual(attempt["status"], "completed")
+        self.assertEqual(attempt["started_at"], "2026-10-19T00:01:01Z")
+        self.assertEqual(attempt["finished_at"], "2026-10-19T00:02:00Z")
+
+    def test_interrupted_attempt_is_audited_and_same_run_is_requeued(self):
+        run_id = self._prepare_run(seed=42)
+        self.repository.start_campaign("campaign")
+        self.repository.start_run(run_id, "2026-10-19T00:01:00Z")
+        self.repository.record_trace(
+            run_id,
+            checkpoint_index=0,
+            iteration_index=0,
+            evaluations=20,
+            metrics={"objective_best": 1.0},
+        )
+
+        attempt_id = self.repository.recover_interrupted_run(
+            "campaign",
+            run_id,
+            "worker process terminated unexpectedly",
+            "2026-10-19T00:02:00Z",
+        )
+
+        run = self.connection.execute(
+            "SELECT status, random_seed, started_at FROM runs WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()
+        attempt = self.connection.execute(
+            """
+            SELECT status, recovery_reason, discarded_trace_points
+            FROM run_attempts WHERE attempt_id = ?
+            """,
+            (attempt_id,),
+        ).fetchone()
+        self.assertEqual(tuple(run), ("planned", 42, None))
+        self.assertEqual(attempt["status"], "abandoned")
+        self.assertEqual(
+            attempt["recovery_reason"], "worker process terminated unexpectedly"
+        )
+        self.assertEqual(attempt["discarded_trace_points"], 1)
+        self.assertEqual(
+            self.connection.execute(
+                "SELECT COUNT(*) FROM trace_points WHERE run_id = ?", (run_id,)
+            ).fetchone()[0],
+            0,
+        )
+
+        self.repository.start_run(run_id, "2026-10-19T00:03:00Z")
+        attempts = self.connection.execute(
+            """
+            SELECT attempt_index, status FROM run_attempts
+            WHERE run_id = ? ORDER BY attempt_index
+            """,
+            (run_id,),
+        ).fetchall()
+        self.assertEqual(
+            [tuple(row) for row in attempts],
+            [(1, "abandoned"), (2, "running")],
+        )
+
+    def test_recovery_rejects_non_running_run_without_creating_attempt(self):
+        run_id = self._prepare_run()
+        self.repository.start_campaign("campaign")
+        with self.assertRaisesRegex(RepositoryError, "not interrupted"):
+            self.repository.recover_interrupted_run(
+                "campaign", run_id, "operator confirmed interruption"
+            )
+        count = self.connection.execute(
+            "SELECT COUNT(*) FROM run_attempts WHERE run_id = ?", (run_id,)
+        ).fetchone()[0]
+        self.assertEqual(count, 0)
 
     def test_unselected_metric_is_rejected_without_partial_trace(self):
         run_id = self._prepare_run(selection="minimal")

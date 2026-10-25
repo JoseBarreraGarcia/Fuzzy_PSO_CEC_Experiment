@@ -7,14 +7,14 @@ control difuso ni acceso SQL dentro de los algoritmos.
 y expande cada tratamiento al número solicitado de réplicas. La persistencia es
 atómica: o se guarda la campaña completa o no se guarda ninguna de sus filas.
 Esto reemplaza la lógica dispersa de expansión, no los archivos de `config/`
-que seguirán siendo la interfaz humana cuando exista su esquema v2.
+que constituyen la interfaz humana mediante el esquema de campañas v1.
 
 ## Estado operativo
 
 `ExperimentRunExecutor` conecta una réplica ya planificada con un optimizador
 ya configurado:
 
-1. cambia la réplica de `planned` a `running`;
+1. crea un intento auditable y cambia la réplica de `planned` a `running`;
 2. antes del cambio de estado, compara el ejecutable con el plan persistido;
 3. ejecuta `optimizer.run()`;
 4. valida objetivo, NFE y solución final;
@@ -38,11 +38,13 @@ runner conozca sus operadores internos.
   optimizador recibe `ReplicaRandomStreams` creado desde esa semilla.
 - El runner contrasta semilla y motor RNG con SQLite antes de ejecutar.
 - No reconstruye trazas ni métricas que no fueron observadas durante la corrida.
-- La versión del optimizador está presente en sus metadatos, pero el esquema
-  SQLite v1 todavía no tiene una columna dedicada para validarla y persistirla.
-- Todavía no ejecuta campañas completas ni aplica reanudación o paralelismo.
-- Todavía no existe el lector que transforme `config/*.json` en las definiciones
-  tipadas del planificador.
+- La versión del optimizador se persiste y valida antes de cada ejecución.
+- El orquestador ejecuta campañas secuenciales y reanuda filas `planned`.
+- Las interrupciones en `running` requieren `recover` explícito, que conserva
+  intentos auditables y reencola la misma réplica.
+- El lector estricto transforma campañas JSON válidas en definiciones tipadas.
+- El paralelismo continúa deshabilitado hasta demostrar replay reproducible e
+  independencia del orden.
 
 `runtime_total_seconds` mide provisionalmente el intervalo monotónico ocupado
 por `optimizer.run()`. Las escrituras SQLite quedan fuera de ese intervalo para

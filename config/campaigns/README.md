@@ -138,4 +138,7 @@ afcs-campaign run `
 
 `run` ejecuta únicamente filas `planned`, por lo que puede retomarse después de
 una detención entre réplicas. Una fila que haya quedado en estado `running`
-requiere una decisión explícita de recuperación y nunca se reinicia sola.
+requiere una decisión explícita de recuperación y nunca se reinicia sola. Use
+`afcs-campaign recover --database <db> --campaign-id <id> --run-id <ids...>
+--reason <motivo>`; después, `run` ejecutará nuevamente esas réplicas con la
+misma configuración y semilla.

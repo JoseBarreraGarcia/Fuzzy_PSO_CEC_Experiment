@@ -71,8 +71,8 @@ fallida. Cada valor conserva el ID y la versión de su definición.
 
 - medir el costo de instrumentación en campañas representativas;
 - validar estrategias de reducción de frecuencia para experimentos masivos;
-- implementar métricas equivalentes para GA y otras metaheurísticas;
-- acordar la política de recuperación de una réplica interrumpida en `running`.
+- implementar métricas equivalentes y extender el contrato de observación a GA
+  y otras metaheurísticas.
 
 El tiempo exclusivo del FIS y los resúmenes por réplica ya están implementados.
 También se registran reglas evaluadas y omitidas para distinguir el costo lógico

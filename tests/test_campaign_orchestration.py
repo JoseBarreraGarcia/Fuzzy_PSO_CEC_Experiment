@@ -15,7 +15,11 @@ from afcs.experiments import (
     parse_campaign_config,
 )
 from afcs.metrics import load_metric_registry
-from afcs.persistence import ExperimentRepository, initialize_v2_database
+from afcs.persistence import (
+    ExperimentRepository,
+    RepositoryError,
+    initialize_v2_database,
+)
 from afcs.experiments.cli import campaign_preview, main
 
 
@@ -195,6 +199,37 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         with self.assertRaisesRegex(CampaignRecoveryRequired, "explicit recovery"):
             orchestrator.execute_pending("stale")
 
+        recovered = orchestrator.recover_interrupted(
+            "stale",
+            (persisted.run_ids[0],),
+            "test process was intentionally interrupted",
+        )
+        self.assertEqual(recovered.running, 0)
+        self.assertEqual(recovered.planned, 4)
+
+        completed = orchestrator.execute_pending("stale")
+        self.assertEqual(completed.completed, 4)
+        self.assertEqual(completed.campaign_status, "completed")
+
+    def test_recovery_of_multiple_runs_is_atomic(self) -> None:
+        orchestrator = SequentialCampaignOrchestrator(self.repository)
+        persisted = orchestrator.plan(_smoke_config("atomic-recovery"))
+        self.repository.start_campaign("atomic-recovery")
+        self.repository.start_run(persisted.run_ids[0])
+
+        with self.assertRaises(RepositoryError):
+            orchestrator.recover_interrupted(
+                "atomic-recovery",
+                (persisted.run_ids[0], persisted.run_ids[1]),
+                "atomic recovery test",
+            )
+
+        statuses = self.connection.execute(
+            "SELECT status FROM runs ORDER BY run_id"
+        ).fetchall()
+        self.assertEqual(statuses[0]["status"], "running")
+        self.assertEqual(statuses[1]["status"], "planned")
+
     def test_preview_is_read_only_and_reports_budget(self) -> None:
         preview = campaign_preview(_smoke_config("preview"))
 
@@ -236,6 +271,39 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
                 0,
             )
         self.assertEqual(json.loads(output.getvalue())["planned_runs"], 1)
+
+        cli_connection = initialize_v2_database(database_path)
+        try:
+            cli_repository = ExperimentRepository(
+                cli_connection, load_metric_registry()
+            )
+            cli_repository.start_campaign("cli-smoke")
+            run_id = cli_repository.run_ids_by_status("cli-smoke", "planned")[0]
+            cli_repository.start_run(run_id)
+        finally:
+            cli_connection.close()
+
+        output = StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(
+                main(
+                    [
+                        "recover",
+                        "--database",
+                        str(database_path),
+                        "--campaign-id",
+                        "cli-smoke",
+                        "--run-id",
+                        str(run_id),
+                        "--reason",
+                        "intentional CLI recovery test",
+                    ]
+                ),
+                0,
+            )
+        recovered = json.loads(output.getvalue())
+        self.assertEqual(recovered["planned"], 1)
+        self.assertEqual(recovered["running"], 0)
 
         output = StringIO()
         with redirect_stdout(output):

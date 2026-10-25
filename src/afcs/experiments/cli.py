@@ -66,8 +66,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "database": str(Path(arguments.database).resolve()),
                 }
             )
-        else:
+        elif arguments.command == "run":
             _print_json(asdict(orchestrator.execute_pending(arguments.campaign_id)))
+        else:
+            _print_json(
+                asdict(
+                    orchestrator.recover_interrupted(
+                        arguments.campaign_id,
+                        tuple(arguments.run_id),
+                        arguments.reason,
+                    )
+                )
+            )
     finally:
         connection.close()
     return 0
@@ -87,6 +97,14 @@ def _parser() -> argparse.ArgumentParser:
     run = commands.add_parser("run", help="execute only pending runs sequentially")
     run.add_argument("--database", required=True, type=Path)
     run.add_argument("--campaign-id", required=True)
+    recover = commands.add_parser(
+        "recover",
+        help="explicitly abandon interrupted attempts and requeue their runs",
+    )
+    recover.add_argument("--database", required=True, type=Path)
+    recover.add_argument("--campaign-id", required=True)
+    recover.add_argument("--run-id", required=True, type=int, nargs="+")
+    recover.add_argument("--reason", required=True)
     return parser
 
 

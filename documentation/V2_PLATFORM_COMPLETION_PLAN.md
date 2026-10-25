@@ -43,8 +43,8 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
 
 ### Bloque A — endurecimiento del núcleo experimental
 
-1. Definir e implementar recuperación explícita de réplicas abandonadas en
-   `running`, conservando auditoría y sin sobrescribir resultados.
+1. [Completado] Recuperación explícita de réplicas abandonadas en `running`,
+   conservando intentos auditables y sin sobrescribir resultados.
 2. Validar ejecución paralela reproducible e independiente del orden.
 3. Completar políticas uniformes para `NaN`, `inf`, excepciones, cancelación y
    agotamiento de presupuesto.

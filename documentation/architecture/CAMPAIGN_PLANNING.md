@@ -50,13 +50,15 @@ vigentes y genera una configuración resuelta con todos los valores por defecto.
 Esa versión resuelta, no la plantilla con valores implícitos, es la que se
 entrega a `CampaignDefinition.source_config` para persistirla.
 
-Actualmente el catálogo ejecutable incluye CEC2017, PSO, `fixed_inertia` y
-`legacy_ldiw`. La ampliación a otros problemas, optimizadores y controladores
-debe incorporar conjuntamente implementación, esquema, documentación y pruebas.
+Actualmente el catálogo ejecutable incluye CEC2017, PSO, `fixed_inertia`,
+`legacy_ldiw` y `fuzzy_inertia_mamdani`. La ampliación a otros problemas,
+optimizadores y controladores debe incorporar conjuntamente implementación,
+esquema, documentación y pruebas.
 
 ## Trabajo pendiente
 
 - Decidir la migración de los JSON heredados; no deben interpretarse
   silenciosamente con semántica nueva.
-- Definir la recuperación explícita de filas abandonadas en `running` y validar
-  el piloto de equivalencia secuencial/paralelo.
+- [Completado] Recuperación explícita de filas abandonadas en `running`, con
+  historial de intentos y conservación de la identidad experimental.
+- Validar reproducibilidad y equivalencia entre ejecución secuencial y paralela.

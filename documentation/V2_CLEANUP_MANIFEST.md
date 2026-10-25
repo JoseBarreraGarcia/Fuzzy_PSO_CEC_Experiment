@@ -317,8 +317,9 @@ Avance ejecutado:
   reinterpretan ni migran automáticamente.
 - [x] Se conectó el flujo secuencial `preview → plan → run`, con reanudación de
   filas pendientes y smoke test integral CEC2017/PSO/SQLite.
-- [ ] Falta aprobar e implementar una política explícita para recuperar réplicas
-  abandonadas en estado `running` tras una interrupción abrupta.
+- [x] Se implementó una política explícita y auditable para recuperar réplicas
+  abandonadas en `running`, conservando intentos y reencolando la misma unidad
+  experimental sin alterar su semilla.
 - [x] PSO persiste atómicamente checkpoints desde la población inicial evaluada,
   con NFE, métricas poblacionales y `w` aplicado desde la primera transición.
 - [x] Las métricas poblacionales v2 tienen versión explícita y pruebas de

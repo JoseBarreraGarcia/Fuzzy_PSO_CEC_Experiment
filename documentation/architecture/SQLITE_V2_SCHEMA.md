@@ -44,11 +44,24 @@ campaigns
 ├── algorithm_configurations
 ├── campaign_metrics ── metric_definitions
 └── runs
+    ├── run_attempts
     ├── problem_instances
     ├── run_metric_values ── metric_definitions
     └── trace_points
         └── trace_metric_values ── metric_definitions
 ```
+
+### `run_attempts`
+
+Separa la réplica científica de sus intentos operativos. Cada transición
+`planned → running` crea un `attempt_index` nuevo. Los intentos pueden terminar
+como `completed`, `failed`, `cancelled` o `abandoned`; un índice único parcial
+impide más de un intento `running` por réplica.
+
+La recuperación explícita conserva el intento abandonado y sus metadatos, pero
+retira de las tablas canónicas cualquier traza parcial antes de reencolar la
+misma fila de `runs`. Así no se duplican unidades experimentales ni se mezclan
+trayectorias de procesos diferentes.
 
 ### `campaigns`
 

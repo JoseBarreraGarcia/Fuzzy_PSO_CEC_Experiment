@@ -31,8 +31,22 @@ campaña detenida entre réplicas y preserva los resultados ya registrados.
 
 Una interrupción abrupta dentro de una réplica puede dejarla en `running`. El
 orquestador informa `CampaignRecoveryRequired` y no cambia ese estado por sí
-solo. Definir si se cancela, se marca fallida o se vuelve a planificar esa
-réplica es una decisión metodológica aún pendiente.
+solo. La recuperación aprobada debe invocarse explícitamente:
+
+```powershell
+afcs-campaign recover `
+  --database Resultados/campaign.db `
+  --campaign-id campaign-id `
+  --run-id 17 `
+  --reason "worker interrumpido por reinicio del sistema"
+```
+
+La operación marca el intento activo como `abandoned`, registra fechas, motivo
+y cantidad de datos parciales descartados, limpia las trazas canónicas
+incompletas y devuelve la misma réplica lógica a `planned`. El reintento conserva
+configuración, `replica_index`, semilla y presupuesto, y genera un nuevo intento
+numerado. No se recuperan automáticamente filas por antigüedad ni se reintentan
+fallos terminales.
 
 ## Límites deliberados de esta etapa
 

@@ -441,10 +441,28 @@ class ExperimentRepository:
         self._require_campaign_status(row["campaign_id"], "running")
         if row["status"] != "planned":
             raise RepositoryError(f"Run {run_id} is not planned")
+        timestamp = started_at or utc_now()
         with self._write_scope():
+            attempt_index = int(
+                self.connection.execute(
+                    """
+                    SELECT COALESCE(MAX(attempt_index), 0) + 1
+                    FROM run_attempts WHERE run_id = ?
+                    """,
+                    (run_id,),
+                ).fetchone()[0]
+            )
+            self.connection.execute(
+                """
+                INSERT INTO run_attempts (
+                    run_id, attempt_index, status, started_at
+                ) VALUES (?, ?, 'running', ?)
+                """,
+                (run_id, attempt_index, timestamp),
+            )
             self.connection.execute(
                 "UPDATE runs SET status = 'running', started_at = ? WHERE run_id = ?",
-                (started_at or utc_now(), run_id),
+                (timestamp, run_id),
             )
 
     def record_trace(
@@ -514,8 +532,10 @@ class ExperimentRepository:
         _validate_sha256(initial_velocity_sha256, "initial_velocity_sha256")
         selected_metrics = metrics or {}
         self._validate_selected_metrics(row["campaign_id"], selected_metrics, "replica")
+        timestamp = finished_at or utc_now()
 
         with self._write_scope():
+            attempt_id = self._active_attempt_id(run_id)
             self.connection.execute(
                 """
                 UPDATE runs
@@ -526,7 +546,7 @@ class ExperimentRepository:
                 WHERE run_id = ?
                 """,
                 (
-                    finished_at or utc_now(),
+                    timestamp,
                     objective_best,
                     canonical_json(solution),
                     evaluations,
@@ -537,6 +557,14 @@ class ExperimentRepository:
                     initial_velocity_sha256,
                     run_id,
                 ),
+            )
+            self.connection.execute(
+                """
+                UPDATE run_attempts
+                SET status = 'completed', finished_at = ?
+                WHERE attempt_id = ?
+                """,
+                (timestamp, attempt_id),
             )
             for metric_id, value in selected_metrics.items():
                 self._insert_run_metric(run_id, metric_id, value, "observed")
@@ -551,15 +579,131 @@ class ExperimentRepository:
         row = self._get_run(run_id)
         if row["status"] not in {"planned", "running"}:
             raise RepositoryError(f"Run {run_id} cannot transition to failed")
+        timestamp = finished_at or utc_now()
         with self._write_scope():
+            if row["status"] == "running":
+                attempt_id = self._active_attempt_id(run_id)
+                self.connection.execute(
+                    """
+                    UPDATE run_attempts
+                    SET status = 'failed', finished_at = ?,
+                        error_type = ?, error_message = ?
+                    WHERE attempt_id = ?
+                    """,
+                    (timestamp, error_type, error_message, attempt_id),
+                )
+            else:
+                attempt_index = int(
+                    self.connection.execute(
+                        """
+                        SELECT COALESCE(MAX(attempt_index), 0) + 1
+                        FROM run_attempts WHERE run_id = ?
+                        """,
+                        (run_id,),
+                    ).fetchone()[0]
+                )
+                self.connection.execute(
+                    """
+                    INSERT INTO run_attempts (
+                        run_id, attempt_index, status, started_at, finished_at,
+                        error_type, error_message
+                    ) VALUES (?, ?, 'failed', ?, ?, ?, ?)
+                    """,
+                    (
+                        run_id,
+                        attempt_index,
+                        row["started_at"] or timestamp,
+                        timestamp,
+                        error_type,
+                        error_message,
+                    ),
+                )
             self.connection.execute(
                 """
                 UPDATE runs
                 SET status = 'failed', finished_at = ?, error_type = ?, error_message = ?
                 WHERE run_id = ?
                 """,
-                (finished_at or utc_now(), error_type, error_message, run_id),
+                (timestamp, error_type, error_message, run_id),
             )
+
+    def recover_interrupted_run(
+        self,
+        campaign_id: str,
+        run_id: int,
+        reason: str,
+        recovered_at: str | None = None,
+    ) -> int:
+        """Abandon the active attempt and requeue its logical replica.
+
+        Recovery is explicit and audit-preserving. Partial canonical traces are
+        removed before the same run identity is returned to ``planned``; the
+        attempt ledger retains their counts and the operator-supplied reason.
+        """
+
+        if not isinstance(reason, str) or not reason.strip():
+            raise RepositoryError("Recovery reason must be a non-empty string")
+        row = self._get_run(run_id)
+        if row["campaign_id"] != campaign_id:
+            raise RepositoryError(
+                f"Run {run_id} does not belong to campaign {campaign_id!r}"
+            )
+        self._require_campaign_status(campaign_id, "running")
+        if row["status"] != "running":
+            raise RepositoryError(f"Run {run_id} is not interrupted/running")
+
+        timestamp = recovered_at or utc_now()
+        with self._write_scope():
+            attempt_id = self._active_attempt_id(run_id)
+            trace_count = int(
+                self.connection.execute(
+                    "SELECT COUNT(*) FROM trace_points WHERE run_id = ?", (run_id,)
+                ).fetchone()[0]
+            )
+            metric_count = int(
+                self.connection.execute(
+                    "SELECT COUNT(*) FROM run_metric_values WHERE run_id = ?", (run_id,)
+                ).fetchone()[0]
+            )
+            self.connection.execute(
+                "DELETE FROM trace_points WHERE run_id = ?", (run_id,)
+            )
+            self.connection.execute(
+                "DELETE FROM run_metric_values WHERE run_id = ?", (run_id,)
+            )
+            self.connection.execute(
+                """
+                UPDATE run_attempts
+                SET status = 'abandoned', finished_at = ?,
+                    error_type = 'InterruptedRunRecovery', error_message = ?,
+                    recovery_reason = ?, discarded_trace_points = ?,
+                    discarded_run_metrics = ?
+                WHERE attempt_id = ?
+                """,
+                (
+                    timestamp,
+                    reason.strip(),
+                    reason.strip(),
+                    trace_count,
+                    metric_count,
+                    attempt_id,
+                ),
+            )
+            self.connection.execute(
+                """
+                UPDATE runs
+                SET status = 'planned', started_at = NULL, finished_at = NULL,
+                    objective_best = NULL, solution_json = NULL,
+                    evaluations = NULL, runtime_total_seconds = NULL,
+                    feasible = NULL, constraint_violation = NULL,
+                    error_type = NULL, error_message = NULL,
+                    initial_population_sha256 = NULL,
+                    initial_velocity_sha256 = NULL
+                WHERE run_id = ?
+                """,
+                (run_id,),
+            )
+        return attempt_id
 
     def finish_campaign(self, campaign_id: str, finished_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "running")
@@ -593,6 +737,20 @@ class ExperimentRepository:
         if row is None:
             raise RepositoryError(f"Unknown run: {run_id}")
         return row
+
+    def _active_attempt_id(self, run_id: int) -> int:
+        rows = self.connection.execute(
+            """
+            SELECT attempt_id FROM run_attempts
+            WHERE run_id = ? AND status = 'running'
+            """,
+            (run_id,),
+        ).fetchall()
+        if len(rows) != 1:
+            raise RepositoryError(
+                f"Run {run_id} must have exactly one active execution attempt"
+            )
+        return int(rows[0]["attempt_id"])
 
     def _require_campaign_status(self, campaign_id: str, expected: str) -> None:
         row = self.connection.execute(
