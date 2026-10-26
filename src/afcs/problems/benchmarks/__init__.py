@@ -7,6 +7,7 @@ from .classical import (
     ClassicalFunctionDefinition,
     create_classical_problem,
 )
+from .opfunu_cec import OPFUNU_FAMILY, OpfunuCECProblem, opfunu_version
 
 __all__ = [
     "CLASSICAL_FUNCTIONS",
@@ -14,5 +15,8 @@ __all__ = [
     "ClassicalBenchmarkProblem",
     "ClassicalFunctionDefinition",
     "create_classical_problem",
+    "OPFUNU_FAMILY",
+    "OpfunuCECProblem",
+    "opfunu_version",
 ]
 

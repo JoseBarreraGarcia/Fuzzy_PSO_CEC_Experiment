@@ -306,6 +306,43 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertTrue(all(row["random_seed"] == 42 for row in rows))
         self.assertTrue(all(row["evaluations"] == 8 for row in rows))
 
+    def test_opfunu_cec_campaign_executes_with_auditable_identity(self) -> None:
+        raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
+        raw["campaign"].update(
+            {"id": "opfunu-smoke", "replicas": 1, "metrics": "minimal"}
+        )
+        raw["problems"] = [
+            {
+                "family": "OPFUNU_CEC",
+                "suite_year": 2014,
+                "functions": [1],
+                "dimensions": [10],
+            }
+        ]
+        raw["treatments"] = [raw["treatments"][0]]
+        raw["treatments"][0]["parameters"].update(
+            {"population_size": 4, "max_iterations": 1}
+        )
+
+        summary = CampaignOrchestrator(self.repository).plan_and_execute(
+            parse_campaign_config(raw, code_commit="test-commit")
+        )
+
+        self.assertEqual(summary.completed, 1)
+        row = self.connection.execute(
+            """
+            SELECT pi.problem_family, pi.name, pi.parameters_json
+            FROM runs AS r JOIN problem_instances AS pi
+              ON pi.instance_id = r.instance_id
+            WHERE r.campaign_id = 'opfunu-smoke'
+            """
+        ).fetchone()
+        self.assertEqual(row["problem_family"], "OPFUNU_CEC")
+        self.assertEqual(row["name"], "F1CEC2014_OPFUNU")
+        parameters = json.loads(row["parameters_json"])
+        self.assertEqual(parameters["implementation"], "opfunu")
+        self.assertEqual(parameters["suite_year"], 2014)
+
     def test_stale_running_run_requires_explicit_recovery(self) -> None:
         orchestrator = SequentialCampaignOrchestrator(self.repository)
         persisted = orchestrator.plan(_smoke_config("stale"))

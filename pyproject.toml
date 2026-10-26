@@ -12,6 +12,9 @@ dependencies = [
     "numpy>=2.0",
 ]
 
+[project.optional-dependencies]
+opfunu = ["opfunu==1.0.1"]
+
 [project.scripts]
 afcs-campaign = "afcs.experiments.cli:main"
 

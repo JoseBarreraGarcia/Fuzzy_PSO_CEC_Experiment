@@ -12,7 +12,7 @@
     "schema_version": {"const": 1, "description": "Versión del contrato de configuración."},
     "campaign": {"$ref": "#/$defs/campaign"},
     "randomness": {"$ref": "#/$defs/randomness"},
-    "problems": {"type": "array", "minItems": 1, "items": {"oneOf": [{"$ref": "#/$defs/cec2017Problems"}, {"$ref": "#/$defs/classicalProblems"}]}},
+    "problems": {"type": "array", "minItems": 1, "items": {"oneOf": [{"$ref": "#/$defs/cec2017Problems"}, {"$ref": "#/$defs/classicalProblems"}, {"$ref": "#/$defs/opfunuProblems"}]}},
     "treatments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/psoTreatment"}},
     "execution": {"$ref": "#/$defs/execution"},
     "trace": {"$ref": "#/$defs/trace"}
@@ -65,6 +65,16 @@
       "properties": {
         "family": {"const": "CLASSICAL"},
         "functions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1, "maximum": 23}},
+        "dimensions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}}
+      }
+    },
+    "opfunuProblems": {
+      "type": "object", "additionalProperties": false,
+      "required": ["family", "suite_year", "functions", "dimensions"],
+      "properties": {
+        "family": {"const": "OPFUNU_CEC"},
+        "suite_year": {"type": "integer", "minimum": 2000, "maximum": 2099},
+        "functions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}},
         "dimensions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}}
       }
     },

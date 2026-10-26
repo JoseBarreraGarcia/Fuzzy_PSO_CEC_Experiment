@@ -16,7 +16,11 @@ from afcs.optimizers.pso import (
 )
 from afcs.persistence import PlannedRun
 from afcs.problems.benchmarks.cec2017 import CEC2017Problem
-from afcs.problems.benchmarks import CLASSICAL_FUNCTIONS, ClassicalBenchmarkProblem
+from afcs.problems.benchmarks import (
+    CLASSICAL_FUNCTIONS,
+    ClassicalBenchmarkProblem,
+    OpfunuCECProblem,
+)
 
 from .contracts import RunnableOptimizer
 
@@ -94,6 +98,11 @@ def _build_pso(
             plan.dimension,
             noise_rng=(streams.generator("problem") if definition.stochastic else None),
         )
+    elif plan.problem_family == "OPFUNU_CEC":
+        suite_year = plan.problem_parameters.get("suite_year")
+        if isinstance(suite_year, bool) or not isinstance(suite_year, int):
+            raise ValueError("OPFUNU_CEC plan requires an integer suite_year")
+        problem = OpfunuCECProblem(suite_year, function_number, plan.dimension)
     else:
         raise ValueError(f"Unsupported PSO problem family {plan.problem_family!r}")
     trace = plan.campaign_config.get("trace")

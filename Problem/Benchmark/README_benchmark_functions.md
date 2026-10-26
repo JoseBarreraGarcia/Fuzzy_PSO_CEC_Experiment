@@ -1,5 +1,70 @@
 # Benchmark Functions Reference
 
+## Identidad autoritativa en la plataforma v2
+
+Los benchmarks matematicos **no constituyen una sola suite**. La configuracion
+v2 obliga a declarar la familia para que el resultado pueda reproducirse,
+reportarse y citarse sin ambiguedad:
+
+| `family` | Contenido | Implementacion autoritativa v2 | Identidad minima persistida |
+|---|---|---|---|
+| `CLASSICAL` | Coleccion historica F1-F23 | `src/afcs/problems/benchmarks/classical.py` | familia, funcion, dimension y version de formula |
+| `CEC2017` | Suite CEC 2017 autocontenida; F2 excluida | `src/afcs/problems/benchmarks/cec2017/` | suite, funcion, dimension e identidad de datos |
+| `OPFUNU_CEC` | Suites CEC expuestas por OPFUNU | `src/afcs/problems/benchmarks/opfunu_cec.py` | ano, funcion, dimension, clase y version de OPFUNU |
+
+`CEC2017` y `OPFUNU_CEC` con `suite_year: 2017` son implementaciones distintas.
+No deben mezclarse bajo una misma etiqueta ni suponerse equivalentes sin una
+validacion explicita. La primera conserva recursos auditados en el repositorio;
+la segunda delega formulas y datos al paquete OPFUNU.
+
+### Configuracion v2
+
+Cada entrada de `problems` selecciona funciones y dimensiones de una familia.
+No existen dimensiones implicitas ni un fallback silencioso:
+
+```json
+"problems": [
+  {"family": "CLASSICAL", "functions": [1], "dimensions": [30]},
+  {"family": "CLASSICAL", "functions": [14], "dimensions": [2]},
+  {"family": "CEC2017", "functions": [1, 3, 21], "dimensions": [10, 30]},
+  {
+    "family": "OPFUNU_CEC",
+    "suite_year": 2014,
+    "functions": [1, 3],
+    "dimensions": [10, 30]
+  }
+]
+```
+
+Las combinaciones invalidas se rechazan al cargar la campana. En `CLASSICAL`,
+F14-F23 conservan sus dimensiones matematicas fijas. En `CEC2017`, v2 acepta
+10, 30, 50 y 100 y excluye F2. En `OPFUNU_CEC`, la disponibilidad depende de
+los recursos incluidos en la version instalada de OPFUNU; los fallos de esa
+dependencia se convierten en errores controlados de configuracion.
+
+OPFUNU es una dependencia opcional y reproducible:
+
+```powershell
+pip install -e ".[opfunu]"
+```
+
+La version v2 esta fijada en `opfunu==1.0.1`. SQLite registra `suite_year`,
+`function_number`, `implementation`, `implementation_version`,
+`implementation_class` e `implementation_module` para cada instancia.
+
+### Informacion minima para una publicacion
+
+Se debe informar: familia; nombre y ano de la suite cuando corresponda;
+funciones; dimensiones; limites; presupuesto de evaluaciones; implementacion y
+version; commit del repositorio; y protocolo de semillas. Para OPFUNU se debe
+citar tanto la suite CEC original como el software OPFUNU y su version. El
+nombre generico "CEC" no identifica por si solo un experimento reproducible.
+
+Las secciones siguientes conservan el inventario matematico y contexto del
+sistema historico. Los ejemplos basados en `experiments.json`, `BD/sqlite.py` y
+`Problem/Benchmark/Problem.py` son heredados; para nuevas campanas prevalecen
+el esquema v2 y las implementaciones indicadas arriba.
+
 This document describes the three groups of benchmark functions available in this framework, their mathematical origins, global optima, search bounds, valid dimensions, and how to configure them in `config/experiments.json`.
 
 ---
@@ -101,7 +166,8 @@ Source files: `Problem/Benchmark/CEC/cec2017/` (simple.py, hybrid.py, compositio
 ### Characteristics
 
 - All functions are **shifted and rotated** using official matrices from the competition.
-- Rotation matrices and shift vectors are preloaded for dimensions: **2, 10, 20, 30, 50, 100** only.
+- La plataforma v2 admite las dimensiones **10, 30, 50 y 100**, para las que
+  valida los recursos de rotación, desplazamiento y permutación necesarios.
 - Global optima follow the pattern: $f^* = i \times 100$ for function $f_i$.
 - Search space is **always** [−100, 100] for all dimensions.
 
@@ -110,7 +176,7 @@ Source files: `Problem/Benchmark/CEC/cec2017/` (simple.py, hybrid.py, compositio
 | ID in config | CEC2017 | Type | Name | f* | Notes |
 |---|---|---|---|---|---|
 | F1CEC2017 | f1 | Simple | Shifted & Rotated Bent Cigar | 100 | |
-| F2CEC2017 | f2 | Simple | (Deprecated) Sum of Different Power | 200 | Removed from official suite post-2017 |
+| F2CEC2017 | f2 | Simple | (Deprecated) Sum of Different Power | 200 | Excluida de la plataforma v2 y de nuevas campañas |
 | F3CEC2017 | f3 | Simple | Shifted & Rotated Zakharov | 300 | |
 | F4CEC2017 | f4 | Simple | Shifted & Rotated Rosenbrock | 400 | |
 | F5CEC2017 | f5 | Simple | Shifted & Rotated Rastrigin | 500 | |
@@ -146,9 +212,7 @@ Only the following dimensions are supported (rotation/shift matrices are precomp
 
 | Dimension | Notes |
 |-----------|-------|
-| 2 | Very low-dimensional, mostly for visualization |
 | 10 | Low-dimensional |
-| 20 | Medium |
 | 30 | Standard competition dimension |
 | 50 | Large |
 | 100 | Very large |
@@ -173,11 +237,17 @@ Only the following dimensions are supported (rotation/shift matrices are precomp
 }
 ```
 
-> **Note on F2CEC2017**: This function was officially deprecated from the CEC 2017 suite after publication. The implementation prints a deprecation warning when called. It is available but not recommended for publications.
+> **Nota sobre F2CEC2017**: fue retirada de la suite oficial. La plataforma v2
+> la rechaza en configuración; no está disponible para nuevas campañas.
 
 ---
 
 ## Group 3 — opfunu Library Functions
+
+La tabla siguiente documenta la selección utilizada por el flujo histórico.
+La familia v2 `OPFUNU_CEC` no está limitada artificialmente a esa selección:
+acepta cualquier clase CEC expuesta por la versión fijada de OPFUNU, siempre
+que existan los datos para la dimensión solicitada.
 
 ### Origin and Reference
 
@@ -221,7 +291,9 @@ These functions cover CEC competitions from 2005 to 2022. Bounds and optima are 
 }
 ```
 
-Dimensions for opfunu functions depend on each function's internal `dim_default`. If no entry exists in `dimensiones["BEN"]`, the pipeline falls back to `func_class().dim_default` automatically (see `obtener_dimensiones_ben()` in `1_0_poblarDB.py`).
+En el flujo v2 la dimensión siempre es explícita. `dim_default` y el fallback
+de `1_0_poblarDB.py` sólo describen el sistema histórico y no se aplican a
+nuevas campañas.
 
 ---
 

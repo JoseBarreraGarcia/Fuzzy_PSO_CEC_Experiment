@@ -17,7 +17,7 @@ informativa y el lector la ignora.
 |---|---|---|
 | `campaign` | Identidad, réplicas y métricas | `replicas >= 1`; perfiles `minimal`, `convergence`, `optimizer`, `fuzzy`, `timing`, `all`, lista u objeto selectivo |
 | `randomness` | Pareamiento y reproducibilidad | `paired_by_replica_v1`, semilla base no negativa, `numpy_seedsequence_pcg64_v1` |
-| `problems` | Matriz de problemas | `CEC2017`: F1 y F3-F30 en 10/30/50/100; `CLASSICAL`: F1-F23 con dimensiones libres o fijas según la función |
+| `problems` | Matriz de problemas | `CEC2017`: F1 y F3-F30 en 10/30/50/100; `CLASSICAL`: F1-F23; `OPFUNU_CEC`: exige `suite_year` y valida cada función/dimensión en OPFUNU |
 | `treatments` | Configuraciones del optimizador | `PSO`; políticas `fixed_inertia`, `legacy_ldiw` y `fuzzy_inertia_mamdani` |
 | `execution` | Recursos de ejecución | `parallel_workers >= 1`; 1 es secuencial y valores mayores usan procesos aislados |
 | `trace` | Muestreo de la trayectoria | Activación, frecuencia, checkpoint inicial y checkpoint final obligatorio |
@@ -26,6 +26,22 @@ Los parámetros PSO obligatorios son `population_size` y `max_iterations`. Los
 opcionales y sus valores efectivos por defecto son `cognitive=2.0`,
 `social=2.0` y `velocity_factor=0.1`. `fixed_inertia` requiere `value`;
 `legacy_ldiw` acepta `maximum=0.9` y `minimum=0.1`.
+
+Una suite distribuida por OPFUNU se declara sin codificar el año dentro del
+nombre de la función:
+
+```json
+{
+  "family": "OPFUNU_CEC",
+  "suite_year": 2014,
+  "functions": [1, 3],
+  "dimensions": [10, 30]
+}
+```
+
+La versión y clase concretas de OPFUNU quedan materializadas en la
+configuración resuelta y en SQLite. `CEC2017` sigue siendo la implementación
+autocontenida del repositorio y no es un alias de `OPFUNU_CEC`/2017.
 
 PSO-FCS se declara con `fuzzy_inertia_mamdani`. El ejemplo específico está en
 `cec2017_pso_fcs_overlap.example.json`. El modo `shared` aplica el mismo overlap

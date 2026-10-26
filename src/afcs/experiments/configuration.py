@@ -26,7 +26,11 @@ from afcs.problems.benchmarks.cec2017 import (
     CEC2017_SUPPORTED_DIMENSIONS,
     CEC2017Problem,
 )
-from afcs.problems.benchmarks import CLASSICAL_FUNCTIONS, ClassicalBenchmarkProblem
+from afcs.problems.benchmarks import (
+    CLASSICAL_FUNCTIONS,
+    ClassicalBenchmarkProblem,
+    OpfunuCECProblem,
+)
 
 from .planning import CampaignDefinition, TreatmentDefinition
 
@@ -236,13 +240,22 @@ def _parse_problems(raw: Any) -> tuple[Any, ...]:
         _keys(
             entry,
             required={"family", "functions", "dimensions"},
-            optional=set(),
+            optional={"suite_year"},
             path=path,
         )
         family = entry["family"]
-        if family not in {"CEC2017", "CLASSICAL"}:
+        if family not in {"CEC2017", "CLASSICAL", "OPFUNU_CEC"}:
             raise ConfigurationError(
-                f"{path}.family: supported options are ['CEC2017', 'CLASSICAL']"
+                f"{path}.family: supported options are "
+                "['CEC2017', 'CLASSICAL', 'OPFUNU_CEC']"
+            )
+        suite_year = entry.get("suite_year")
+        if family == "OPFUNU_CEC":
+            if isinstance(suite_year, bool) or not isinstance(suite_year, int):
+                raise ConfigurationError(f"{path}.suite_year must be an integer")
+        elif suite_year is not None:
+            raise ConfigurationError(
+                f"{path}.suite_year is only valid for OPFUNU_CEC"
             )
         functions = _unique_integer_list(entry["functions"], f"{path}.functions")
         dimensions = _unique_integer_list(
@@ -251,10 +264,11 @@ def _parse_problems(raw: Any) -> tuple[Any, ...]:
         for function_number in functions:
             if family == "CEC2017" and function_number in CEC2017_DEPRECATED_FUNCTIONS:
                 raise ConfigurationError(f"{path}.functions: CEC2017 F2 is excluded")
-            maximum = 30 if family == "CEC2017" else 23
-            if function_number < 1 or function_number > maximum:
+            maximum = 30 if family == "CEC2017" else 23 if family == "CLASSICAL" else None
+            if function_number < 1 or (maximum is not None and function_number > maximum):
                 raise ConfigurationError(
-                    f"{path}.functions: values must be between 1 and {maximum}"
+                    f"{path}.functions: values must be positive"
+                    + (f" and no greater than {maximum}" if maximum else "")
                 )
         unsupported = (
             set(dimensions) - set(CEC2017_SUPPORTED_DIMENSIONS)
@@ -268,7 +282,7 @@ def _parse_problems(raw: Any) -> tuple[Any, ...]:
             )
         for function_number in functions:
             for dimension in dimensions:
-                key = (family, function_number, dimension)
+                key = (f"{family}:{suite_year}", function_number, dimension)
                 if key in seen:
                     raise ConfigurationError(
                         f"Duplicate {family} problem F{function_number} D{dimension}"
@@ -277,7 +291,7 @@ def _parse_problems(raw: Any) -> tuple[Any, ...]:
                 try:
                     if family == "CEC2017":
                         problem = CEC2017Problem(function_number, dimension)
-                    else:
+                    elif family == "CLASSICAL":
                         definition = CLASSICAL_FUNCTIONS[function_number]
                         problem = ClassicalBenchmarkProblem(
                             function_number,
@@ -288,7 +302,11 @@ def _parse_problems(raw: Any) -> tuple[Any, ...]:
                                 else None
                             ),
                         )
-                except (TypeError, ValueError) as error:
+                    else:
+                        problem = OpfunuCECProblem(
+                            suite_year, function_number, dimension
+                        )
+                except (TypeError, ValueError, RuntimeError) as error:
                     raise ConfigurationError(f"{path}: {error}") from error
                 problems.append(problem)
     return tuple(problems)
@@ -486,11 +504,12 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
     treatment_specs = parts["treatment_specs"]
     execution = parts["execution"]
     trace = parts["trace"]
-    problem_groups: dict[tuple[str, int], list[int]] = {}
+    problem_groups: dict[tuple[str, int | None, int], list[int]] = {}
     for problem in problems:
         function_number = problem.metadata.parameters["function_number"]
+        suite_year = problem.metadata.parameters.get("suite_year")
         problem_groups.setdefault(
-            (problem.metadata.family, function_number), []
+            (problem.metadata.family, suite_year, function_number), []
         ).append(
             problem.metadata.dimension
         )
@@ -523,12 +542,13 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
             "engine": randomness.engine,
         },
         "problems": [
-            {
-                "family": family,
-                "functions": [function_number],
-                "dimensions": sorted(dimensions),
-            }
-            for (family, function_number), dimensions in sorted(problem_groups.items())
+            _resolved_problem_group(
+                family=family,
+                suite_year=suite_year,
+                function_number=function_number,
+                dimensions=dimensions,
+            )
+            for (family, suite_year, function_number), dimensions in sorted(problem_groups.items())
         ],
         "treatments": treatments,
         "execution": {"parallel_workers": execution.parallel_workers},
@@ -539,6 +559,23 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
             "include_final": trace.include_final,
         },
     }
+
+
+def _resolved_problem_group(
+    *,
+    family: str,
+    suite_year: int | None,
+    function_number: int,
+    dimensions: list[int],
+) -> dict[str, Any]:
+    group: dict[str, Any] = {
+        "family": family,
+        "functions": [function_number],
+        "dimensions": sorted(dimensions),
+    }
+    if suite_year is not None:
+        group["suite_year"] = suite_year
+    return group
 
 
 def _object(value: Any, path: str) -> Mapping[str, Any]:

@@ -102,6 +102,26 @@ class TestCampaignConfiguration(unittest.TestCase):
         with self.assertRaisesRegex(ConfigurationError, "requires dimension 2"):
             parse_campaign_config(raw, code_commit="abc123")
 
+    def test_opfunu_family_resolves_suite_year_and_function(self) -> None:
+        raw = _example()
+        raw["problems"] = [
+            {
+                "family": "OPFUNU_CEC",
+                "suite_year": 2014,
+                "functions": [1],
+                "dimensions": [10],
+            }
+        ]
+        loaded = parse_campaign_config(raw, code_commit="abc123")
+        problem = loaded.resolved_config["problems"][0]
+        self.assertEqual(problem["family"], "OPFUNU_CEC")
+        self.assertEqual(problem["suite_year"], 2014)
+        self.assertEqual(problem["functions"], [1])
+
+        del raw["problems"][0]["suite_year"]
+        with self.assertRaisesRegex(ConfigurationError, "suite_year"):
+            parse_campaign_config(raw, code_commit="abc123")
+
     def test_fuzzy_policy_is_resolved_with_explicit_methodology(self) -> None:
         raw = _example()
         raw["treatments"] = [deepcopy(raw["treatments"][0])]
