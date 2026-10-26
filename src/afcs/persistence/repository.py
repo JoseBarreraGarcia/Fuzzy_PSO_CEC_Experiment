@@ -528,6 +528,21 @@ class ExperimentRepository:
             raise RepositoryError(f"Run {run_id} is not running")
         if not math.isfinite(objective_best):
             raise RepositoryError("Completed objective_best must be finite")
+        planned_budget = self.connection.execute(
+            """
+            SELECT ac.budget_evaluations
+            FROM runs AS r
+            JOIN algorithm_configurations AS ac
+              ON ac.configuration_id = r.configuration_id
+             AND ac.campaign_id = r.campaign_id
+            WHERE r.run_id = ?
+            """,
+            (run_id,),
+        ).fetchone()["budget_evaluations"]
+        if planned_budget is not None and evaluations != int(planned_budget):
+            raise RepositoryError(
+                "Completed evaluations must equal the planned evaluation budget"
+            )
         _validate_sha256(initial_population_sha256, "initial_population_sha256")
         _validate_sha256(initial_velocity_sha256, "initial_velocity_sha256")
         selected_metrics = metrics or {}

@@ -321,6 +321,24 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
             )
         self.assertEqual(json.loads(output.getvalue())["completed"], 1)
 
+        output = StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(
+                main(
+                    [
+                        "audit",
+                        "--database",
+                        str(database_path),
+                        "--campaign-id",
+                        "cli-smoke",
+                    ]
+                ),
+                0,
+            )
+        audit = json.loads(output.getvalue())
+        self.assertTrue(audit["is_valid"])
+        self.assertEqual(audit["run_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

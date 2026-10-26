@@ -9,7 +9,11 @@ from pathlib import Path
 from typing import Sequence
 
 from afcs.metrics import load_metric_registry
-from afcs.persistence import ExperimentRepository, initialize_v2_database
+from afcs.persistence import (
+    ExperimentRepository,
+    audit_campaign_integrity,
+    initialize_v2_database,
+)
 
 from .configuration import LoadedCampaignConfig, load_campaign_config
 from .orchestration import SequentialCampaignOrchestrator
@@ -68,7 +72,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         elif arguments.command == "run":
             _print_json(asdict(orchestrator.execute_pending(arguments.campaign_id)))
-        else:
+        elif arguments.command == "recover":
             _print_json(
                 asdict(
                     orchestrator.recover_interrupted(
@@ -78,6 +82,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                     )
                 )
             )
+        else:
+            report = audit_campaign_integrity(connection, arguments.campaign_id)
+            payload = asdict(report)
+            payload["is_valid"] = report.is_valid
+            _print_json(payload)
+            if not report.is_valid:
+                return 2
     finally:
         connection.close()
     return 0
@@ -105,6 +116,11 @@ def _parser() -> argparse.ArgumentParser:
     recover.add_argument("--campaign-id", required=True)
     recover.add_argument("--run-id", required=True, type=int, nargs="+")
     recover.add_argument("--reason", required=True)
+    audit = commands.add_parser(
+        "audit", help="validate persisted campaign integrity without changing it"
+    )
+    audit.add_argument("--database", required=True, type=Path)
+    audit.add_argument("--campaign-id", required=True)
     return parser
 
 

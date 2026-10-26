@@ -50,6 +50,14 @@ class ExperimentRunExecutor:
             result = optimizer.run()
             objective = _finite_float(result.best_objective, "best_objective")
             evaluations = _non_negative_integer(result.evaluations, "evaluations")
+            if (
+                plan.budget_evaluations is not None
+                and evaluations != plan.budget_evaluations
+            ):
+                raise ValueError(
+                    "result evaluations do not match the planned evaluation budget: "
+                    f"observed={evaluations}, planned={plan.budget_evaluations}"
+                )
             solution = _finite_solution(result.best_position)
             finished = self._read_clock()
             runtime = finished - started
@@ -61,8 +69,13 @@ class ExperimentRunExecutor:
                 for metric_id, value in getattr(result, "run_metrics", {}).items()
                 if metric_id in selected_metric_ids
             }
+            trace_points = tuple(getattr(result, "trace_points", ()))
+            if trace_points and trace_points[-1].evaluations != evaluations:
+                raise ValueError(
+                    "final trace evaluations do not match the optimizer result"
+                )
             with self._repository.transaction():
-                for point in getattr(result, "trace_points", ()):
+                for point in trace_points:
                     self._repository.record_trace(
                         run_id=run_id,
                         checkpoint_index=point.checkpoint_index,

@@ -46,11 +46,12 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
 1. [Completado] Recuperación explícita de réplicas abandonadas en `running`,
    conservando intentos auditables y sin sobrescribir resultados.
 2. Validar ejecución paralela reproducible e independiente del orden.
-3. Completar políticas uniformes para `NaN`, `inf`, excepciones, cancelación y
-   agotamiento de presupuesto.
+3. [Parcial] `NaN`, `inf`, excepciones y presupuesto exacto se rechazan y dejan
+   evidencia estructurada; falta definir e implementar cancelación explícita.
 4. Separar y registrar, cuando corresponda, tiempo de problema, optimizador,
    métricas y controlador.
-5. Añadir inspección y validación de integridad de campañas terminadas.
+5. [Completado] Inspección read-only de integridad relacional, intentos, NFE,
+   resultados y trazas de campañas.
 
 ### Bloque B — contratos generales de problemas
 

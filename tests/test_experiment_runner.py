@@ -162,6 +162,29 @@ class TestExperimentRunExecutor(unittest.TestCase):
         ).fetchone()[0]
         self.assertEqual(status, "failed")
 
+    def test_result_with_wrong_evaluation_count_is_recorded_as_failure(self):
+        @dataclass
+        class WrongBudgetResult:
+            best_position: tuple[float, ...] = (0.0, 0.0)
+            best_objective: float = 0.0
+            evaluations: int = 11
+
+        class WrongBudgetOptimizer:
+            run_metadata = self._matching_optimizer().run_metadata
+
+            def run(self):
+                return WrongBudgetResult()
+
+        with self.assertRaisesRegex(ValueError, "planned evaluation budget"):
+            ExperimentRunExecutor(self.repository, clock=Clock(1.0)).execute(
+                self.run_id, WrongBudgetOptimizer()
+            )
+
+        row = self.connection.execute(
+            "SELECT status, error_type FROM runs WHERE run_id = ?", (self.run_id,)
+        ).fetchone()
+        self.assertEqual(tuple(row), ("failed", "ValueError"))
+
     def test_plan_mismatch_is_rejected_before_run_starts(self):
         mismatched = LegacyCompatiblePSO(
             problem=self.problem,
@@ -185,7 +208,7 @@ class TestExperimentRunExecutor(unittest.TestCase):
             evaluations: int = 12
             trace_points: tuple[OptimizationTracePoint, ...] = (
                 OptimizationTracePoint(0, 0, 4, 0.01, {"objective_best": 1.0}),
-                OptimizationTracePoint(1, 1, 8, 0.01, {"inertia_weight": 0.6}),
+                OptimizationTracePoint(1, 1, 12, 0.01, {"inertia_weight": 0.6}),
             )
 
         class InvalidTraceOptimizer:

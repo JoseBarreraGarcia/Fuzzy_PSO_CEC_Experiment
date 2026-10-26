@@ -48,6 +48,26 @@ configuración, `replica_index`, semilla y presupuesto, y genera un nuevo intent
 numerado. No se recuperan automáticamente filas por antigüedad ni se reintentan
 fallos terminales.
 
+## Auditoría de integridad
+
+Una campaña puede inspeccionarse sin alterar sus resultados:
+
+```powershell
+afcs-campaign audit `
+  --database Resultados/campaign.db `
+  --campaign-id campaign-id
+```
+
+El comando verifica `integrity_check`, claves foráneas, coherencia entre
+campaña/réplicas/intentos, secuencia de intentos y checkpoints, presupuesto NFE,
+NFE final de la traza, finitud del resultado y dimensión de la solución. Devuelve
+código 0 si no encuentra problemas y 2 cuando informa inconsistencias.
+
+El runner y el repositorio también impiden preventivamente completar una réplica
+si el NFE observado no coincide exactamente con el presupuesto persistido. Los
+objetivos, soluciones y métricas no finitos se rechazan y la ejecución queda
+registrada como `failed`.
+
 ## Límites deliberados de esta etapa
 
 - Sólo se ejecuta `parallel_workers=1`; otros valores se rechazan tanto en el

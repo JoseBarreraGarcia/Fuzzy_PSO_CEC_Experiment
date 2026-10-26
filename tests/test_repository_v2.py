@@ -206,6 +206,23 @@ class TestExperimentRepository(unittest.TestCase):
                 metrics={"population_entropy": 0.2},
             )
 
+    def test_completed_run_must_match_planned_evaluation_budget(self):
+        run_id = self._prepare_run()
+        self.repository.start_campaign("campaign")
+        self.repository.start_run(run_id)
+        with self.assertRaisesRegex(RepositoryError, "planned evaluation budget"):
+            self.repository.complete_run(
+                run_id,
+                objective_best=0.1,
+                solution=[0.0, 0.0],
+                evaluations=99,
+                runtime_total_seconds=0.5,
+            )
+        status = self.connection.execute(
+            "SELECT status FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()[0]
+        self.assertEqual(status, "running")
+
     def test_registered_metric_type_is_enforced_without_partial_trace(self):
         run_id = self._prepare_run()
         self.repository.start_campaign("campaign")

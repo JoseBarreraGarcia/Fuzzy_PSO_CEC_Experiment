@@ -22,16 +22,24 @@ from .repository import (
     sha256_text,
     utc_now,
 )
+from .integrity import (
+    CampaignIntegrityIssue,
+    CampaignIntegrityReport,
+    audit_campaign_integrity,
+)
 
 __all__ = [
     "DEFAULT_MIGRATIONS_DIR",
     "ExperimentRepository",
+    "CampaignIntegrityIssue",
+    "CampaignIntegrityReport",
     "Migration",
     "MigrationError",
     "PlannedRun",
     "RepositoryError",
     "StoredValue",
     "apply_migrations",
+    "audit_campaign_integrity",
     "canonical_json",
     "configure_campaign_metrics",
     "connect_v2_database",

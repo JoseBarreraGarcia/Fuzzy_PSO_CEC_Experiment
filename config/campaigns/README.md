@@ -142,3 +142,14 @@ requiere una decisión explícita de recuperación y nunca se reinicia sola. Use
 `afcs-campaign recover --database <db> --campaign-id <id> --run-id <ids...>
 --reason <motivo>`; después, `run` ejecutará nuevamente esas réplicas con la
 misma configuración y semilla.
+
+Para comprobar una base después de ejecutarla:
+
+```powershell
+afcs-campaign audit `
+  --database Resultados/cec2017_v2.db `
+  --campaign-id cec2017-pso-v2-example
+```
+
+La auditoría no modifica resultados y devuelve un informe JSON con los códigos
+de cualquier inconsistencia encontrada.
