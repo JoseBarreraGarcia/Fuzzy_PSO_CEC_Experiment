@@ -62,11 +62,22 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
 1. [Completado] Benchmarks matemáticos consolidados bajo `afcs.problems`:
    `CLASSICAL` F1-F23, `CEC2017` autocontenido y suites CEC de `OPFUNU_CEC`,
    con familia, año, función, dimensión, implementación y versión auditables.
-2. Migrar SCP y USCP mediante el contrato común de problema, restricciones y
-   reparación.
-3. Incorporar un fixture mínimo de Knapsack y dejar preparada su familia.
-4. Clasificar binarización, funciones de transferencia y reparación por módulo.
-5. Asegurar que el runner no contiene casos especiales por familia.
+2. [En pausa por decisión metodológica] Migrar SCP y USCP mediante el contrato
+   común de problema, restricciones y reparación.
+3. [En pausa por decisión metodológica] Incorporar un fixture mínimo de
+   Knapsack y dejar preparada su familia.
+4. [En pausa por decisión metodológica] Clasificar e integrar binarización,
+   funciones de transferencia y reparación. El inventario heredado se conserva
+   sin convertirlo todavía en dependencia del núcleo v2.
+5. Evaluar como próxima ampliación problemas de ingeniería o benchmarks de
+   variables continuas, manteniendo el mismo contrato y sin binarización.
+6. Asegurar que el runner no contiene casos especiales por familia.
+
+**Decisión vigente (2026-10-26):** antes de incorporar dominios binarios se
+priorizará decidir y, si corresponde, validar una familia adicional de
+problemas continuos. SCP, USCP y KP no se eliminan del alcance futuro de la
+tesis, pero su migración no condiciona el cierre inicial de la plataforma v2
+hasta nuevo aviso. Reactivarlos requerirá una decisión metodológica explícita.
 
 ### Bloque C — contratos generales de optimizadores
 
@@ -127,7 +138,8 @@ La plataforma podrá considerarse finiquitada cuando:
 - se instale desde cero y su CI esté verde;
 - pueda ejecutar en forma secuencial y paralela con replay reproducible;
 - recupere interrupciones mediante una política explícita y auditada;
-- soporte al menos CEC/BEN, SCP, USCP y un fixture KP;
+- soporte de forma auditable las familias matemáticas continuas aprobadas y
+  cualquier familia continua adicional que se seleccione durante el cierre;
 - soporte PSO y GA bajo contratos comunes;
 - permita optimizadores con y sin control externo de parámetros;
 - persista configuraciones, semillas, resultados y métricas sin reconstrucción
@@ -139,3 +151,7 @@ La plataforma podrá considerarse finiquitada cuando:
 
 Solo después de esta puerta se congelarán protocolos y se ejecutarán campañas
 científicas destinadas a publicaciones.
+
+La puerta anterior no exige actualmente SCP, USCP, KP ni binarización. Esas
+capacidades quedan como una fase posterior y no deben introducirse de forma
+implícita durante el trabajo con problemas continuos.

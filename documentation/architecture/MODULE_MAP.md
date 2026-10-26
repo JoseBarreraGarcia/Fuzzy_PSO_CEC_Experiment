@@ -26,17 +26,17 @@ Control System*. Cada carpeta responde a una pregunta concreta:
 |---|---|---|
 | `Problem/Benchmark/CEC/cec2017/` | `src/afcs/problems/benchmarks/cec2017/` | migrado; diagnóstico histórico permanece en origen |
 | `Problem/Benchmark/Problem.py` | `src/afcs/problems/benchmarks/` | requiere separar dispatcher e implementaciones |
-| `Problem/SCP/` | `src/afcs/problems/scp/` | pendiente de contrato común |
-| `Problem/USCP/` | `src/afcs/problems/uscp/` | pendiente de contrato común |
-| futuro KP | `src/afcs/problems/knapsack/` | planificado |
+| `Problem/SCP/` | `src/afcs/problems/scp/` | migración pausada; conservar legado |
+| `Problem/USCP/` | `src/afcs/problems/uscp/` | migración pausada; conservar legado |
+| futuro KP | `src/afcs/problems/knapsack/` | pausado junto con dominios binarios |
 | `Metaheuristics/Codes/PSO.py` | `src/afcs/optimizers/pso/` | núcleo v2 y RNG aislados; wrapper heredado pendiente de retiro |
 | `Metaheuristics/Codes/PSO_FCS.py` | PSO + `fuzzy/` + política PSO | separación v2 implementada; ruta histórica pendiente de clasificación final |
 | `Metaheuristics/Codes/GA.py` | `src/afcs/optimizers/ga/` | planificado tras PSO |
 | otras `Metaheuristics/Codes/*.py` | `src/afcs/optimizers/experimental/` | conservar y validar individualmente |
 | `FUZZY/fuzzy_controller_auto.py` | `src/afcs/fuzzy/` + política del optimizador | primitivas e integración v2 disponibles; falta retirar/conservar la referencia heredada |
 | controladores 3L/5L | `src/afcs/fuzzy/schemes/` | referencia y regresión de esquemas |
-| `Discretization/` | `src/afcs/binarization/` | pendiente de clasificar transferencias y reglas |
-| reparación en `Problem/SCP` | `src/afcs/binarization/repair/` o problema | decidir según dependencia del dominio |
+| `Discretization/` | `src/afcs/binarization/` | migración pausada; inventario conservado |
+| reparación en `Problem/SCP` | `src/afcs/binarization/repair/` o problema | decisión y migración pausadas con SCP |
 | `Diversity/` | `src/afcs/metrics/diversity/` | primera familia de métricas existente |
 | `Util/metrics_registry.py` | `src/afcs/metrics/registry.py` | migrado; puente temporal en origen |
 | `BD/persistence_v2.py` | `src/afcs/persistence/database.py` | migrado; puente temporal en origen |

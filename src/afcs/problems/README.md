@@ -25,4 +25,8 @@ Las suites CEC suministradas por OPFUNU se integran mediante
 función, la clase y la versión del paquete forman parte de su identidad
 persistida. No se consideran intercambiables con la implementación CEC2017
 autocontenida.
-SCP, USCP y KP continúan pendientes de migración desde `Problem/`.
+SCP, USCP y KP se conservan en `Problem/` como legado disponible, pero su
+migración está pausada por decisión metodológica desde 2026-10-26. La siguiente
+ampliación se evaluará primero entre problemas de ingeniería o benchmarks
+continuos, evitando introducir por ahora binarización, transferencia y
+reparación en el núcleo v2.

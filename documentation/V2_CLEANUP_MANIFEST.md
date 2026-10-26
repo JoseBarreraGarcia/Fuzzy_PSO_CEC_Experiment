@@ -36,7 +36,7 @@ recuperable desde la rama y el commit indicados arriba.
 |---|---|---|
 | Núcleo de ejecución | `KEEP` + `REFACTOR` | Debe evolucionar sin una reescritura simultánea. |
 | CEC2017 | `KEEP` | Ya dispone de correcciones y pruebas de regresión. |
-| SCP y USCP | `KEEP` + `REFACTOR` | Son familias aprobadas para el núcleo v2. |
+| SCP y USCP | `KEEP` + `PAUSED` | Conservar íntegros; migración al núcleo v2 pausada hasta una nueva decisión metodológica. |
 | Metaheurísticas | `KEEP` + `REFACTOR` | Se conservarán PSO, GA y el resto de implementaciones. |
 | Controladores difusos | `KEEP` + `REFACTOR` | Son funcionalidad central y deberán independizarse de cada artículo. |
 | Código de análisis | `REFACTOR` | Se reutilizará, unificará y probará con fixtures pequeños. |
@@ -76,10 +76,10 @@ archivos. El traslado a `src/` se hará después, módulo por módulo y con prue
 | `Problem/Benchmark/CEC/cec2017/example.py` | `REFACTOR` | Convertir en ejemplo mínimo ejecutable o prueba; evitar código suelto. |
 | `Problem/Benchmark/CEC/cec2017/extra/plots.jpg` | `HISTORICAL` | Imagen auxiliar no necesaria para ejecutar las funciones. |
 | `Problem/Benchmark/CEC/cec2017.rar` | `HISTORICAL` | Copia comprimida redundante con el árbol versionado. |
-| `Problem/SCP/problem.py`, `Problem/USCP/problem.py` | `REFACTOR` | Adaptar al contrato común de problemas con restricciones y reparación. |
-| `Problem/SCP/Instances/` | `KEEP` | Conservar inicialmente las 65 instancias; documentar origen/licencia y crear fixture mínimo aparte. |
-| `Problem/USCP/Instances/` | `KEEP` | Conservar inicialmente las 75 instancias; documentar origen/licencia y crear fixture mínimo aparte. |
-| `Problem/KP/` | futuro | Añadir después del contrato común, no como caso especial del runner. |
+| `Problem/SCP/problem.py`, `Problem/USCP/problem.py` | `KEEP` + `PAUSED` | Conservar sin migrar todavía; la adaptación binaria se retomará sólo mediante decisión explícita. |
+| `Problem/SCP/Instances/` | `KEEP` + `PAUSED` | Conservar las 65 instancias sin migrarlas ni crear fixtures durante la pausa. |
+| `Problem/USCP/Instances/` | `KEEP` + `PAUSED` | Conservar las 75 instancias sin migrarlas ni crear fixtures durante la pausa. |
+| `Problem/KP/` | `PAUSED` | Incorporación futura, posterior a una decisión explícita sobre dominios binarios. |
 
 Los datasets completos de SCP/USCP suman aproximadamente 84,41 MB. No se
 retirarán por tamaño mientras sean la única fuente operativa disponible. Una
