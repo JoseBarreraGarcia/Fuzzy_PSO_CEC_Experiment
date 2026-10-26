@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "required_metrics": [
     "run_status",
     "replica_index",
@@ -57,6 +57,13 @@
       "fuzzy_no_activation_count",
       "fuzzy_fallback_count",
       "inertia_weight"
+    ],
+    "timing": [
+      "problem_evaluation_total_seconds",
+      "metric_collection_total_seconds",
+      "fuzzy_runtime_total_seconds",
+      "persistence_total_seconds",
+      "run_wall_total_seconds"
     ]
   },
   "metrics": {
@@ -131,9 +138,9 @@
       "missing_policy": "forbidden"
     },
     "runtime_total_seconds": {
-      "version": 1,
+      "version": 2,
       "name": "Duración total",
-      "description": "Tiempo de pared total de la réplica medido con un reloj monotónico.",
+      "description": "Intervalo inclusivo ocupado por optimizer.run(), medido con reloj monotónico; incluye problema, controlador y métricas, pero excluye persistencia.",
       "scope": ["replica"],
       "source": "experiment.runner",
       "dtype": "float",
@@ -143,6 +150,62 @@
       "sampling": "once_at_end",
       "aggregation": "mean|median|std|quantiles",
       "missing_policy": "required_on_terminal_state_when_measurable"
+    },
+    "problem_evaluation_total_seconds": {
+      "version": 1,
+      "name": "Tiempo de evaluación del problema",
+      "description": "Suma de intervalos exclusivos ocupados por llamadas a problem.evaluate durante la réplica.",
+      "scope": ["replica"],
+      "source": "optimizer.problem_evaluation_boundary",
+      "dtype": "float",
+      "unit": "seconds",
+      "direction": "minimize_cost",
+      "valid_range": ">= 0 and finite",
+      "sampling": "once_at_end",
+      "aggregation": "mean|median|std|quantiles",
+      "missing_policy": "not_available_without_optimizer_instrumentation"
+    },
+    "metric_collection_total_seconds": {
+      "version": 1,
+      "name": "Tiempo de recolección de métricas",
+      "description": "Suma de intervalos exclusivos ocupados por el colector de métricas y trazas dentro del optimizador.",
+      "scope": ["replica"],
+      "source": "optimizer.trace_collector_boundary",
+      "dtype": "float",
+      "unit": "seconds",
+      "direction": "minimize_cost",
+      "valid_range": ">= 0 and finite",
+      "sampling": "once_at_end",
+      "aggregation": "mean|median|std|quantiles",
+      "missing_policy": "zero_without_trace_collector"
+    },
+    "persistence_total_seconds": {
+      "version": 1,
+      "name": "Tiempo de persistencia",
+      "description": "Intervalo inclusivo de la transacción que persiste trazas, métricas y resultado terminal; excluye el registro posterior de esta propia medición.",
+      "scope": ["replica"],
+      "source": "experiment.runner.persistence_boundary",
+      "dtype": "float",
+      "unit": "seconds",
+      "direction": "minimize_cost",
+      "valid_range": ">= 0 and finite",
+      "sampling": "once_at_end",
+      "aggregation": "mean|median|std|quantiles",
+      "missing_policy": "required_when_timing_profile_selected"
+    },
+    "run_wall_total_seconds": {
+      "version": 1,
+      "name": "Tiempo de pared de la réplica",
+      "description": "Intervalo inclusivo desde antes de marcar la réplica running hasta completar su transacción terminal; excluye el registro posterior de métricas temporales.",
+      "scope": ["replica"],
+      "source": "experiment.runner.wall_boundary",
+      "dtype": "float",
+      "unit": "seconds",
+      "direction": "minimize_cost",
+      "valid_range": ">= 0 and finite",
+      "sampling": "once_at_end",
+      "aggregation": "mean|median|std|quantiles",
+      "missing_policy": "required_when_timing_profile_selected"
     },
     "feasible": {
       "version": 1,

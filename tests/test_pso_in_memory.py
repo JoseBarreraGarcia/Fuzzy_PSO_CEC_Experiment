@@ -30,6 +30,39 @@ def sphere_problem(
 
 
 class TestPSOInMemory(unittest.TestCase):
+    def test_component_times_are_measured_at_explicit_boundaries(self):
+        class StepClock:
+            def __init__(self):
+                self.value = -0.1
+
+            def __call__(self):
+                self.value += 0.1
+                return self.value
+
+        config = LegacyPSORunConfig(population_size=2, max_iterations=1)
+        collector = PSOTraceCollector(
+            selected_metrics=("objective_best",),
+            sampling=TraceSampling(),
+            maximum_iteration=1,
+            lower_bounds=(-5.0, -5.0),
+            upper_bounds=(5.0, 5.0),
+        )
+        result = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=FixedInertia(0.7),
+            rng=np.random.default_rng(123),
+            trace_collector=collector,
+            component_clock=StepClock(),
+        ).run()
+
+        self.assertAlmostEqual(
+            result.run_metrics["problem_evaluation_total_seconds"], 0.4
+        )
+        self.assertAlmostEqual(
+            result.run_metrics["metric_collection_total_seconds"], 0.2
+        )
+
     def test_fixed_inertia_consumes_exact_budget_and_respects_bounds(self):
         config = LegacyPSORunConfig(population_size=4, max_iterations=3)
         result = LegacyCompatiblePSO(

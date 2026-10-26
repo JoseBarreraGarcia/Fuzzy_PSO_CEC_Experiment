@@ -49,9 +49,8 @@ runner conozca sus operadores internos.
 - Las fábricas o ejecutores personalizados inyectados se limitan al modo
   secuencial hasta definir un contrato explícito de construcción por proceso.
 
-`runtime_total_seconds` mide provisionalmente el intervalo monotónico ocupado
-por `optimizer.run()`. Las escrituras SQLite quedan fuera de ese intervalo para
-no mezclar rendimiento algorítmico con I/O. Antes de campañas definitivas se
-deberán añadir tiempos separados para evaluación, optimizador, métricas,
-controlador, persistencia y tiempo de pared completo, según la arquitectura
-aprobada.
+`runtime_total_seconds` mide el intervalo monotónico inclusivo ocupado por
+`optimizer.run()`. El perfil `timing` añade tiempos separados para evaluación
+del problema, métricas, controlador, persistencia y pared total. Los componentes
+incluidos no se suman entre sí; NFE sigue siendo el eje principal para comparar
+calidad de búsqueda y los tiempos caracterizan costo computacional.

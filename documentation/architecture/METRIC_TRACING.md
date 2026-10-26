@@ -54,7 +54,28 @@ registra y sirve para inicializar el máximo histórico de la primera decisión.
 
 Las fórmulas se migraron a `afcs.metrics.tracing` con sufijo de versión `v1` y
 pruebas de equivalencia frente al código heredado. Sus definiciones pasaron a
-versión 2 en el registro, y el registro completo a `schema_version=2`.
+versión 2 en el registro. La incorporación de métricas temporales eleva el
+registro completo a `schema_version=3`.
+
+## Tiempos de componentes
+
+El perfil `timing` selecciona límites monotónicos explícitos:
+
+- `runtime_total_seconds`: intervalo inclusivo de `optimizer.run()`;
+- `problem_evaluation_total_seconds`: suma exclusiva de llamadas a
+  `problem.evaluate`;
+- `metric_collection_total_seconds`: suma exclusiva del colector de trazas;
+- `fuzzy_runtime_total_seconds`: suma exclusiva de inferencias FIS, cuando
+  corresponde;
+- `persistence_total_seconds`: transacción terminal de trazas y resultado;
+- `run_wall_total_seconds`: desde el inicio operativo de la réplica hasta el fin
+  de su transacción terminal.
+
+Los tiempos de problema, métricas y controlador son componentes incluidos en el
+tiempo del optimizador y no deben sumarse nuevamente para estimar la pared. El
+registro posterior de las propias métricas de persistencia queda fuera de esos
+intervalos para evitar una definición autorreferente. Las duraciones sirven para
+diagnóstico de costo; NFE continúa siendo el eje primario de comparación.
 
 La implementación v2 corrige el error heredado de `solverBEN.py` que escribía
 `divj_max0` en todas las iteraciones: ahora cada checkpoint almacena el máximo

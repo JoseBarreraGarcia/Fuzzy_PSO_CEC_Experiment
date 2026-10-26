@@ -15,7 +15,7 @@ informativa y el lector la ignora.
 
 | Bloque | Qué controla | Opciones v1 |
 |---|---|---|
-| `campaign` | Identidad, réplicas y métricas | `replicas >= 1`; perfiles `minimal`, `convergence`, `optimizer`, `fuzzy`, `all`, lista u objeto selectivo |
+| `campaign` | Identidad, réplicas y métricas | `replicas >= 1`; perfiles `minimal`, `convergence`, `optimizer`, `fuzzy`, `timing`, `all`, lista u objeto selectivo |
 | `randomness` | Pareamiento y reproducibilidad | `paired_by_replica_v1`, semilla base no negativa, `numpy_seedsequence_pcg64_v1` |
 | `problems` | Matriz de problemas | `CEC2017`; F1 y F3-F30; dimensiones 10, 30, 50, 100 |
 | `treatments` | Configuraciones del optimizador | `PSO`; políticas `fixed_inertia`, `legacy_ldiw` y `fuzzy_inertia_mamdani` |

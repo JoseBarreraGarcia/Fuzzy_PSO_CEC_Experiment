@@ -404,6 +404,9 @@ class ExperimentRepository:
             raise RepositoryError(f"Unknown campaign: {campaign_id!r}")
         return str(row["status"])
 
+    def run_status(self, run_id: int) -> str:
+        return str(self._get_run(run_id)["status"])
+
     def run_ids_by_status(
         self, campaign_id: str, status: str = "planned"
     ) -> tuple[int, ...]:
@@ -604,6 +607,22 @@ class ExperimentRepository:
             )
             for metric_id, value in selected_metrics.items():
                 self._insert_run_metric(run_id, metric_id, value, "observed")
+
+    def record_completed_run_metrics(
+        self,
+        run_id: int,
+        metrics: Mapping[str, Any],
+        provenance: str = "observed",
+    ) -> None:
+        """Append measurements only knowable after the completion transaction."""
+
+        row = self._get_run(run_id)
+        if row["status"] != "completed":
+            raise RepositoryError("Post-run metrics require a completed run")
+        self._validate_selected_metrics(row["campaign_id"], metrics, "replica")
+        with self._write_scope():
+            for metric_id, value in metrics.items():
+                self._insert_run_metric(run_id, metric_id, value, provenance)
 
     def fail_run(
         self,

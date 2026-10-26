@@ -97,6 +97,7 @@ class LegacyCompatiblePSO:
         random_streams: ReplicaRandomStreams | None = None,
         trace_collector: PSOTraceCollector | None = None,
         clock: Callable[[], float] = perf_counter,
+        component_clock: Callable[[], float] = perf_counter,
     ) -> None:
         if not isinstance(problem, OptimizationProblem):
             raise TypeError("problem must implement OptimizationProblem")
@@ -120,11 +121,16 @@ class LegacyCompatiblePSO:
             raise TypeError("trace_collector must be PSOTraceCollector")
         if not callable(clock):
             raise TypeError("clock must be callable")
+        if not callable(component_clock):
+            raise TypeError("component_clock must be callable")
         self._problem = problem
         self._config = config
         self._inertia_policy = inertia_policy
         self._trace_collector = trace_collector
         self._clock = clock
+        self._component_clock = component_clock
+        self._problem_time_seconds = 0.0
+        self._metric_time_seconds = 0.0
         if random_streams is None:
             self._initialization_rng = rng
             self._dynamics_rng = rng
@@ -169,6 +175,8 @@ class LegacyCompatiblePSO:
         )
 
     def run(self) -> PSORunResult:
+        self._problem_time_seconds = 0.0
+        self._metric_time_seconds = 0.0
         initialization_started = self._clock()
         space = self._problem.metadata.search_space
         lower = np.asarray(space.lower_bounds, dtype=float)
@@ -287,12 +295,18 @@ class LegacyCompatiblePSO:
                 if self._trace_collector is not None
                 else ()
             ),
-            run_metrics=getattr(self._inertia_policy, "summary_metrics", {}),
+            run_metrics={
+                **getattr(self._inertia_policy, "summary_metrics", {}),
+                "problem_evaluation_total_seconds": self._problem_time_seconds,
+                "metric_collection_total_seconds": self._metric_time_seconds,
+            },
         )
 
     def _observe(self, **observation) -> None:
         if self._trace_collector is not None:
+            started = self._read_component_clock()
             self._trace_collector.observe(**observation)
+            self._metric_time_seconds += self._component_elapsed(started)
 
     def _evaluate_population(
         self, positions: np.ndarray, budget: EvaluationBudget
@@ -300,8 +314,22 @@ class LegacyCompatiblePSO:
         values = np.empty(positions.shape[0], dtype=float)
         for index, position in enumerate(positions):
             budget.consume()
+            started = self._read_component_clock()
             values[index] = self._problem.evaluate(position).objective
+            self._problem_time_seconds += self._component_elapsed(started)
         return values
+
+    def _read_component_clock(self) -> float:
+        value = float(self._component_clock())
+        if not math.isfinite(value):
+            raise ValueError("component_clock must produce finite values")
+        return value
+
+    def _component_elapsed(self, started: float) -> float:
+        elapsed = self._read_component_clock() - started
+        if elapsed < 0.0:
+            raise ValueError("component_clock must be monotonic")
+        return elapsed
 
     def _best_index(self, values: np.ndarray) -> int:
         if self._problem.metadata.direction is OptimizationDirection.MINIMIZE:

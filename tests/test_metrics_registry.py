@@ -24,7 +24,7 @@ class TestMetricRegistry(unittest.TestCase):
         cls.registry = load_metric_registry()
 
     def test_default_registry_is_valid(self):
-        self.assertEqual(self.registry.schema_version, 2)
+        self.assertEqual(self.registry.schema_version, 3)
         self.assertGreaterEqual(len(self.registry.metrics), 20)
         self.assertEqual(len(self.registry.metrics), len(set(self.registry.metrics)))
 

@@ -46,7 +46,7 @@ class TestExperimentRunExecutor(unittest.TestCase):
             "Runner integration",
             {"purpose": "test"},
             "test-commit",
-            "minimal",
+            "timing",
         )
         self.problem = CallableProblem(
             ProblemMetadata(
@@ -124,6 +124,31 @@ class TestExperimentRunExecutor(unittest.TestCase):
         self.assertEqual(len(row["initial_velocity_sha256"]), 64)
         self.assertEqual(json.loads(row["solution_json"]), result.best_position.tolist())
         self.assertEqual(row["objective_best"], result.best_objective)
+
+    def test_persistence_and_wall_times_are_recorded_after_completion(self):
+        optimizer = self._matching_optimizer()
+        ExperimentRunExecutor(
+            self.repository,
+            clock=Clock(10.0, 10.5),
+            persistence_clock=Clock(1.0, 2.0, 2.25),
+        ).execute(self.run_id, optimizer)
+
+        rows = self.connection.execute(
+            """
+            SELECT metric_id, value_real FROM run_metric_values
+            WHERE run_id = ? AND metric_id IN (
+                'persistence_total_seconds', 'run_wall_total_seconds',
+                'problem_evaluation_total_seconds',
+                'metric_collection_total_seconds'
+            )
+            """,
+            (self.run_id,),
+        ).fetchall()
+        values = {row["metric_id"]: row["value_real"] for row in rows}
+        self.assertEqual(values["persistence_total_seconds"], 0.25)
+        self.assertEqual(values["run_wall_total_seconds"], 1.25)
+        self.assertGreaterEqual(values["problem_evaluation_total_seconds"], 0.0)
+        self.assertGreaterEqual(values["metric_collection_total_seconds"], 0.0)
 
     def test_optimizer_failure_is_persisted_and_reraised(self):
         metadata = self._matching_optimizer().run_metadata

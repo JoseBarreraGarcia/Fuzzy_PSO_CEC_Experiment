@@ -26,13 +26,17 @@ class ExperimentRunExecutor:
         self,
         repository: ExperimentRepository,
         clock: Callable[[], float] = perf_counter,
+        persistence_clock: Callable[[], float] = perf_counter,
     ) -> None:
         if not isinstance(repository, ExperimentRepository):
             raise TypeError("repository must be ExperimentRepository")
         if not callable(clock):
             raise TypeError("clock must be callable")
+        if not callable(persistence_clock):
+            raise TypeError("persistence_clock must be callable")
         self._repository = repository
         self._clock = clock
+        self._persistence_clock = persistence_clock
 
     def execute(self, run_id: int, optimizer: RunnableOptimizer):
         """Execute and persist one replica, returning its optimizer result."""
@@ -44,6 +48,7 @@ class ExperimentRunExecutor:
 
         plan = self._repository.get_planned_run(run_id)
         self._validate_binding(plan, optimizer)
+        wall_started = self._read_persistence_clock()
         self._repository.start_run(run_id)
         try:
             started = self._read_clock()
@@ -74,6 +79,7 @@ class ExperimentRunExecutor:
                 raise ValueError(
                     "final trace evaluations do not match the optimizer result"
                 )
+            persistence_started = self._read_persistence_clock()
             with self._repository.transaction():
                 for point in trace_points:
                     self._repository.record_trace(
@@ -98,17 +104,39 @@ class ExperimentRunExecutor:
                         result, "initial_velocity_sha256", None
                     ),
                 )
+            persistence_finished = self._read_persistence_clock()
+            persistence_elapsed = persistence_finished - persistence_started
+            wall_elapsed = persistence_finished - wall_started
+            if persistence_elapsed < 0.0 or wall_elapsed < 0.0:
+                raise ValueError("persistence_clock must be monotonic")
+            post_metrics = {
+                "persistence_total_seconds": persistence_elapsed,
+                "run_wall_total_seconds": wall_elapsed,
+            }
+            selected_post_metrics = {
+                metric_id: value
+                for metric_id, value in post_metrics.items()
+                if metric_id in selected_metric_ids
+            }
+            if selected_post_metrics:
+                self._repository.record_completed_run_metrics(
+                    run_id, selected_post_metrics
+                )
             return result
         except Exception as error:
-            self._repository.fail_run(
-                run_id,
-                error_type=type(error).__name__,
-                error_message=str(error),
-            )
+            if self._repository.run_status(run_id) in {"planned", "running"}:
+                self._repository.fail_run(
+                    run_id,
+                    error_type=type(error).__name__,
+                    error_message=str(error),
+                )
             raise
 
     def _read_clock(self) -> float:
         return _finite_float(self._clock(), "clock value")
+
+    def _read_persistence_clock(self) -> float:
+        return _finite_float(self._persistence_clock(), "persistence clock value")
 
     @staticmethod
     def _validate_binding(plan: PlannedRun, optimizer: RunnableOptimizer) -> None:
