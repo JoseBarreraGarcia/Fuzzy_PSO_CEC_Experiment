@@ -25,6 +25,7 @@ from .repository import (
 from .integrity import (
     CampaignIntegrityIssue,
     CampaignIntegrityReport,
+    CampaignIntegrityWarning,
     audit_campaign_integrity,
 )
 
@@ -33,6 +34,7 @@ __all__ = [
     "ExperimentRepository",
     "CampaignIntegrityIssue",
     "CampaignIntegrityReport",
+    "CampaignIntegrityWarning",
     "Migration",
     "MigrationError",
     "PlannedRun",

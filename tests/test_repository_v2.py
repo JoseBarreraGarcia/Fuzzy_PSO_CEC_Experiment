@@ -261,6 +261,87 @@ class TestExperimentRepository(unittest.TestCase):
         ).fetchone()
         self.assertEqual(tuple(row), ("failed", "FloatingPointError", "non-finite fitness"))
 
+    def test_planned_run_can_be_cancelled_without_creating_attempt(self):
+        run_id = self._prepare_run()
+        self.repository.start_campaign("campaign")
+
+        attempt_id = self.repository.cancel_run(
+            "campaign", run_id, "excluded by the approved campaign scope"
+        )
+
+        self.assertIsNone(attempt_id)
+        run = self.connection.execute(
+            "SELECT status, cancellation_reason FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        self.assertEqual(tuple(run), ("cancelled", "excluded by the approved campaign scope"))
+        self.assertEqual(
+            self.connection.execute(
+                "SELECT COUNT(*) FROM run_attempts WHERE run_id = ?", (run_id,)
+            ).fetchone()[0],
+            0,
+        )
+        self.repository.finish_campaign("campaign")
+
+    def test_running_run_cancellation_discards_partial_observations(self):
+        run_id = self._prepare_run()
+        self.repository.start_campaign("campaign")
+        self.repository.start_run(run_id)
+        self.repository.record_trace(run_id, 0, 0, 20, {"objective_best": 1.0})
+
+        attempt_id = self.repository.cancel_run(
+            "campaign", run_id, "operator stopped an invalid treatment"
+        )
+
+        attempt = self.connection.execute(
+            """
+            SELECT status, cancellation_reason, discarded_trace_points
+            FROM run_attempts WHERE attempt_id = ?
+            """,
+            (attempt_id,),
+        ).fetchone()
+        self.assertEqual(
+            tuple(attempt),
+            ("cancelled", "operator stopped an invalid treatment", 1),
+        )
+        self.assertEqual(
+            self.connection.execute(
+                "SELECT COUNT(*) FROM trace_points WHERE run_id = ?", (run_id,)
+            ).fetchone()[0],
+            0,
+        )
+
+    def test_incomplete_campaign_requires_audited_seal_waiver(self):
+        run_id = self._prepare_run()
+        self.repository.start_campaign("campaign")
+        self.repository.cancel_run("campaign", run_id, "hardware maintenance")
+        self.repository.finish_campaign("campaign")
+
+        with self.assertRaisesRegex(RepositoryError, "explicit waiver"):
+            self.repository.seal_campaign("campaign")
+        self.repository.seal_campaign(
+            "campaign", waiver_reason="approved for infrastructure validation only"
+        )
+
+        waiver = self.connection.execute(
+            """
+            SELECT reason, failed_run_count, cancelled_run_count
+            FROM campaign_seal_waivers WHERE campaign_id = 'campaign'
+            """
+        ).fetchone()
+        self.assertEqual(
+            tuple(waiver),
+            ("approved for infrastructure validation only", 0, 1),
+        )
+
+    def test_cancellation_requires_reason_and_is_not_retryable(self):
+        run_id = self._prepare_run()
+        self.repository.start_campaign("campaign")
+        with self.assertRaisesRegex(RepositoryError, "non-empty"):
+            self.repository.cancel_run("campaign", run_id, "  ")
+        self.repository.cancel_run("campaign", run_id, "out of scope")
+        with self.assertRaises(RepositoryError):
+            self.repository.start_run(run_id)
+
     def test_metric_value_encoding_is_typed_and_rejects_non_finite(self):
         self.assertEqual(encode_metric_value(True).value_integer, 1)
         self.assertEqual(encode_metric_value(3).value_integer, 3)

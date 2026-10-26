@@ -48,6 +48,40 @@ configuración, `replica_index`, semilla y presupuesto, y genera un nuevo intent
 numerado. No se recuperan automáticamente filas por antigüedad ni se reintentan
 fallos terminales.
 
+## Cancelación y sellado
+
+Una exclusión intencional no se registra como fallo. El operador puede cancelar
+réplicas `planned` o `running`, siempre con un motivo explícito:
+
+```powershell
+afcs-campaign cancel `
+  --database Resultados/campaign.db `
+  --campaign-id campaign-id `
+  --run-id 17 18 `
+  --reason "tratamientos retirados del alcance aprobado"
+```
+
+La cancelación de una réplica activa cierra el intento como `cancelled`, guarda
+el motivo y el número de observaciones parciales descartadas, y limpia las
+trazas canónicas. Una réplica cancelada no se reintenta automáticamente. La
+campaña sí puede finalizar operativamente cuando todas sus réplicas son
+terminales.
+
+El sellado científico exige que no existan fallos ni cancelaciones. Una campaña
+incompleta sólo puede sellarse mediante una excepción explícita y auditada:
+
+```powershell
+afcs-campaign seal `
+  --database Resultados/campaign.db `
+  --campaign-id campaign-id `
+  --waiver-reason "uso limitado a validación de infraestructura"
+```
+
+La excepción conserva el motivo, fecha y conteos de estados terminales en el
+momento del sellado. La auditoría informa cancelaciones y fallos como
+advertencias, y considera error de integridad un sellado incompleto sin esa
+excepción.
+
 ## Auditoría de integridad
 
 Una campaña puede inspeccionarse sin alterar sus resultados:
@@ -61,7 +95,8 @@ afcs-campaign audit `
 El comando verifica `integrity_check`, claves foráneas, coherencia entre
 campaña/réplicas/intentos, secuencia de intentos y checkpoints, presupuesto NFE,
 NFE final de la traza, finitud del resultado y dimensión de la solución. Devuelve
-código 0 si no encuentra problemas y 2 cuando informa inconsistencias.
+código 0 si no encuentra problemas de integridad y 2 cuando informa
+inconsistencias. Las advertencias operativas no cambian por sí solas el código.
 
 El runner y el repositorio también impiden preventivamente completar una réplica
 si el NFE observado no coincide exactamente con el presupuesto persistido. Los

@@ -230,6 +230,24 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertEqual(statuses[0]["status"], "running")
         self.assertEqual(statuses[1]["status"], "planned")
 
+    def test_multiple_run_cancellation_is_not_executed(self) -> None:
+        orchestrator = SequentialCampaignOrchestrator(self.repository)
+        persisted = orchestrator.plan(_smoke_config("cancel-runs"))
+        self.repository.start_campaign("cancel-runs")
+        self.repository.start_run(persisted.run_ids[0])
+
+        summary = orchestrator.cancel_runs(
+            "cancel-runs",
+            (persisted.run_ids[0], persisted.run_ids[1]),
+            "operator reduced the validated scope",
+        )
+        self.assertEqual(summary.cancelled, 2)
+        self.assertEqual(summary.running, 0)
+        completed = orchestrator.execute_pending("cancel-runs")
+        self.assertEqual(completed.completed, 2)
+        self.assertEqual(completed.cancelled, 2)
+        self.assertEqual(completed.campaign_status, "completed")
+
     def test_preview_is_read_only_and_reports_budget(self) -> None:
         preview = campaign_preview(_smoke_config("preview"))
 

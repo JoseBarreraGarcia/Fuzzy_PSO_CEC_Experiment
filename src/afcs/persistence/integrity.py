@@ -16,6 +16,13 @@ class CampaignIntegrityIssue:
 
 
 @dataclass(frozen=True, slots=True)
+class CampaignIntegrityWarning:
+    code: str
+    message: str
+    run_id: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class CampaignIntegrityReport:
     campaign_id: str
     campaign_status: str
@@ -23,6 +30,7 @@ class CampaignIntegrityReport:
     attempt_count: int
     trace_point_count: int
     issues: tuple[CampaignIntegrityIssue, ...]
+    warnings: tuple[CampaignIntegrityWarning, ...]
 
     @property
     def is_valid(self) -> bool:
@@ -41,6 +49,7 @@ def audit_campaign_integrity(
         raise ValueError(f"Unknown campaign: {campaign_id!r}")
 
     issues: list[CampaignIntegrityIssue] = []
+    warnings: list[CampaignIntegrityWarning] = []
     integrity = connection.execute("PRAGMA integrity_check").fetchall()
     if [row[0] for row in integrity] != ["ok"]:
         issues.append(
@@ -121,6 +130,16 @@ def audit_campaign_integrity(
                         run_id,
                     )
                 )
+            if run["status"] == "cancelled":
+                attempt_reason = attempts[-1]["cancellation_reason"]
+                if not isinstance(attempt_reason, str) or not attempt_reason.strip():
+                    issues.append(
+                        CampaignIntegrityIssue(
+                            "cancelled_attempt_missing_reason",
+                            "Cancelled execution attempt lacks a cancellation reason",
+                            run_id,
+                        )
+                    )
 
         traces = connection.execute(
             """
@@ -136,6 +155,50 @@ def audit_campaign_integrity(
                     "planned_run_has_traces",
                     "Planned run contains canonical trace points",
                     run_id,
+                )
+            )
+        if run["status"] == "cancelled":
+            warnings.append(
+                CampaignIntegrityWarning(
+                    "cancelled_run",
+                    "Run was intentionally excluded from execution",
+                    run_id,
+                )
+            )
+            reason = run["cancellation_reason"]
+            if not isinstance(reason, str) or not reason.strip():
+                issues.append(
+                    CampaignIntegrityIssue(
+                        "cancelled_run_missing_reason",
+                        "Cancelled run lacks a non-empty cancellation reason",
+                        run_id,
+                    )
+                )
+            if traces:
+                issues.append(
+                    CampaignIntegrityIssue(
+                        "cancelled_run_has_traces",
+                        "Cancelled run contains canonical trace points",
+                        run_id,
+                    )
+                )
+            run_metric_count = int(
+                connection.execute(
+                    "SELECT COUNT(*) FROM run_metric_values WHERE run_id = ?", (run_id,)
+                ).fetchone()[0]
+            )
+            if run_metric_count:
+                issues.append(
+                    CampaignIntegrityIssue(
+                        "cancelled_run_has_metrics",
+                        "Cancelled run contains canonical run metrics",
+                        run_id,
+                    )
+                )
+        elif run["status"] == "failed":
+            warnings.append(
+                CampaignIntegrityWarning(
+                    "failed_run", "Run ended with an execution failure", run_id
                 )
             )
         if traces:
@@ -157,6 +220,37 @@ def audit_campaign_integrity(
         if run["status"] == "completed":
             _audit_completed_run(run, traces, issues)
 
+    failed_count = sum(run["status"] == "failed" for run in runs)
+    cancelled_count = sum(run["status"] == "cancelled" for run in runs)
+    if status == "sealed" and (failed_count or cancelled_count):
+        waiver = connection.execute(
+            "SELECT * FROM campaign_seal_waivers WHERE campaign_id = ?", (campaign_id,)
+        ).fetchone()
+        if waiver is None:
+            issues.append(
+                CampaignIntegrityIssue(
+                    "sealed_incomplete_without_waiver",
+                    "Sealed campaign has failed/cancelled runs but no approved waiver",
+                )
+            )
+        else:
+            warnings.append(
+                CampaignIntegrityWarning(
+                    "scientific_completeness_waived",
+                    "Scientific completeness was explicitly waived when sealing",
+                )
+            )
+            if (
+                int(waiver["failed_run_count"]) != failed_count
+                or int(waiver["cancelled_run_count"]) != cancelled_count
+            ):
+                issues.append(
+                    CampaignIntegrityIssue(
+                        "seal_waiver_count_mismatch",
+                        "Seal waiver snapshot differs from current terminal run counts",
+                    )
+                )
+
     return CampaignIntegrityReport(
         campaign_id=campaign_id,
         campaign_status=status,
@@ -164,6 +258,7 @@ def audit_campaign_integrity(
         attempt_count=attempt_count,
         trace_point_count=trace_point_count,
         issues=tuple(issues),
+        warnings=tuple(warnings),
     )
 
 

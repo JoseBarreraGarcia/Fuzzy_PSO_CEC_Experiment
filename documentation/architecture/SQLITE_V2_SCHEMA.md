@@ -41,6 +41,7 @@ lector estricto y el JSON Schema de campañas están implementados en
 
 ```text
 campaigns
+├── campaign_seal_waivers
 ├── algorithm_configurations
 ├── campaign_metrics ── metric_definitions
 └── runs
@@ -62,6 +63,16 @@ La recuperación explícita conserva el intento abandonado y sus metadatos, pero
 retira de las tablas canónicas cualquier traza parcial antes de reencolar la
 misma fila de `runs`. Así no se duplican unidades experimentales ni se mezclan
 trayectorias de procesos diferentes.
+
+La migración 005 añade motivos de cancelación a la réplica y al intento. Una
+cancelación planificada no crea un intento; una cancelación durante ejecución
+cierra el intento activo y registra los datos parciales descartados.
+
+### `campaign_seal_waivers`
+
+Registra la excepción necesaria para sellar una campaña que contiene réplicas
+`failed` o `cancelled`. Conserva motivo, fecha de aprobación y una fotografía de
+los conteos terminales para que la auditoría detecte modificaciones posteriores.
 
 ### `campaigns`
 

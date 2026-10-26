@@ -143,6 +143,14 @@ requiere una decisión explícita de recuperación y nunca se reinicia sola. Use
 --reason <motivo>`; después, `run` ejecutará nuevamente esas réplicas con la
 misma configuración y semilla.
 
+Una exclusión deliberada se registra con `afcs-campaign cancel --database <db>
+--campaign-id <id> --run-id <ids...> --reason <motivo>`. Puede aplicarse a
+réplicas planificadas o activas, no equivale a un fallo y no se reintenta.
+
+Tras finalizar, `afcs-campaign seal` sólo acepta campañas completas. Si existen
+fallos o cancelaciones, exige `--waiver-reason <justificación>` y persiste esa
+excepción para auditoría; no debe usarse para ocultar datos ausentes.
+
 Para comprobar una base después de ejecutarla:
 
 ```powershell

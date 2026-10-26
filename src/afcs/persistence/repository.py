@@ -720,6 +720,75 @@ class ExperimentRepository:
             )
         return attempt_id
 
+    def cancel_run(
+        self,
+        campaign_id: str,
+        run_id: int,
+        reason: str,
+        cancelled_at: str | None = None,
+    ) -> int | None:
+        """Intentionally exclude a planned or running run from execution.
+
+        Cancelling a running run closes its active attempt and removes partial
+        canonical observations. Cancelling a planned run creates no attempt.
+        In both cases the operator-supplied reason remains auditable.
+        """
+
+        if not isinstance(reason, str) or not reason.strip():
+            raise RepositoryError("Cancellation reason must be a non-empty string")
+        row = self._get_run(run_id)
+        if row["campaign_id"] != campaign_id:
+            raise RepositoryError(
+                f"Run {run_id} does not belong to campaign {campaign_id!r}"
+            )
+        self._require_campaign_status(campaign_id, "running")
+        if row["status"] not in {"planned", "running"}:
+            raise RepositoryError(f"Run {run_id} cannot transition to cancelled")
+
+        timestamp = cancelled_at or utc_now()
+        reason = reason.strip()
+        attempt_id: int | None = None
+        with self._write_scope():
+            trace_count = int(
+                self.connection.execute(
+                    "SELECT COUNT(*) FROM trace_points WHERE run_id = ?", (run_id,)
+                ).fetchone()[0]
+            )
+            metric_count = int(
+                self.connection.execute(
+                    "SELECT COUNT(*) FROM run_metric_values WHERE run_id = ?", (run_id,)
+                ).fetchone()[0]
+            )
+            self.connection.execute("DELETE FROM trace_points WHERE run_id = ?", (run_id,))
+            self.connection.execute(
+                "DELETE FROM run_metric_values WHERE run_id = ?", (run_id,)
+            )
+            if row["status"] == "running":
+                attempt_id = self._active_attempt_id(run_id)
+                self.connection.execute(
+                    """
+                    UPDATE run_attempts
+                    SET status = 'cancelled', finished_at = ?, cancellation_reason = ?,
+                        discarded_trace_points = ?, discarded_run_metrics = ?
+                    WHERE attempt_id = ?
+                    """,
+                    (timestamp, reason, trace_count, metric_count, attempt_id),
+                )
+            self.connection.execute(
+                """
+                UPDATE runs
+                SET status = 'cancelled', finished_at = ?, cancellation_reason = ?,
+                    objective_best = NULL, solution_json = NULL, evaluations = NULL,
+                    runtime_total_seconds = NULL, feasible = NULL,
+                    constraint_violation = NULL, error_type = NULL,
+                    error_message = NULL, initial_population_sha256 = NULL,
+                    initial_velocity_sha256 = NULL
+                WHERE run_id = ?
+                """,
+                (timestamp, reason, run_id),
+            )
+        return attempt_id
+
     def finish_campaign(self, campaign_id: str, finished_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "running")
         pending = self.connection.execute(
@@ -737,12 +806,47 @@ class ExperimentRepository:
                 (finished_at or utc_now(), campaign_id),
             )
 
-    def seal_campaign(self, campaign_id: str, sealed_at: str | None = None) -> None:
+    def seal_campaign(
+        self,
+        campaign_id: str,
+        sealed_at: str | None = None,
+        waiver_reason: str | None = None,
+    ) -> None:
         self._require_campaign_status(campaign_id, "completed")
+        counts = self.connection.execute(
+            """
+            SELECT
+                SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled
+            FROM runs WHERE campaign_id = ?
+            """,
+            (campaign_id,),
+        ).fetchone()
+        failed = int(counts["failed"] or 0)
+        cancelled = int(counts["cancelled"] or 0)
+        incomplete = failed + cancelled
+        normalized_waiver = waiver_reason.strip() if isinstance(waiver_reason, str) else ""
+        if incomplete and not normalized_waiver:
+            raise RepositoryError(
+                "Campaign has failed or cancelled runs; sealing requires an explicit waiver reason"
+            )
+        if not incomplete and waiver_reason is not None:
+            raise RepositoryError("A seal waiver is only valid for an incomplete campaign")
+        timestamp = sealed_at or utc_now()
         with self._write_scope():
+            if incomplete:
+                self.connection.execute(
+                    """
+                    INSERT INTO campaign_seal_waivers (
+                        campaign_id, reason, approved_at,
+                        failed_run_count, cancelled_run_count
+                    ) VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (campaign_id, normalized_waiver, timestamp, failed, cancelled),
+                )
             self.connection.execute(
                 "UPDATE campaigns SET status = 'sealed', sealed_at = ? WHERE campaign_id = ?",
-                (sealed_at or utc_now(), campaign_id),
+                (timestamp, campaign_id),
             )
 
     def _get_run(self, run_id: int) -> sqlite3.Row:

@@ -114,6 +114,22 @@ class SequentialCampaignOrchestrator:
                 )
         return self._summary(campaign_id, executed_now=0)
 
+    def cancel_runs(
+        self, campaign_id: str, run_ids: tuple[int, ...], reason: str
+    ) -> CampaignExecutionSummary:
+        """Cancel selected logical replicas atomically without automatic retry."""
+
+        if not run_ids:
+            raise ValueError("At least one run_id is required for cancellation")
+        if len(run_ids) != len(set(run_ids)):
+            raise ValueError("Cancellation run_ids must be unique")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError("Cancellation reason must be a non-empty string")
+        with self._repository.transaction():
+            for run_id in run_ids:
+                self._repository.cancel_run(campaign_id, run_id, reason)
+        return self._summary(campaign_id, executed_now=0)
+
     def _summary(
         self, campaign_id: str, *, executed_now: int
     ) -> CampaignExecutionSummary:

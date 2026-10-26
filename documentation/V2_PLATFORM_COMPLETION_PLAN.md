@@ -37,7 +37,7 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
 - FIS triangular/gaussiano, overlap compartido/independiente e inferencia
   densa/dispersa;
 - validación técnica CEC2017–PSO–FCS de 42 corridas sin fallos;
-- batería actual de 111 pruebas.
+- batería actual de 125 pruebas.
 
 ## 3. Trabajo necesario para declarar v2 terminada
 
@@ -46,8 +46,9 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
 1. [Completado] Recuperación explícita de réplicas abandonadas en `running`,
    conservando intentos auditables y sin sobrescribir resultados.
 2. Validar ejecución paralela reproducible e independiente del orden.
-3. [Parcial] `NaN`, `inf`, excepciones y presupuesto exacto se rechazan y dejan
-   evidencia estructurada; falta definir e implementar cancelación explícita.
+3. [Completado] `NaN`, `inf`, excepciones y presupuesto exacto se rechazan y
+   dejan evidencia estructurada. La cancelación es explícita, exige motivo,
+   descarta observaciones parciales y no provoca reintentos automáticos.
 4. Separar y registrar, cuando corresponda, tiempo de problema, optimizador,
    métricas y controlador.
 5. [Completado] Inspección read-only de integridad relacional, intentos, NFE,

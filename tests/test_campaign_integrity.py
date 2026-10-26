@@ -49,6 +49,7 @@ class TestCampaignIntegrityAudit(unittest.TestCase):
         self.assertEqual(report.run_count, 1)
         self.assertEqual(report.attempt_count, 1)
         self.assertEqual(report.trace_point_count, 3)
+        self.assertEqual(report.warnings, ())
 
     def test_budget_tampering_is_reported_without_modification(self) -> None:
         run_id = self.connection.execute(
@@ -81,6 +82,32 @@ class TestCampaignIntegrityAudit(unittest.TestCase):
 
         self.assertIn(
             "terminal_attempt_mismatch", {issue.code for issue in report.issues}
+        )
+
+    def test_cancelled_run_is_warning_but_missing_waiver_is_integrity_error(self) -> None:
+        self.connection.execute(
+            """
+            UPDATE runs SET status = 'cancelled', cancellation_reason = 'scope change'
+            WHERE campaign_id = 'integrity'
+            """
+        )
+        self.connection.execute(
+            "UPDATE run_attempts SET status = 'cancelled' WHERE run_id = 1"
+        )
+        self.connection.execute(
+            """
+            UPDATE campaigns SET status = 'sealed', sealed_at = '2026-10-26T00:00:00Z'
+            WHERE campaign_id = 'integrity'
+            """
+        )
+        self.connection.commit()
+
+        report = audit_campaign_integrity(self.connection, "integrity")
+
+        self.assertIn("cancelled_run", {warning.code for warning in report.warnings})
+        self.assertIn(
+            "sealed_incomplete_without_waiver",
+            {issue.code for issue in report.issues},
         )
 
 

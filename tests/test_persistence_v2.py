@@ -74,7 +74,7 @@ class TestPersistenceV2(unittest.TestCase):
         return instance_id
 
     def test_migration_is_idempotent(self):
-        self.assertEqual(current_schema_version(self.connection), 4)
+        self.assertEqual(current_schema_version(self.connection), 5)
         self.assertEqual(apply_migrations(self.connection), ())
 
     def test_expected_tables_exist(self):
@@ -96,6 +96,7 @@ class TestPersistenceV2(unittest.TestCase):
                 "run_metric_values",
                 "trace_metric_values",
                 "run_attempts",
+                "campaign_seal_waivers",
                 "schema_migrations",
             }
             <= names

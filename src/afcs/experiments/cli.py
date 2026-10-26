@@ -82,7 +82,27 @@ def main(argv: Sequence[str] | None = None) -> int:
                     )
                 )
             )
-        else:
+        elif arguments.command == "cancel":
+            _print_json(
+                asdict(
+                    orchestrator.cancel_runs(
+                        arguments.campaign_id,
+                        tuple(arguments.run_id),
+                        arguments.reason,
+                    )
+                )
+            )
+        elif arguments.command == "seal":
+            repository.seal_campaign(
+                arguments.campaign_id, waiver_reason=arguments.waiver_reason
+            )
+            _print_json(
+                {
+                    "campaign_id": arguments.campaign_id,
+                    "campaign_status": repository.campaign_status(arguments.campaign_id),
+                }
+            )
+        elif arguments.command == "audit":
             report = audit_campaign_integrity(connection, arguments.campaign_id)
             payload = asdict(report)
             payload["is_valid"] = report.is_valid
@@ -116,6 +136,22 @@ def _parser() -> argparse.ArgumentParser:
     recover.add_argument("--campaign-id", required=True)
     recover.add_argument("--run-id", required=True, type=int, nargs="+")
     recover.add_argument("--reason", required=True)
+    cancel = commands.add_parser(
+        "cancel", help="intentionally exclude planned or running runs"
+    )
+    cancel.add_argument("--database", required=True, type=Path)
+    cancel.add_argument("--campaign-id", required=True)
+    cancel.add_argument("--run-id", required=True, type=int, nargs="+")
+    cancel.add_argument("--reason", required=True)
+    seal = commands.add_parser(
+        "seal", help="seal a completed campaign for scientific use"
+    )
+    seal.add_argument("--database", required=True, type=Path)
+    seal.add_argument("--campaign-id", required=True)
+    seal.add_argument(
+        "--waiver-reason",
+        help="required justification when failed or cancelled runs exist",
+    )
     audit = commands.add_parser(
         "audit", help="validate persisted campaign integrity without changing it"
     )
