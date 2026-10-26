@@ -87,6 +87,21 @@ class TestCampaignConfiguration(unittest.TestCase):
         self.assertEqual(loaded.execution.parallel_workers, 2)
         self.assertEqual(loaded.resolved_config["execution"]["parallel_workers"], 2)
 
+    def test_classical_family_validates_fixed_dimensions(self) -> None:
+        raw = _example()
+        raw["problems"] = [
+            {"family": "CLASSICAL", "functions": [1, 14], "dimensions": [2]}
+        ]
+        loaded = parse_campaign_config(raw, code_commit="abc123")
+        self.assertEqual(loaded.summary.problem_instances, 2)
+        self.assertEqual(loaded.resolved_config["problems"][0]["family"], "CLASSICAL")
+
+        raw["problems"] = [
+            {"family": "CLASSICAL", "functions": [14], "dimensions": [3]}
+        ]
+        with self.assertRaisesRegex(ConfigurationError, "requires dimension 2"):
+            parse_campaign_config(raw, code_commit="abc123")
+
     def test_fuzzy_policy_is_resolved_with_explicit_methodology(self) -> None:
         raw = _example()
         raw["treatments"] = [deepcopy(raw["treatments"][0])]

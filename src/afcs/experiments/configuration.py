@@ -26,6 +26,7 @@ from afcs.problems.benchmarks.cec2017 import (
     CEC2017_SUPPORTED_DIMENSIONS,
     CEC2017Problem,
 )
+from afcs.problems.benchmarks import CLASSICAL_FUNCTIONS, ClassicalBenchmarkProblem
 
 from .planning import CampaignDefinition, TreatmentDefinition
 
@@ -225,10 +226,10 @@ def parse_campaign_config(
     )
 
 
-def _parse_problems(raw: Any) -> tuple[CEC2017Problem, ...]:
+def _parse_problems(raw: Any) -> tuple[Any, ...]:
     entries = _non_empty_list(raw, "problems")
-    problems: list[CEC2017Problem] = []
-    seen: set[tuple[int, int]] = set()
+    problems: list[Any] = []
+    seen: set[tuple[str, int, int]] = set()
     for index, value in enumerate(entries):
         path = f"problems[{index}]"
         entry = _object(value, path)
@@ -238,36 +239,58 @@ def _parse_problems(raw: Any) -> tuple[CEC2017Problem, ...]:
             optional=set(),
             path=path,
         )
-        if entry["family"] != "CEC2017":
+        family = entry["family"]
+        if family not in {"CEC2017", "CLASSICAL"}:
             raise ConfigurationError(
-                f"{path}.family: supported options are ['CEC2017']"
+                f"{path}.family: supported options are ['CEC2017', 'CLASSICAL']"
             )
         functions = _unique_integer_list(entry["functions"], f"{path}.functions")
         dimensions = _unique_integer_list(
             entry["dimensions"], f"{path}.dimensions"
         )
         for function_number in functions:
-            if function_number in CEC2017_DEPRECATED_FUNCTIONS:
+            if family == "CEC2017" and function_number in CEC2017_DEPRECATED_FUNCTIONS:
                 raise ConfigurationError(f"{path}.functions: CEC2017 F2 is excluded")
-            if function_number < 1 or function_number > 30:
+            maximum = 30 if family == "CEC2017" else 23
+            if function_number < 1 or function_number > maximum:
                 raise ConfigurationError(
-                    f"{path}.functions: values must be between 1 and 30"
+                    f"{path}.functions: values must be between 1 and {maximum}"
                 )
-        unsupported = set(dimensions) - set(CEC2017_SUPPORTED_DIMENSIONS)
-        if unsupported:
+        unsupported = (
+            set(dimensions) - set(CEC2017_SUPPORTED_DIMENSIONS)
+            if family == "CEC2017"
+            else set()
+        )
+        if family == "CEC2017" and unsupported:
             raise ConfigurationError(
                 f"{path}.dimensions: unsupported values {sorted(unsupported)}; "
                 f"options are {sorted(CEC2017_SUPPORTED_DIMENSIONS)}"
             )
         for function_number in functions:
             for dimension in dimensions:
-                key = (function_number, dimension)
+                key = (family, function_number, dimension)
                 if key in seen:
                     raise ConfigurationError(
-                        f"Duplicate CEC2017 problem F{function_number} D{dimension}"
+                        f"Duplicate {family} problem F{function_number} D{dimension}"
                     )
                 seen.add(key)
-                problems.append(CEC2017Problem(function_number, dimension))
+                try:
+                    if family == "CEC2017":
+                        problem = CEC2017Problem(function_number, dimension)
+                    else:
+                        definition = CLASSICAL_FUNCTIONS[function_number]
+                        problem = ClassicalBenchmarkProblem(
+                            function_number,
+                            dimension,
+                            noise_rng=(
+                                np.random.default_rng(0)
+                                if definition.stochastic
+                                else None
+                            ),
+                        )
+                except (TypeError, ValueError) as error:
+                    raise ConfigurationError(f"{path}: {error}") from error
+                problems.append(problem)
     return tuple(problems)
 
 
@@ -463,9 +486,12 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
     treatment_specs = parts["treatment_specs"]
     execution = parts["execution"]
     trace = parts["trace"]
-    problem_groups: dict[int, list[int]] = {}
+    problem_groups: dict[tuple[str, int], list[int]] = {}
     for problem in problems:
-        problem_groups.setdefault(problem.function_number, []).append(
+        function_number = problem.metadata.parameters["function_number"]
+        problem_groups.setdefault(
+            (problem.metadata.family, function_number), []
+        ).append(
             problem.metadata.dimension
         )
     treatments = []
@@ -498,11 +524,11 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
         },
         "problems": [
             {
-                "family": "CEC2017",
+                "family": family,
                 "functions": [function_number],
                 "dimensions": sorted(dimensions),
             }
-            for function_number, dimensions in sorted(problem_groups.items())
+            for (family, function_number), dimensions in sorted(problem_groups.items())
         ],
         "treatments": treatments,
         "execution": {"parallel_workers": execution.parallel_workers},

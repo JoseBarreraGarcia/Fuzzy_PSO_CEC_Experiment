@@ -26,12 +26,13 @@ class TestPairedRandomness(unittest.TestCase):
         np.testing.assert_array_equal(dynamics_a, dynamics_b)
         self.assertFalse(np.array_equal(init_a, dynamics_a))
 
-    def test_controller_consumption_does_not_shift_common_streams(self):
+    def test_optional_stream_consumption_does_not_shift_common_streams(self):
         streams = ReplicaRandomStreams(57)
         expected_init = streams.generator("initialization").random(5)
         expected_dynamics = streams.generator("dynamics").random(5)
 
         streams.generator("controller").random(10_000)
+        streams.generator("problem").random(10_000)
 
         np.testing.assert_array_equal(
             streams.generator("initialization").random(5), expected_init

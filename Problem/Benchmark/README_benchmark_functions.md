@@ -15,7 +15,7 @@ This 23-function suite is the standard benchmark set widely used in the swarm in
 > *Computer Methods in Applied Mechanics and Engineering*, 376, 113609.
 > https://doi.org/10.1016/j.cma.2020.113609
 
-The individual functions originate from earlier CEC competitions and classical papers (indicated per function below). The Python implementation in this project is in `Problem/Benchmark/Problem.py`.
+The individual functions originate from earlier CEC competitions and classical papers (indicated per function below). The authoritative v2 implementation is `src/afcs/problems/benchmarks/classical.py`; `Problem/Benchmark/Problem.py` is retained temporarily as the historical compatibility source.
 
 ### Characteristics
 

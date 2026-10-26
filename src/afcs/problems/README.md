@@ -15,6 +15,9 @@ entre limitar, reparar o penalizar corresponde al optimizador o al problema y
 debe quedar registrado. Sí rechaza dimensiones incorrectas y valores no
 finitos.
 
-Estado: contrato base implementado. CEC2017 ya fue migrado de forma
-autocontenida a `benchmarks/cec2017/` y dispone de un adaptador probado; las
-demás familias siguen en `Problem/`.
+Estado: contrato base implementado. CEC2017 está autocontenido en
+`benchmarks/cec2017/`. La suite clásica F1-F23 está consolidada en
+`benchmarks/classical.py`, conserva equivalencia numérica con las fórmulas
+históricas y valida dimensiones fijas. F7 conserva su ruido uniforme mediante
+el subflujo RNG explícito `problem`, sin consumir el estado global de NumPy.
+SCP, USCP y KP continúan pendientes de migración desde `Problem/`.

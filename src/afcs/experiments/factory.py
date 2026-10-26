@@ -16,6 +16,7 @@ from afcs.optimizers.pso import (
 )
 from afcs.persistence import PlannedRun
 from afcs.problems.benchmarks.cec2017 import CEC2017Problem
+from afcs.problems.benchmarks import CLASSICAL_FUNCTIONS, ClassicalBenchmarkProblem
 
 from .contracts import RunnableOptimizer
 
@@ -70,10 +71,8 @@ def _build_pso(
         raise ValueError(
             f"Unsupported PSO version {plan.optimizer_version!r}; expected {PSO_VERSION!r}"
         )
-    if plan.problem_family != "CEC2017":
-        raise ValueError("The v1 PSO builder currently supports only CEC2017")
     if plan.dimension is None:
-        raise ValueError("CEC2017 plan requires a dimension")
+        raise ValueError("Continuous benchmark plan requires a dimension")
     if plan.population_size is None or plan.budget_iterations is None:
         raise ValueError("PSO plan requires population and iteration budgets")
     if plan.random_seed is None or plan.rng_engine is None:
@@ -81,8 +80,22 @@ def _build_pso(
 
     function_number = plan.problem_parameters.get("function_number")
     if isinstance(function_number, bool) or not isinstance(function_number, int):
-        raise ValueError("CEC2017 plan requires an integer function_number")
-    problem = CEC2017Problem(function_number, plan.dimension)
+        raise ValueError("Benchmark plan requires an integer function_number")
+    streams = ReplicaRandomStreams(plan.random_seed, engine=plan.rng_engine)
+    if plan.problem_family == "CEC2017":
+        problem = CEC2017Problem(function_number, plan.dimension)
+    elif plan.problem_family == "CLASSICAL":
+        try:
+            definition = CLASSICAL_FUNCTIONS[function_number]
+        except KeyError as error:
+            raise ValueError("Unsupported classical function number") from error
+        problem = ClassicalBenchmarkProblem(
+            function_number,
+            plan.dimension,
+            noise_rng=(streams.generator("problem") if definition.stochastic else None),
+        )
+    else:
+        raise ValueError(f"Unsupported PSO problem family {plan.problem_family!r}")
     trace = plan.campaign_config.get("trace")
     if not isinstance(trace, Mapping):
         raise ValueError("Persisted campaign requires trace configuration")
@@ -105,7 +118,6 @@ def _build_pso(
         social=parameters.get("social", 2.0),
         velocity_factor=parameters.get("velocity_factor", 0.1),
     )
-    streams = ReplicaRandomStreams(plan.random_seed, engine=plan.rng_engine)
     collector = PSOTraceCollector(
         selected_metrics=selected_metrics,
         sampling=sampling,

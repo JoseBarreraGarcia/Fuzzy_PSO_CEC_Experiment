@@ -37,7 +37,7 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
 - FIS triangular/gaussiano, overlap compartido/independiente e inferencia
   densa/dispersa;
 - validación técnica CEC2017–PSO–FCS de 42 corridas sin fallos;
-- batería actual de 129 pruebas.
+- batería actual de 135 pruebas.
 
 ## 3. Trabajo necesario para declarar v2 terminada
 
@@ -58,7 +58,8 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
 
 ### Bloque B — contratos generales de problemas
 
-1. Consolidar el dispatcher de benchmarks clásicos bajo `afcs.problems`.
+1. [Completado] Suite clásica F1-F23 consolidada bajo `afcs.problems`, con
+   metadatos, dimensiones, equivalencia histórica y ruido F7 reproducible.
 2. Migrar SCP y USCP mediante el contrato común de problema, restricciones y
    reparación.
 3. Incorporar un fixture mínimo de Knapsack y dejar preparada su familia.

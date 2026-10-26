@@ -274,6 +274,38 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertEqual(persisted["fuzzy_no_activation_count"]["value_integer"], 0)
         self.assertEqual(persisted["fuzzy_fallback_count"]["value_integer"], 0)
 
+    def test_classical_deterministic_and_stochastic_functions_execute(self) -> None:
+        raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
+        raw["campaign"].update(
+            {"id": "classical-smoke", "replicas": 1, "metrics": "minimal"}
+        )
+        raw["problems"] = [
+            {"family": "CLASSICAL", "functions": [1, 7], "dimensions": [5]}
+        ]
+        for treatment in raw["treatments"]:
+            treatment["parameters"].update(
+                {"population_size": 4, "max_iterations": 1}
+            )
+
+        summary = CampaignOrchestrator(self.repository).plan_and_execute(
+            parse_campaign_config(raw, code_commit="test-commit")
+        )
+
+        self.assertEqual(summary.completed, 4)
+        rows = self.connection.execute(
+            """
+            SELECT pi.problem_family, pi.name, r.random_seed, r.evaluations
+            FROM runs AS r
+            JOIN problem_instances AS pi ON pi.instance_id = r.instance_id
+            WHERE r.campaign_id = 'classical-smoke'
+            ORDER BY pi.name, r.configuration_id
+            """
+        ).fetchall()
+        self.assertEqual({row["problem_family"] for row in rows}, {"CLASSICAL"})
+        self.assertEqual({row["name"] for row in rows}, {"F1", "F7"})
+        self.assertTrue(all(row["random_seed"] == 42 for row in rows))
+        self.assertTrue(all(row["evaluations"] == 8 for row in rows))
+
     def test_stale_running_run_requires_explicit_recovery(self) -> None:
         orchestrator = SequentialCampaignOrchestrator(self.repository)
         persisted = orchestrator.plan(_smoke_config("stale"))

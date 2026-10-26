@@ -17,7 +17,7 @@ informativa y el lector la ignora.
 |---|---|---|
 | `campaign` | Identidad, réplicas y métricas | `replicas >= 1`; perfiles `minimal`, `convergence`, `optimizer`, `fuzzy`, `timing`, `all`, lista u objeto selectivo |
 | `randomness` | Pareamiento y reproducibilidad | `paired_by_replica_v1`, semilla base no negativa, `numpy_seedsequence_pcg64_v1` |
-| `problems` | Matriz de problemas | `CEC2017`; F1 y F3-F30; dimensiones 10, 30, 50, 100 |
+| `problems` | Matriz de problemas | `CEC2017`: F1 y F3-F30 en 10/30/50/100; `CLASSICAL`: F1-F23 con dimensiones libres o fijas según la función |
 | `treatments` | Configuraciones del optimizador | `PSO`; políticas `fixed_inertia`, `legacy_ldiw` y `fuzzy_inertia_mamdani` |
 | `execution` | Recursos de ejecución | `parallel_workers >= 1`; 1 es secuencial y valores mayores usan procesos aislados |
 | `trace` | Muestreo de la trayectoria | Activación, frecuencia, checkpoint inicial y checkpoint final obligatorio |

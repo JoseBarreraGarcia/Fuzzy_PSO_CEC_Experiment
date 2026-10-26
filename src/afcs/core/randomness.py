@@ -13,6 +13,7 @@ _STREAM_IDS = {
     "initialization": 0,
     "dynamics": 1,
     "controller": 2,
+    "problem": 3,
 }
 
 
