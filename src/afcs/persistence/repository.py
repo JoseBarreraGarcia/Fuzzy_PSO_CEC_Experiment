@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
+from pathlib import Path
 import sqlite3
 from types import MappingProxyType
 from typing import Any
@@ -137,6 +138,23 @@ class ExperimentRepository:
         self.connection = connection
         self.registry = registry
 
+    @property
+    def database_path(self) -> Path:
+        """Return the absolute main-database path required by worker processes."""
+
+        row = self.connection.execute("PRAGMA database_list").fetchone()
+        if row is None or not row["file"]:
+            raise RepositoryError("Parallel execution requires a file-backed database")
+        return Path(row["file"]).resolve()
+
+    def campaign_config(self, campaign_id: str) -> Mapping[str, Any]:
+        row = self.connection.execute(
+            "SELECT config_json FROM campaigns WHERE campaign_id = ?", (campaign_id,)
+        ).fetchone()
+        if row is None:
+            raise RepositoryError(f"Unknown campaign: {campaign_id!r}")
+        return MappingProxyType(json.loads(row["config_json"]))
+
     @contextmanager
     def transaction(self):
         """Group repository operations into one atomic SQLite transaction."""
@@ -145,7 +163,10 @@ class ExperimentRepository:
             with nullcontext():
                 yield
             return
-        self.connection.execute("BEGIN")
+        # Acquire the single SQLite writer slot before any reads inside the
+        # transaction. This avoids deferred-transaction upgrade deadlocks when
+        # multiple worker processes persist completed replicas concurrently.
+        self.connection.execute("BEGIN IMMEDIATE")
         try:
             yield
         except Exception:

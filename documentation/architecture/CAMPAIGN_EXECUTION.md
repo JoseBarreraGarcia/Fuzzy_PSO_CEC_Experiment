@@ -2,7 +2,8 @@
 
 ## Flujo implementado
 
-`SequentialCampaignOrchestrator` conecta las piezas ya validadas:
+`CampaignOrchestrator` conecta las piezas ya validadas. El nombre histórico
+`SequentialCampaignOrchestrator` se conserva temporalmente como alias compatible:
 
 ```text
 preview (sin escritura)
@@ -103,18 +104,33 @@ si el NFE observado no coincide exactamente con el presupuesto persistido. Los
 objetivos, soluciones y métricas no finitos se rechazan y la ejecución queda
 registrada como `failed`.
 
+## Paralelismo reproducible
+
+`execution.parallel_workers=1` mantiene la ejecución secuencial. Un valor mayor
+distribuye réplicas completas mediante procesos; nunca paraleliza operaciones
+dentro de una réplica. Cada trabajador abre una conexión propia a la base WAL,
+lee el plan persistido y crea localmente el problema, el optimizador y sus
+subflujos RNG.
+
+La identidad aleatoria depende de la semilla de réplica, no del trabajador, del
+orden de envío ni del orden de finalización. La prueba de equivalencia compara
+objetivo, solución, NFE y hashes de condiciones iniciales entre ejecuciones con
+uno y dos trabajadores. Se excluyen deliberadamente los tiempos de reloj porque
+la contención y planificación del sistema operativo los hacen no deterministas.
+
 ## Límites deliberados de esta etapa
 
-- Sólo se ejecuta `parallel_workers=1`; otros valores se rechazan tanto en el
-  esquema como en el lector.
+- El paralelismo está disponible sólo para bases SQLite respaldadas por archivo;
+  las bases `:memory:` se rechazan porque no pueden compartirse entre procesos.
 - La ejecución se detiene ante el primer error, después de registrar la réplica
   como `failed`. Una invocación posterior continúa con las demás pendientes.
 - Las trazas PSO, las métricas poblacionales y los diagnósticos internos del
   controlador difuso se persisten según el perfil seleccionado.
 - La validación técnica acotada del controlador se mantiene separada del piloto
   y de la campaña confirmatoria.
-- La validación técnica de equivalencia secuencial/paralela continúa pendiente;
-  no requiere ni autoriza una campaña científica.
+- La equivalencia secuencial/paralela está cubierta por una prueba técnica
+  acotada; esto no sustituye pruebas de rendimiento ni autoriza una campaña
+  científica.
 
 Estas restricciones evitan anunciar capacidades que todavía no han sido
 verificadas experimentalmente.

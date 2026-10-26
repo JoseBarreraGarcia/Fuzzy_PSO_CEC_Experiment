@@ -1,10 +1,17 @@
-"""Sequential, resumable orchestration of persisted experiment campaigns."""
+"""Resumable sequential or process-parallel experiment orchestration."""
 
 from __future__ import annotations
 
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
+from pathlib import Path
 
-from afcs.persistence import ExperimentRepository, RepositoryError
+from afcs.metrics import load_metric_registry
+from afcs.persistence import (
+    ExperimentRepository,
+    RepositoryError,
+    connect_v2_database,
+)
 
 from .configuration import LoadedCampaignConfig
 from .factory import OptimizerFactory
@@ -28,7 +35,7 @@ class CampaignExecutionSummary:
     campaign_status: str
 
 
-class SequentialCampaignOrchestrator:
+class CampaignOrchestrator:
     """Plan and execute campaigns using SQLite as the canonical work queue.
 
     Re-entry executes only rows still marked ``planned``. Failed rows remain
@@ -48,12 +55,13 @@ class SequentialCampaignOrchestrator:
         self._repository = repository
         self._factory = optimizer_factory or OptimizerFactory()
         self._executor = run_executor or ExperimentRunExecutor(repository)
+        self._parallel_safe_defaults = (
+            optimizer_factory is None and run_executor is None
+        )
 
     def plan(self, loaded: LoadedCampaignConfig) -> PersistedCampaignPlan:
         if not isinstance(loaded, LoadedCampaignConfig):
             raise TypeError("loaded must be LoadedCampaignConfig")
-        if loaded.execution.parallel_workers != 1:
-            raise ValueError("Sequential orchestrator requires parallel_workers=1")
         return CampaignPlanner(self._repository).persist(
             loaded.campaign, loaded.treatments
         )
@@ -62,9 +70,13 @@ class SequentialCampaignOrchestrator:
         self, loaded: LoadedCampaignConfig
     ) -> CampaignExecutionSummary:
         plan = self.plan(loaded)
-        return self.execute_pending(plan.campaign_id)
+        return self.execute_pending(
+            plan.campaign_id, parallel_workers=loaded.execution.parallel_workers
+        )
 
-    def execute_pending(self, campaign_id: str) -> CampaignExecutionSummary:
+    def execute_pending(
+        self, campaign_id: str, parallel_workers: int | None = None
+    ) -> CampaignExecutionSummary:
         status = self._repository.campaign_status(campaign_id)
         if status == "draft":
             self._repository.start_campaign(campaign_id)
@@ -82,19 +94,69 @@ class SequentialCampaignOrchestrator:
                 f"recovery decision is required for run_ids={list(stale)}"
             )
 
-        executed = 0
-        for run_id in self._repository.run_ids_by_status(campaign_id, "planned"):
-            plan = self._repository.get_planned_run(run_id)
-            optimizer = self._factory.build(
-                plan,
-                selected_metrics=self._repository.selected_metric_ids(campaign_id),
-            )
-            self._executor.execute(run_id, optimizer)
-            executed += 1
+        workers = (
+            self._configured_workers(campaign_id)
+            if parallel_workers is None
+            else parallel_workers
+        )
+        if isinstance(workers, bool) or not isinstance(workers, int) or workers < 1:
+            raise ValueError("parallel_workers must be a positive integer")
+        pending = self._repository.run_ids_by_status(campaign_id, "planned")
+        if workers == 1:
+            executed = self._execute_sequential(campaign_id, pending)
+        else:
+            executed = self._execute_parallel(campaign_id, pending, workers)
 
         if not self._repository.run_ids_by_status(campaign_id, "planned"):
             self._repository.finish_campaign(campaign_id)
         return self._summary(campaign_id, executed_now=executed)
+
+    def _execute_sequential(self, campaign_id: str, run_ids: tuple[int, ...]) -> int:
+        executed = 0
+        selected_metrics = self._repository.selected_metric_ids(campaign_id)
+        for run_id in run_ids:
+            plan = self._repository.get_planned_run(run_id)
+            optimizer = self._factory.build(plan, selected_metrics=selected_metrics)
+            self._executor.execute(run_id, optimizer)
+            executed += 1
+        return executed
+
+    def _execute_parallel(
+        self, campaign_id: str, run_ids: tuple[int, ...], workers: int
+    ) -> int:
+        if not run_ids:
+            return 0
+        if not self._parallel_safe_defaults:
+            raise ValueError(
+                "Parallel execution does not accept process-local factory/executor overrides"
+            )
+        database_path = self._repository.database_path
+        errors: list[Exception] = []
+        completed = 0
+        effective_workers = min(workers, len(run_ids))
+        with ProcessPoolExecutor(max_workers=effective_workers) as pool:
+            futures = {
+                pool.submit(
+                    _execute_persisted_run, database_path, campaign_id, run_id
+                ): run_id
+                for run_id in run_ids
+            }
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                    completed += 1
+                except Exception as error:
+                    errors.append(error)
+        if errors:
+            raise RuntimeError(
+                f"{len(errors)} parallel run(s) failed; inspect persisted run errors"
+            ) from errors[0]
+        return completed
+
+    def _configured_workers(self, campaign_id: str) -> int:
+        config = self._repository.campaign_config(campaign_id)
+        execution = config.get("execution", {})
+        return int(execution.get("parallel_workers", 1))
 
     def recover_interrupted(
         self, campaign_id: str, run_ids: tuple[int, ...], reason: str
@@ -149,3 +211,25 @@ class SequentialCampaignOrchestrator:
             campaign_status=self._repository.campaign_status(campaign_id),
             **counts,
         )
+
+
+def _execute_persisted_run(
+    database_path: Path, campaign_id: str, run_id: int
+) -> None:
+    """Process-safe worker entry point; all mutable state is worker-local."""
+
+    connection = connect_v2_database(database_path)
+    try:
+        repository = ExperimentRepository(connection, load_metric_registry())
+        plan = repository.get_planned_run(run_id)
+        optimizer = OptimizerFactory().build(
+            plan,
+            selected_metrics=repository.selected_metric_ids(campaign_id),
+        )
+        ExperimentRunExecutor(repository).execute(run_id, optimizer)
+    finally:
+        connection.close()
+
+
+# Compatibility name retained while callers migrate to the general API.
+SequentialCampaignOrchestrator = CampaignOrchestrator

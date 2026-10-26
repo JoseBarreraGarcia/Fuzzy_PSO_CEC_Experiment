@@ -8,6 +8,7 @@ import tempfile
 import unittest
 
 from afcs.experiments import (
+    CampaignOrchestrator,
     CampaignRecoveryRequired,
     ExperimentRunExecutor,
     OptimizerFactory,
@@ -29,7 +30,9 @@ FUZZY_EXAMPLE_PATH = Path(
 )
 
 
-def _smoke_config(campaign_id: str = "smoke", metrics: str = "minimal"):
+def _smoke_config(
+    campaign_id: str = "smoke", metrics: str = "minimal", parallel_workers: int = 1
+):
     raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
     raw["campaign"].update(
         {"id": campaign_id, "name": "Sequential smoke", "replicas": 2, "metrics": metrics}
@@ -37,6 +40,7 @@ def _smoke_config(campaign_id: str = "smoke", metrics: str = "minimal"):
     raw["problems"] = [
         {"family": "CEC2017", "functions": [1], "dimensions": [10]}
     ]
+    raw["execution"]["parallel_workers"] = parallel_workers
     for treatment in raw["treatments"]:
         treatment["parameters"].update(
             {"population_size": 4, "max_iterations": 2}
@@ -129,6 +133,86 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertEqual(summary.executed_now, 3)
         self.assertEqual(summary.completed, 4)
         self.assertEqual(summary.campaign_status, "completed")
+
+    def test_parallel_execution_matches_sequential_scientific_results(self) -> None:
+        sequential = CampaignOrchestrator(self.repository).plan_and_execute(
+            _smoke_config("sequential-reference", parallel_workers=1)
+        )
+        self.assertEqual(sequential.completed, 4)
+        sequential_rows = self.connection.execute(
+            """
+            SELECT r.replica_index, ac.configuration_id, r.objective_best,
+                   r.solution_json, r.evaluations, r.initial_population_sha256,
+                   r.initial_velocity_sha256
+            FROM runs AS r JOIN algorithm_configurations AS ac
+              ON ac.configuration_id = r.configuration_id
+            WHERE r.campaign_id = 'sequential-reference'
+            ORDER BY ac.configuration_id, r.replica_index
+            """
+        ).fetchall()
+        sequential_trace = self.connection.execute(
+            """
+            SELECT r.replica_index, r.configuration_id, tp.checkpoint_index,
+                   tp.iteration_index, tp.evaluations, tmv.metric_id,
+                   tmv.value_real, tmv.value_integer, tmv.value_text, tmv.value_json
+            FROM trace_points AS tp
+            JOIN runs AS r ON r.run_id = tp.run_id
+            LEFT JOIN trace_metric_values AS tmv
+              ON tmv.run_id = tp.run_id
+             AND tmv.checkpoint_index = tp.checkpoint_index
+            WHERE r.campaign_id = 'sequential-reference'
+            ORDER BY r.configuration_id, r.replica_index,
+                     tp.checkpoint_index, tmv.metric_id
+            """
+        ).fetchall()
+
+        parallel_connection = initialize_v2_database(
+            Path(self.temp_dir.name) / "parallel.db"
+        )
+        try:
+            parallel_repository = ExperimentRepository(
+                parallel_connection, load_metric_registry()
+            )
+            parallel = CampaignOrchestrator(parallel_repository).plan_and_execute(
+                _smoke_config("parallel-reference", parallel_workers=2)
+            )
+            self.assertEqual(parallel.completed, 4)
+            parallel_rows = parallel_connection.execute(
+                """
+                SELECT r.replica_index, ac.configuration_id, r.objective_best,
+                       r.solution_json, r.evaluations, r.initial_population_sha256,
+                       r.initial_velocity_sha256
+                FROM runs AS r JOIN algorithm_configurations AS ac
+                  ON ac.configuration_id = r.configuration_id
+                WHERE r.campaign_id = 'parallel-reference'
+                ORDER BY ac.configuration_id, r.replica_index
+                """
+            ).fetchall()
+            self.assertEqual(
+                [tuple(row) for row in parallel_rows],
+                [tuple(row) for row in sequential_rows],
+            )
+            parallel_trace = parallel_connection.execute(
+                """
+                SELECT r.replica_index, r.configuration_id, tp.checkpoint_index,
+                       tp.iteration_index, tp.evaluations, tmv.metric_id,
+                       tmv.value_real, tmv.value_integer, tmv.value_text, tmv.value_json
+                FROM trace_points AS tp
+                JOIN runs AS r ON r.run_id = tp.run_id
+                LEFT JOIN trace_metric_values AS tmv
+                  ON tmv.run_id = tp.run_id
+                 AND tmv.checkpoint_index = tp.checkpoint_index
+                WHERE r.campaign_id = 'parallel-reference'
+                ORDER BY r.configuration_id, r.replica_index,
+                         tp.checkpoint_index, tmv.metric_id
+                """
+            ).fetchall()
+            self.assertEqual(
+                [tuple(row) for row in parallel_trace],
+                [tuple(row) for row in sequential_trace],
+            )
+        finally:
+            parallel_connection.close()
 
     def test_fuzzy_campaign_executes_and_persists_controller_diagnostics(self) -> None:
         raw = json.loads(FUZZY_EXAMPLE_PATH.read_text(encoding="utf-8"))

@@ -12,6 +12,7 @@ from .configuration import (
 )
 from .factory import OptimizerFactory
 from .orchestration import (
+    CampaignOrchestrator,
     CampaignExecutionSummary,
     CampaignRecoveryRequired,
     SequentialCampaignOrchestrator,
@@ -33,6 +34,7 @@ from .runner import ExperimentRunExecutor, RunBindingError
 __all__ = [
     "CampaignDefinition",
     "CampaignExecutionSummary",
+    "CampaignOrchestrator",
     "CampaignPlanner",
     "CampaignRecoveryRequired",
     "CampaignSummary",

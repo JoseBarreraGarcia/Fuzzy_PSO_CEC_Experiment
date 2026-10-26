@@ -434,11 +434,6 @@ def _parse_execution(raw: Any) -> ExecutionConfig:
         parsed = ExecutionConfig(execution.get("parallel_workers", 1))
     except (TypeError, ValueError) as error:
         raise ConfigurationError(str(error)) from error
-    if parsed.parallel_workers != 1:
-        raise ConfigurationError(
-            "execution.parallel_workers: only sequential execution (1) is "
-            "available until the parallel reproducibility pilot is approved"
-        )
     return parsed
 
 

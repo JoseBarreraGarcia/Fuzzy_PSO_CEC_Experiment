@@ -39,12 +39,15 @@ runner conozca sus operadores internos.
 - El runner contrasta semilla y motor RNG con SQLite antes de ejecutar.
 - No reconstruye trazas ni métricas que no fueron observadas durante la corrida.
 - La versión del optimizador se persiste y valida antes de cada ejecución.
-- El orquestador ejecuta campañas secuenciales y reanuda filas `planned`.
+- El orquestador ejecuta campañas secuenciales o en procesos aislados y reanuda
+  filas `planned`. Cada trabajador reconstruye la réplica desde SQLite.
 - Las interrupciones en `running` requieren `recover` explícito, que conserva
   intentos auditables y reencola la misma réplica.
 - El lector estricto transforma campañas JSON válidas en definiciones tipadas.
-- El paralelismo continúa deshabilitado hasta demostrar replay reproducible e
-  independencia del orden.
+- El número de trabajadores no interviene en la derivación de semillas. La
+  equivalencia de resultados y trazas con uno y dos procesos está probada.
+- Las fábricas o ejecutores personalizados inyectados se limitan al modo
+  secuencial hasta definir un contrato explícito de construcción por proceso.
 
 `runtime_total_seconds` mide provisionalmente el intervalo monotónico ocupado
 por `optimizer.run()`. Las escrituras SQLite quedan fuera de ese intervalo para

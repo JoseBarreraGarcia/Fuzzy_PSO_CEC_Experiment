@@ -19,7 +19,7 @@ informativa y el lector la ignora.
 | `randomness` | Pareamiento y reproducibilidad | `paired_by_replica_v1`, semilla base no negativa, `numpy_seedsequence_pcg64_v1` |
 | `problems` | Matriz de problemas | `CEC2017`; F1 y F3-F30; dimensiones 10, 30, 50, 100 |
 | `treatments` | Configuraciones del optimizador | `PSO`; políticas `fixed_inertia`, `legacy_ldiw` y `fuzzy_inertia_mamdani` |
-| `execution` | Recursos de ejecución | `parallel_workers=1`; otros valores se rechazan hasta validar reproducibilidad paralela |
+| `execution` | Recursos de ejecución | `parallel_workers >= 1`; 1 es secuencial y valores mayores usan procesos aislados |
 | `trace` | Muestreo de la trayectoria | Activación, frecuencia, checkpoint inicial y checkpoint final obligatorio |
 
 Los parámetros PSO obligatorios son `population_size` y `max_iterations`. Los
@@ -135,6 +135,13 @@ afcs-campaign run `
   --database Resultados/cec2017_v2.db `
   --campaign-id cec2017-pso-v2-example
 ```
+
+`run` lee `execution.parallel_workers` desde la configuración resuelta y ya
+persistida. Cada proceso abre su propia conexión SQLite y reconstruye el
+optimizador desde la réplica almacenada; no comparte generadores aleatorios ni
+estado mutable. Cambiar el número de trabajadores no cambia las semillas ni los
+resultados científicos. Los tiempos de ejecución sí pueden variar y no forman
+parte de la equivalencia numérica.
 
 `run` ejecuta únicamente filas `planned`, por lo que puede retomarse después de
 una detención entre réplicas. Una fila que haya quedado en estado `running`

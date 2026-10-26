@@ -16,7 +16,7 @@ from afcs.persistence import (
 )
 
 from .configuration import LoadedCampaignConfig, load_campaign_config
-from .orchestration import SequentialCampaignOrchestrator
+from .orchestration import CampaignOrchestrator
 
 
 def campaign_preview(loaded: LoadedCampaignConfig) -> dict:
@@ -53,7 +53,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     connection = initialize_v2_database(arguments.database)
     try:
         repository = ExperimentRepository(connection, registry)
-        orchestrator = SequentialCampaignOrchestrator(repository)
+        orchestrator = CampaignOrchestrator(repository)
         if arguments.command == "plan":
             loaded = load_campaign_config(
                 arguments.config,
@@ -125,7 +125,9 @@ def _parser() -> argparse.ArgumentParser:
     plan = commands.add_parser("plan", help="persist the expanded plan in SQLite")
     _config_arguments(plan)
     plan.add_argument("--database", required=True, type=Path)
-    run = commands.add_parser("run", help="execute only pending runs sequentially")
+    run = commands.add_parser(
+        "run", help="execute pending runs with the persisted worker count"
+    )
     run.add_argument("--database", required=True, type=Path)
     run.add_argument("--campaign-id", required=True)
     recover = commands.add_parser(

@@ -6,7 +6,7 @@
     "randomness": "La réplica i usa base_seed + i en todos los tratamientos. Con 31 réplicas y base_seed 42 se usan 42-72.",
     "problems": "Actualmente: familia CEC2017, funciones F1 y F3-F30 (F2 excluida), dimensiones 10, 30, 50 o 100.",
     "treatments": "Actualmente: optimizer PSO; parameter_policy fixed_inertia o legacy_ldiw.",
-    "execution": "parallel_workers=1 ejecuta secuencialmente; el paralelismo se habilitará tras su validación metodológica.",
+    "execution": "parallel_workers=1 ejecuta secuencialmente; valores mayores usan procesos aislados sin cambiar semillas ni resultados científicos.",
     "trace": "Registra la población inicial evaluada como checkpoint 0 y luego cada iteración; w sólo existe desde checkpoint 1."
   },
   "schema_version": 1,

@@ -80,11 +80,12 @@ class TestCampaignConfiguration(unittest.TestCase):
         ):
             parse_campaign_config(raw, code_commit="abc123")
 
-    def test_parallel_execution_is_not_advertised_before_validation(self) -> None:
+    def test_parallel_worker_count_is_accepted_and_resolved(self) -> None:
         raw = _example()
         raw["execution"]["parallel_workers"] = 2
-        with self.assertRaisesRegex(ConfigurationError, "only sequential execution"):
-            parse_campaign_config(raw, code_commit="abc123")
+        loaded = parse_campaign_config(raw, code_commit="abc123")
+        self.assertEqual(loaded.execution.parallel_workers, 2)
+        self.assertEqual(loaded.resolved_config["execution"]["parallel_workers"], 2)
 
     def test_fuzzy_policy_is_resolved_with_explicit_methodology(self) -> None:
         raw = _example()

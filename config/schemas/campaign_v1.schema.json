@@ -133,7 +133,7 @@
     },
     "execution": {
       "type": "object", "additionalProperties": false,
-      "properties": {"parallel_workers": {"const": 1, "default": 1, "description": "La ejecución v1 es secuencial; el paralelismo se habilitará tras validar reproducibilidad."}}
+      "properties": {"parallel_workers": {"type": "integer", "minimum": 1, "default": 1, "description": "1 ejecuta secuencialmente; valores mayores distribuyen réplicas entre procesos aislados."}}
     },
     "trace": {
       "type": "object", "additionalProperties": false,

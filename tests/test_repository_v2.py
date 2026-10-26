@@ -351,6 +351,15 @@ class TestExperimentRepository(unittest.TestCase):
         with self.assertRaises(RepositoryError):
             encode_metric_value(float("nan"))
 
+    def test_parallel_database_path_rejects_in_memory_storage(self):
+        connection = initialize_v2_database(":memory:")
+        try:
+            repository = ExperimentRepository(connection, self.registry)
+            with self.assertRaisesRegex(RepositoryError, "file-backed"):
+                _ = repository.database_path
+        finally:
+            connection.close()
+
 
 if __name__ == "__main__":
     unittest.main()
