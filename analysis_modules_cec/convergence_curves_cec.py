@@ -28,6 +28,7 @@ import seaborn as sns
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from BD.sqlite import BD
+from afcs.analysis import aggregate_iteration_values
 
 # ---------------------------------------------------------------------------
 # Plot style (LNCS / IEEE conference format)
@@ -230,9 +231,30 @@ def extract_iteration_data():
 
 def aggregate_by_iter(df, value_col='best_fitness'):
     """Group by (MH, funcion, iter) and compute mean/std of value_col."""
-    grouped = df.groupby(['MH', 'funcion', 'iter'])[value_col].agg(['mean', 'std']).reset_index()
-    grouped.columns = ['MH', 'funcion', 'iter', f'{value_col}_mean', f'{value_col}_std']
-    return grouped
+    required_columns = {'MH', 'funcion', 'iter', value_col}
+    missing_columns = required_columns.difference(df.columns)
+    if missing_columns:
+        raise KeyError(next(iter(sorted(missing_columns))))
+    rows = aggregate_iteration_values(
+        df.to_dict('records'),
+        group_fields=('MH', 'funcion'),
+        iteration_field='iter',
+        value_field=value_col,
+    )
+    columns = ['MH', 'funcion', 'iter', f'{value_col}_mean', f'{value_col}_std']
+    return pd.DataFrame(
+        [
+            {
+                'MH': summary.group_values[0],
+                'funcion': summary.group_values[1],
+                'iter': summary.iteration,
+                f'{value_col}_mean': summary.mean,
+                f'{value_col}_std': summary.sample_std,
+            }
+            for summary in rows
+        ],
+        columns=columns,
+    )
 
 
 # ---------------------------------------------------------------------------
