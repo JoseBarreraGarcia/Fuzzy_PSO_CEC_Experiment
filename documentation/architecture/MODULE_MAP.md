@@ -26,6 +26,7 @@ Control System*. Cada carpeta responde a una pregunta concreta:
 |---|---|---|
 | `Problem/Benchmark/CEC/cec2017/` | `src/afcs/problems/benchmarks/cec2017/` | migrado; diagnóstico histórico permanece en origen |
 | `Problem/Benchmark/Problem.py` | `src/afcs/problems/benchmarks/` | requiere separar dispatcher e implementaciones |
+| selección histórica de BEN/CEC en solvers | `src/afcs/problems/factory.py` | migrado; registro común independiente de PSO |
 | `Problem/SCP/` | `src/afcs/problems/scp/` | migración pausada; conservar legado |
 | `Problem/USCP/` | `src/afcs/problems/uscp/` | migración pausada; conservar legado |
 | futuro KP | `src/afcs/problems/knapsack/` | pausado junto con dominios binarios |

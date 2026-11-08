@@ -18,7 +18,9 @@ completed o failed por réplica → campaña completed
 ```
 
 La fábrica reconstruye cada ejecución desde SQLite, no desde estado transitorio
-del proceso. En la primera versión soporta CEC2017, PSO
+del proceso. `ProblemFactory` resuelve independientemente `CLASSICAL`,
+`CEC2017` y `OPFUNU_CEC`; `OptimizerFactory` consume el problema sin duplicar
+esa selección por algoritmo. En la primera versión soporta PSO
 `2.0.0a0-legacy-compatible`, `fixed_inertia`, `legacy_ldiw` y
 `fuzzy_inertia_mamdani`. La versión del
 optimizador queda normalizada en `algorithm_configurations` mediante la migración

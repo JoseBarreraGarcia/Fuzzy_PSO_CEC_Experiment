@@ -169,8 +169,8 @@ cobrarle un coste inexistente y medir el coste añadido por la adaptación.
 3. [Completado] Definir Optimizer, SearchState, ParameterPolicy y ParameterUpdate.
 4. [Completado] Extraer el núcleo PSO sin cambiar fórmulas ni orden de operaciones.
 5. [Completado] Implementar NoAdaptation, inercia fija y política legacy equivalente.
-6. [En progreso] Conectar el runner y persistencia v2.
-7. [En progreso] Migrar PSO-FCS como política difusa.
+6. [Completado] Conectar el runner y persistencia v2.
+7. [Completado] Migrar PSO-FCS como política difusa.
 8. Incorporar las otras políticas de w tras aprobar sus fórmulas.
 9. Adaptar GA y después inventariar las demás MH legacy.
 10. Implementar comparadores completos en módulos separados.
@@ -193,8 +193,8 @@ Avance de implementación:
 - ejecutor mínimo de una réplica y persistencia del resultado/fallo: implementado;
 - validación automática plan ↔ problema ↔ optimizador: implementada para los
   campos disponibles en el esquema v2, incluida semilla y motor RNG;
-- persistencia y validación de la versión del optimizador: pendiente de una
-  migración futura del esquema.
+- persistencia y validación de la versión del optimizador: implementadas por la
+  migración 003; PSO usa una única constante de identidad.
 - primitivas difusas triangulares y gaussianas, reglas R1-R8 e inferencia
   Mamdani min-max-centroide: implementadas en `afcs.fuzzy`;
 - política `fuzzy_inertia_mamdani` con diversidad Hussain, máximo histórico y

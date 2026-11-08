@@ -13,22 +13,15 @@ from afcs.optimizers.pso import (
     LegacyCompatiblePSO,
     LegacyLinearInertia,
     LegacyPSORunConfig,
+    PSO_IMPLEMENTATION_VERSION,
 )
 from afcs.persistence import PlannedRun
-from afcs.problems.benchmarks.cec2017 import CEC2017Problem
-from afcs.problems.benchmarks import (
-    CLASSICAL_FUNCTIONS,
-    ClassicalBenchmarkProblem,
-    OpfunuCECProblem,
-)
+from afcs.problems import DEFAULT_PROBLEM_FACTORY
 
 from .contracts import RunnableOptimizer
 
 
 OptimizerBuilder = Callable[[PlannedRun, tuple[str, ...]], RunnableOptimizer]
-PSO_VERSION = "2.0.0a0-legacy-compatible"
-
-
 class OptimizerFactory:
     """Extensible catalog that turns one database plan into an optimizer."""
 
@@ -71,9 +64,10 @@ class OptimizerFactory:
 def _build_pso(
     plan: PlannedRun, selected_metrics: tuple[str, ...]
 ) -> LegacyCompatiblePSO:
-    if plan.optimizer_version != PSO_VERSION:
+    if plan.optimizer_version != PSO_IMPLEMENTATION_VERSION:
         raise ValueError(
-            f"Unsupported PSO version {plan.optimizer_version!r}; expected {PSO_VERSION!r}"
+            f"Unsupported PSO version {plan.optimizer_version!r}; "
+            f"expected {PSO_IMPLEMENTATION_VERSION!r}"
         )
     if plan.dimension is None:
         raise ValueError("Continuous benchmark plan requires a dimension")
@@ -82,29 +76,13 @@ def _build_pso(
     if plan.random_seed is None or plan.rng_engine is None:
         raise ValueError("PSO plan requires persisted replica randomness")
 
-    function_number = plan.problem_parameters.get("function_number")
-    if isinstance(function_number, bool) or not isinstance(function_number, int):
-        raise ValueError("Benchmark plan requires an integer function_number")
     streams = ReplicaRandomStreams(plan.random_seed, engine=plan.rng_engine)
-    if plan.problem_family == "CEC2017":
-        problem = CEC2017Problem(function_number, plan.dimension)
-    elif plan.problem_family == "CLASSICAL":
-        try:
-            definition = CLASSICAL_FUNCTIONS[function_number]
-        except KeyError as error:
-            raise ValueError("Unsupported classical function number") from error
-        problem = ClassicalBenchmarkProblem(
-            function_number,
-            plan.dimension,
-            noise_rng=(streams.generator("problem") if definition.stochastic else None),
-        )
-    elif plan.problem_family == "OPFUNU_CEC":
-        suite_year = plan.problem_parameters.get("suite_year")
-        if isinstance(suite_year, bool) or not isinstance(suite_year, int):
-            raise ValueError("OPFUNU_CEC plan requires an integer suite_year")
-        problem = OpfunuCECProblem(suite_year, function_number, plan.dimension)
-    else:
-        raise ValueError(f"Unsupported PSO problem family {plan.problem_family!r}")
+    problem = DEFAULT_PROBLEM_FACTORY.build(
+        family=plan.problem_family,
+        dimension=plan.dimension,
+        parameters=plan.problem_parameters,
+        random_streams=streams,
+    )
     trace = plan.campaign_config.get("trace")
     if not isinstance(trace, Mapping):
         raise ValueError("Persisted campaign requires trace configuration")

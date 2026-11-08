@@ -71,7 +71,8 @@ esas decisiones cuando sean aprobadas, sin valores ocultos ni cambios de código
    sin convertirlo todavía en dependencia del núcleo v2.
 5. Evaluar como próxima ampliación problemas de ingeniería o benchmarks de
    variables continuas, manteniendo el mismo contrato y sin binarización.
-6. Asegurar que el runner no contiene casos especiales por familia.
+6. [Completado] Separar `ProblemFactory` del adaptador PSO y confirmar que el
+   runner no contiene casos especiales por familia.
 
 **Decisión vigente (2026-10-26):** antes de incorporar dominios binarios se
 priorizará decidir y, si corresponde, validar una familia adicional de
@@ -81,7 +82,8 @@ hasta nuevo aviso. Reactivarlos requerirá una decisión metodológica explícit
 
 ### Bloque C — contratos generales de optimizadores
 
-1. Congelar PSO v2 como primera implementación de referencia.
+1. [Completado] Congelar PSO v2 como primera implementación de referencia bajo
+   la identidad `2.0.0a0-legacy-compatible`.
 2. Migrar GA con ejecución sin adaptación y con punto de extensión para control
    futuro de parámetros.
 3. Inventariar las demás metaheurísticas como soportadas, experimentales o

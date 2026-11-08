@@ -54,10 +54,16 @@ El runner compara estos datos con SQLite antes de iniciar una réplica. La
 semilla y el motor RNG forman parte de los metadatos de ejecución, aunque no de
 la firma compartida de la configuración algorítmica.
 
+La identidad congelada es `2.0.0a0-legacy-compatible` y se define una sola vez
+mediante `PSO_IMPLEMENTATION_VERSION`. Cambiar fórmulas, orden de operaciones,
+inicialización, fronteras, velocidad o presupuesto exige una versión nueva y
+pruebas de equivalencia o caracterización separadas.
+
 ## Límites actuales
 
 - Sólo se utiliza el valor objetivo retornado por el problema; la política para
   restricciones todavía debe definirse para problemas de ingeniería.
-- Aún no existe recolección de métricas ni persistencia durante la corrida.
-- El controlador difuso todavía no está adaptado a `ParameterPolicy`.
-- El runner de campañas todavía no consume este optimizador.
+- La instrumentación disponible es poblacional y específica de PSO; debe
+  separarse en observaciones comunes y específicas antes de integrar GA.
+- Las variantes que alteran algo más que la política de inercia requieren otra
+  implementación o versión y no deben presentarse como una simple política.

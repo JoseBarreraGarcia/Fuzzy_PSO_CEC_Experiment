@@ -20,6 +20,9 @@ from afcs.problems import OptimizationProblem
 from .core import PSOConfig, advance_swarm
 
 
+PSO_IMPLEMENTATION_VERSION = "2.0.0a0-legacy-compatible"
+
+
 @dataclass(frozen=True, slots=True)
 class LegacyPSORunConfig:
     """Execution settings that preserve the approved historical PSO rules."""
@@ -147,7 +150,7 @@ class LegacyCompatiblePSO:
         return OptimizerRunMetadata(
             optimizer=OptimizerMetadata(
                 optimizer_id="PSO",
-                version="2.0.0a0-legacy-compatible",
+                version=PSO_IMPLEMENTATION_VERSION,
                 configurable_parameters=(
                     "w",
                     "cognitive",

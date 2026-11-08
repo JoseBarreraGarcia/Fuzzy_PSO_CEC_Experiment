@@ -9,6 +9,9 @@ El contrato inicial incluye:
   parámetros de procedencia;
 - `OptimizationProblem`: interfaz estructural consumida por optimizadores;
 - `CallableProblem`: adaptador mínimo para objetivos escalares.
+- `ProblemFactory`: registro extensible y fuente única para reconstruir una
+  instancia desde su familia, dimensión, parámetros y subflujos aleatorios,
+  independiente del optimizador que la consumirá.
 
 La evaluación no rechaza automáticamente puntos fuera de los límites: decidir
 entre limitar, reparar o penalizar corresponde al optimizador o al problema y
