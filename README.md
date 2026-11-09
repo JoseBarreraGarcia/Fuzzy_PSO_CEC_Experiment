@@ -9,9 +9,10 @@ una ampliación explícita del alcance.
 > **Estado:** transición avanzada a v2. CEC2017, PSO, control difuso, semillas,
 > GA real-coded, campañas secuenciales y paralelas, métricas y persistencia
 > SQLite ya operan en el paquete nuevo y cuentan con pruebas. Todavía no es una
-> versión de producción: quedan calidad, CI y autorización de distribución.
-> R3 verificó wheel/sdist e instalación limpia local (Windows, Python 3.14.4);
-> no certifica otros entornos ni publicación. Recuperación, paralelismo y análisis canónico ya
+> versión de producción: quedan validación integral de candidata, documentación
+> de lanzamiento y autorización de distribución. R4 verificó CI en
+> Windows/Ubuntu con Python 3.11–3.14; no certifica publicación.
+> Recuperación, paralelismo y análisis canónico ya
 > tienen validación técnica; no equivale a rendimiento publicable ni autoriza
 > campañas científicas. SCP/USCP/KP y selección dinámica siguen fuera del
 > alcance operativo actual.
@@ -115,8 +116,9 @@ para actualizar dependencias de un entorno validado sin revisar los cambios.
 Para instalar sólo el núcleo, use `pip install -e .` con el intérprete elegido.
 Estos rangos de dependencias no garantizan compatibilidad con todas las
 versiones futuras de Python o bibliotecas. R3 verificó instalaciones no editables
-desde wheel y sdist fuera del repositorio en Windows/Python 3.14.4; CI y la matriz
-de soporte siguen pendientes de R4. El extra `opfunu` declara
+desde wheel y sdist fuera del repositorio en Windows/Python 3.14.4; R4 amplió
+la comprobación a la matriz remota Windows/Ubuntu, Python 3.11–3.14.
+El extra `opfunu` declara
 `setuptools>=68,<82`: OPFUNU 1.0.1 importa `pkg_resources`, retirado en
 setuptools 82. Esto no añade setuptools al núcleo NumPy ni elimina el aviso de
 obsolescencia de OPFUNU.
@@ -149,10 +151,14 @@ presentan como cubiertas por el gate de tipos. No hay silenciamientos globales
 de diagnósticos. Para aplicar el formato use `python -m ruff format src\afcs tests`.
 Las pruebas requieren una instalación de AFCS: no insertan `src` en `sys.path`.
 
-El [workflow](.github/workflows/quality.yml) propone Python 3.11–3.14 (último
-patch disponible) en Ubuntu 24.04 y Windows Server 2022. No es una declaración
-de soporte verificado: la matriz remota debe ejecutarse y pasar antes de cerrar
-R4. No incluye macOS, intérpretes alternativos, Python 3.15 ni 32 bits.
+El [workflow](.github/workflows/quality.yml) prueba Python 3.11–3.14 (patch
+resuelto por setup-python) en Ubuntu 24.04 y Windows Server 2022. Las ocho
+combinaciones y el job estático aprobaron en la
+[ejecución R4 del 9 de noviembre de 2026](https://github.com/JoseBarreraGarcia/Fuzzy_PSO_CEC_Experiment/actions/runs/42620911607),
+commit `1466e91a63bb7fc9c55978cbe91e894a853a3aa3`.
+Esto verifica ese snapshot y sus dependencias resueltas, no todas las versiones
+futuras de esas familias. No incluye macOS, intérpretes alternativos, Python
+3.15 ni 32 bits; R5–R7 siguen pendientes.
 
 [`distribution_ci.py`](tests/distribution_ci.py) ejecuta los mismos controles
 de artefactos en cada celda: build aislado, instalación no editable del wheel

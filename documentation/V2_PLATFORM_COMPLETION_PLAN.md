@@ -5,9 +5,10 @@
 **Estado de referencia (9 de noviembre de 2026):** núcleo continuo con PSO/PSO-FCS,
 GA real-coded, ejecución secuencial/paralela y análisis canónico implementados;
 limpieza histórica y auditoría interna R1/R2 cerradas para el alcance revisado;
-R3 verificado localmente en Windows/Python 3.14.4; R4 tiene controles locales
-verdes en Windows/Python 3.11.9 y 3.14.4, con 312 pruebas e instalaciones no
-editables de núcleo/extras. CI, matriz de soporte y autorización de distribución siguen pendientes;
+R3 verificado localmente en Windows/Python 3.14.4; R4 cerrado con CI real
+verde en las ocho combinaciones Windows/Ubuntu y Python 3.11–3.14,
+con 312 pruebas e instalaciones no editables de núcleo/extras.
+Validación integral de candidata y autorización de distribución siguen pendientes;
 esto no certifica lanzamiento.
 
 **Prioridad:** terminar una plataforma reutilizable antes de diseñar campañas
@@ -217,7 +218,7 @@ ni una fecha de lanzamiento hasta conocer los hallazgos de R1.
 | R1. Auditoría interna de `src` | Cerrada con decisiones trazadas en R2 | Ninguna | 31 hallazgos/candidatos investigados; resolución registrada sin confundir bugs y decisiones científicas |
 | R2. Correcciones justificadas | Completada; grupos A-G cerrados | R1 y decisiones aprobadas | 31 entradas resueltas mediante correcciones o contratos explícitos; 310 pruebas aprobadas; no certifica lanzamiento |
 | R3. Instalación limpia y artefactos | Completada localmente (Windows/Python 3.14.4) | R2 | Wheel y sdist inspeccionados; núcleo y extras no editables fuera del workspace; 310 pruebas desde el sdist |
-| R4. Calidad y CI | Implementada y validada localmente; CI remota pendiente | R3 | Ruff/Pyright verdes en Windows 3.11/3.14; matriz candidata Windows/Ubuntu 3.11–3.14; cierre exige workflows reales verdes |
+| R4. Calidad y CI | Completada; CI remota verde | R3 | Ruff/Pyright y ocho celdas Windows/Ubuntu Python 3.11–3.14 aprobados en run 42620911607 |
 | R5. Validación integral de candidata | Pendiente | R4 | Flujo completo sobre paquete instalado, con replay, recuperación y análisis reconciliado |
 | R6. Documentación de lanzamiento | Pendiente | R5 | Guías y ejemplos coherentes con capacidades realmente validadas |
 | R7. Distribución y autorización | Pendiente | R6 y decisiones legales/de versión | Licencias, contenido distribuible, changelog, versión y compatibilidad resueltos; candidata aprobada |
@@ -711,12 +712,39 @@ otra versión. La validación no autoriza sobrescribir campañas científicas.
 El uso de `.venv` se limitó a lecturas y a crear un entorno separado: sus
 dependencias no se actualizaron.
 
-**Estado de cierre:** R4 permanece abierto hasta ejecutar y aprobar la matriz
-real de GitHub Actions. Este worktree aún no se ha convertido en commit ni
-publicado; el workflow local no puede validar por sí mismo los cambios no
-enviados. No se hace commit, push ni ejecución remota sin autorización. Tampoco
-se presenta una ejecución Windows local como evidencia de Ubuntu o de Python
-3.12/3.13. R5 sigue pendiente.
+**Cierre remoto autorizado (9 de noviembre de 2026):** tras aprobar el usuario
+la revisión, commits y push necesarios para CI, se creó y envió la rama
+`Solver_CEC_Fuzzy_PSO_v2` con el checkpoint
+`1466e91a63bb7fc9c55978cbe91e894a853a3aa3`.
+El commit incluye 114 archivos del paquete activo, pruebas, configuración,
+empaquetado, workflow y documentación vinculada. La limpieza histórica
+acumulada, ARCHIVE, personalizaciones del editor/instrucciones y Tesis quedaron
+fuera de este checkpoint; siguen preservados en el worktree, sin revertirse.
+No se publicó ningún paquete ni se ejecutaron campañas científicas.
+
+La [ejecución 42620911607](https://github.com/JoseBarreraGarcia/Fuzzy_PSO_CEC_Experiment/actions/runs/42620911607),
+intento 1, se inició por push a las 12:54:42 UTC y concluyó correctamente a
+las 12:57:14 UTC. Resultado obtenido de GitHub Actions, no inferido de YAML
+ni de pruebas locales:
+
+| Job | Resultado |
+|---|---|
+| Ruff y Pyright (Ubuntu 24.04, Python 3.11) | success |
+| Ubuntu 24.04 / Python 3.11 | success |
+| Ubuntu 24.04 / Python 3.12 | success |
+| Ubuntu 24.04 / Python 3.13 | success |
+| Ubuntu 24.04 / Python 3.14 | success |
+| Windows Server 2022 / Python 3.11 | success |
+| Windows Server 2022 / Python 3.12 | success |
+| Windows Server 2022 / Python 3.13 | success |
+| Windows Server 2022 / Python 3.14 | success |
+
+Cada celda ejecutó el runner de distribución completo descrito arriba.
+Como comprobación adicional de logs, Ubuntu/3.14 registró CPython 3.14.10 y
+312 pruebas OK; Windows/3.11 registró CPython 3.11.9 y 312 pruebas OK.
+El soporte comprobado corresponde al snapshot y dependencias resueltas en
+estos runners; no garantiza todos los patches o dependencias futuros.
+**R4 queda cerrado. R5 es la siguiente puerta**, aún pendiente.
 
 ### R5 — Validar una candidata de extremo a extremo
 

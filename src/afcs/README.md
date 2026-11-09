@@ -25,8 +25,9 @@ discreto permanecen reservados/pausados, no son capacidades ejecutables.
 
 La instalación editable y la suite del checkout no certifican distribución.
 R3 verificó wheel/sdist e instalación no editable fuera del checkout en
-Windows/Python 3.14.4, con núcleo NumPy y extras. CI y la matriz de soporte
-siguen pendientes de R4; esto no autoriza publicación ni campañas científicas.
+Windows/Python 3.14.4, con núcleo NumPy y extras. R4 verificó después CI real
+en Windows/Ubuntu con Python 3.11–3.14; esto no autoriza publicación ni campañas
+científicas ni certifica combinaciones de dependencias futuras.
 El estado y decisiones están en el
 [plan de finalización](../../documentation/V2_PLATFORM_COMPLETION_PLAN.md).
 No se requiere ni se reintroduce el stack histórico para ejecutar v2.
