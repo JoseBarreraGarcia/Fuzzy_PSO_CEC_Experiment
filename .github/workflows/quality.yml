@@ -1,0 +1,66 @@
+name: AFCS quality
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afcs-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MPLBACKEND: Agg
+  PYTHONUTF8: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  static:
+    name: Ruff and Pyright
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install declared development tools and optional dependencies
+        run: python -m pip install ".[dev,analysis,opfunu]"
+      - name: Lint active code and tests
+        run: python -m ruff check src/afcs tests
+      - name: Check formatting
+        run: python -m ruff format --check src/afcs tests
+      - name: Check production types
+        run: python -m pyright --pythonpath "$(python -c 'import sys; print(sys.executable)')"
+
+  distributions:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+        python: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install declared development tools
+        shell: pwsh
+        run: |
+          python -m pip install ".[dev]"
+          exit $LASTEXITCODE
+      - name: Verify artifacts, core, extras, sequential and process execution
+        shell: pwsh
+        run: |
+          python tests/distribution_ci.py --output (Join-Path $env:RUNNER_TEMP "afcs-distribution")
+          exit $LASTEXITCODE

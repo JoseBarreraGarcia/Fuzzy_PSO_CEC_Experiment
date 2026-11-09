@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from copy import deepcopy
 import json
-from pathlib import Path
 import unittest
+from copy import deepcopy
+from pathlib import Path
 
-from afcs.experiments import ConfigurationError, load_campaign_config, parse_campaign_config
-
+from afcs.experiments import (
+    ConfigurationError,
+    load_campaign_config,
+    parse_campaign_config,
+)
 
 EXAMPLE_PATH = Path("config/campaigns/cec2017_pso_v2.example.json")
+GA_EXAMPLE_PATH = Path("config/campaigns/real_coded_ga_v2.example.json")
 
 
 def _example() -> dict:
@@ -53,10 +57,24 @@ class TestCampaignConfiguration(unittest.TestCase):
         cases = (
             (lambda raw: raw.update({"typo": True}), "unknown=['typo']"),
             (lambda raw: raw["problems"][0]["functions"].append(2), "F2 is excluded"),
-            (lambda raw: raw["problems"][0].update({"dimensions": [20]}), "unsupported values [20]"),
-            (lambda raw: raw["treatments"][0].update({"optimizer": "GA"}), "supported options are ['PSO']"),
-            (lambda raw: raw["treatments"][0]["parameter_policy"].update({"id": "fuzzy"}), "supported options are ['fixed_inertia', 'legacy_ldiw', 'fuzzy_inertia_mamdani']"),
-            (lambda raw: raw["campaign"].update({"metrics": "unknown"}), "Unknown metric profile"),
+            (
+                lambda raw: raw["problems"][0].update({"dimensions": [20]}),
+                "unsupported values [20]",
+            ),
+            (
+                lambda raw: raw["treatments"][0].update({"optimizer": "DE"}),
+                "supported options are ['GA', 'PSO']",
+            ),
+            (
+                lambda raw: raw["treatments"][0]["parameter_policy"].update(
+                    {"id": "fuzzy"}
+                ),
+                "supported options are ['fixed_inertia', 'legacy_ldiw', 'linear_endpoints_v1', 'fuzzy_inertia_mamdani']",
+            ),
+            (
+                lambda raw: raw["campaign"].update({"metrics": "unknown"}),
+                "Unknown metric profile",
+            ),
         )
         for mutation, message in cases:
             with self.subTest(message=message):
@@ -87,6 +105,36 @@ class TestCampaignConfiguration(unittest.TestCase):
         self.assertEqual(loaded.execution.parallel_workers, 2)
         self.assertEqual(loaded.resolved_config["execution"]["parallel_workers"], 2)
 
+    def test_real_coded_ga_is_resolved_without_binary_representation(self) -> None:
+        raw = _example()
+        raw["problems"] = [{"family": "CLASSICAL", "functions": [1], "dimensions": [2]}]
+        raw["treatments"] = [
+            {
+                "id": "ga-real-defaults",
+                "optimizer": "GA",
+                "parameters": {"population_size": 8, "max_iterations": 5},
+            }
+        ]
+
+        loaded = parse_campaign_config(raw, code_commit="abc123")
+        resolved = loaded.resolved_config["treatments"][0]
+
+        self.assertEqual(loaded.treatments[0].run_metadata.optimizer.optimizer_id, "GA")
+        self.assertEqual(
+            loaded.treatments[0].run_metadata.optimizer.version,
+            "2.0.0a0-real-coded",
+        )
+        self.assertEqual(resolved["parameters"]["crossover_probability"], 0.9)
+        self.assertEqual(resolved["parameters"]["mutation_probability"], "1/d")
+        self.assertEqual(resolved["parameter_policy"]["id"], "no_adaptation")
+
+    def test_real_coded_ga_example_is_loadable_and_budgeted(self) -> None:
+        loaded = load_campaign_config(GA_EXAMPLE_PATH, code_commit="abc123")
+
+        self.assertEqual(loaded.summary.total_runs, 5)
+        self.assertEqual(loaded.summary.total_evaluations, 20 * 201 * 5)
+        self.assertEqual(loaded.treatments[0].run_metadata.optimizer.optimizer_id, "GA")
+
     def test_classical_family_validates_fixed_dimensions(self) -> None:
         raw = _example()
         raw["problems"] = [
@@ -116,7 +164,7 @@ class TestCampaignConfiguration(unittest.TestCase):
         problem = loaded.resolved_config["problems"][0]
         self.assertEqual(problem["family"], "OPFUNU_CEC")
         self.assertEqual(problem["suite_year"], 2014)
-        self.assertEqual(problem["functions"], [1])
+        self.assertEqual(problem["functions"], (1,))
 
         del raw["problems"][0]["suite_year"]
         with self.assertRaisesRegex(ConfigurationError, "suite_year"):

@@ -2,16 +2,14 @@
 # Author: Duncan Tilley
 # Composition function definitions, f21 to f30
 
-from . import basic
-from . import transforms
-from . import hybrid
-
 import numpy as np
+
+from . import basic, hybrid, transforms
 
 
 def _calc_w(x, sigma):
     nx = x.shape[1]
-    squared_distance = np.sum(x*x, axis=1)
+    squared_distance = np.sum(x * x, axis=1)
     nonzero = squared_distance != 0.0
     weights = np.full(squared_distance.shape, np.inf, dtype=float)
     distance = squared_distance[nonzero]
@@ -59,7 +57,7 @@ def _composition(x, rotations, shifts, funcs, sigmas, lambdas, biases):
         w[:, i] = _calc_w(x_shifted, sigmas[i])
     w = _normalise_weights(w)
 
-    return np.sum(w * (lambdas*vals + biases), axis=1)
+    return np.sum(w * (lambdas * vals + biases), axis=1)
 
 
 def _compose_hybrids(x, rotations, shifts, shuffles, funcs, sigmas, offsets, biases):
@@ -71,7 +69,12 @@ def _compose_hybrids(x, rotations, shifts, shuffles, funcs, sigmas, offsets, bia
     w = np.zeros((nv, N))
     for i in range(0, N):
         x_shifted = x - np.expand_dims(shifts[i][:nx], 0)
-        vals[:, i] = funcs[i](x, rotation=rotations[i], shift=shifts[i][:nx], shuffle=shuffles[i]) - offsets[i]
+        vals[:, i] = (
+            funcs[i](
+                x, rotation=rotations[i], shift=shifts[i][:nx], shuffle=shuffles[i]
+            )
+            - offsets[i]
+        )
         w[:, i] = _calc_w(x_shifted, sigmas[i])
     w = _normalise_weights(w)
 
@@ -180,7 +183,12 @@ def f24(x, rotations=None, shifts=None):
     if shifts is None:
         shifts = transforms.shifts_cf[3]
 
-    funcs = [basic.ackley, basic.high_conditioned_elliptic, basic.griewank, basic.rastrigin]
+    funcs = [
+        basic.ackley,
+        basic.high_conditioned_elliptic,
+        basic.griewank,
+        basic.rastrigin,
+    ]
     sigmas = np.array([10.0, 20.0, 30.0, 40.0])
     lambdas = np.array([1.0, 1.0e-6, 10.0, 1.0])
     biases = np.array([0.0, 100.0, 200.0, 300.0])
@@ -207,7 +215,13 @@ def f25(x, rotations=None, shifts=None):
     if shifts is None:
         shifts = transforms.shifts_cf[4]
 
-    funcs = [basic.rastrigin, basic.happy_cat, basic.ackley, basic.discus, basic.rosenbrock]
+    funcs = [
+        basic.rastrigin,
+        basic.happy_cat,
+        basic.ackley,
+        basic.discus,
+        basic.rosenbrock,
+    ]
     sigmas = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
     lambdas = np.array([10.0, 1.0, 10.0, 1.0e-6, 1.0])
     biases = np.array([0.0, 100.0, 200.0, 300.0, 400.0])
@@ -234,11 +248,17 @@ def f26(x, rotations=None, shifts=None):
     if shifts is None:
         shifts = transforms.shifts_cf[5]
 
-    funcs = [basic.expanded_schaffers_f6, basic.modified_schwefel, basic.griewank, basic.rosenbrock, basic.rastrigin]
+    funcs = [
+        basic.expanded_schaffers_f6,
+        basic.modified_schwefel,
+        basic.griewank,
+        basic.rosenbrock,
+        basic.rastrigin,
+    ]
     sigmas = np.array([10.0, 20.0, 20.0, 30.0, 40.0])
     # NOTE: the lambdas specified in the problem definitions (below) differ from
     # what is used in the code
-    #lambdas = np.array([1.0e-26, 10.0, 1.0e-6, 10.0, 5.0e-4])
+    # lambdas = np.array([1.0e-26, 10.0, 1.0e-6, 10.0, 5.0e-4])
     lambdas = np.array([5.0e-4, 1.0, 10.0, 1.0, 10.0])
     biases = np.array([0.0, 100.0, 200.0, 300.0, 400.0])
     return _composition(x, rotations, shifts, funcs, sigmas, lambdas, biases) + 2600
@@ -339,9 +359,14 @@ def f29(x, rotations=None, shifts=None, shuffles=None):
     funcs = [hybrid.f15, hybrid.f16, hybrid.f17]
     sigmas = np.array([10.0, 30.0, 50.0])
     biases = np.array([0.0, 100.0, 200.0])
-    offsets = np.array([1500, 1600, 1700]) # subtract F* added at the end of the functions
+    offsets = np.array(
+        [1500, 1600, 1700]
+    )  # subtract F* added at the end of the functions
 
-    return _compose_hybrids(x, rotations, shifts, shuffles, funcs, sigmas, offsets, biases) + 2900
+    return (
+        _compose_hybrids(x, rotations, shifts, shuffles, funcs, sigmas, offsets, biases)
+        + 2900
+    )
 
 
 def f30(x, rotations=None, shifts=None, shuffles=None):
@@ -371,8 +396,13 @@ def f30(x, rotations=None, shifts=None, shuffles=None):
     funcs = [hybrid.f15, hybrid.f18, hybrid.f19]
     sigmas = np.array([10.0, 30.0, 50.0])
     biases = np.array([0.0, 100.0, 200.0])
-    offsets = np.array([1500, 1800, 1900]) # subtract F* added at the end of the functions
-    return _compose_hybrids(x, rotations, shifts, shuffles, funcs, sigmas, offsets, biases) + 3000
+    offsets = np.array(
+        [1500, 1800, 1900]
+    )  # subtract F* added at the end of the functions
+    return (
+        _compose_hybrids(x, rotations, shifts, shuffles, funcs, sigmas, offsets, biases)
+        + 3000
+    )
 
 
 all_functions = [

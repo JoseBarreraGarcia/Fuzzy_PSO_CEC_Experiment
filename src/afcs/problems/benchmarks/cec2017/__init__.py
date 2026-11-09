@@ -15,4 +15,3 @@ __all__ = [
     "all_functions",
     "get_function",
 ]
-

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
-import math
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
 
@@ -31,8 +31,12 @@ class SearchSpace:
     upper_bounds: tuple[float, ...]
 
     def __post_init__(self) -> None:
-        lower = tuple(_finite_float(value, "lower bound") for value in self.lower_bounds)
-        upper = tuple(_finite_float(value, "upper bound") for value in self.upper_bounds)
+        lower = tuple(
+            _finite_float(value, "lower bound") for value in self.lower_bounds
+        )
+        upper = tuple(
+            _finite_float(value, "upper bound") for value in self.upper_bounds
+        )
         if not lower:
             raise ValueError("A search space must have at least one dimension")
         if len(lower) != len(upper):
@@ -44,7 +48,11 @@ class SearchSpace:
 
     @classmethod
     def uniform(cls, dimension: int, lower: float, upper: float) -> "SearchSpace":
-        if isinstance(dimension, bool) or not isinstance(dimension, int) or dimension <= 0:
+        if (
+            isinstance(dimension, bool)
+            or not isinstance(dimension, int)
+            or dimension <= 0
+        ):
             raise ValueError("dimension must be a positive integer")
         return cls((lower,) * dimension, (upper,) * dimension)
 
@@ -57,7 +65,9 @@ class SearchSpace:
             raise ValueError(
                 f"Expected candidate dimension {self.dimension}, got {len(candidate)}"
             )
-        return tuple(_finite_float(value, "candidate coordinate") for value in candidate)
+        return tuple(
+            _finite_float(value, "candidate coordinate") for value in candidate
+        )
 
     def contains(self, candidate: Sequence[float]) -> bool:
         values = self.normalize_candidate(candidate)
@@ -145,4 +155,3 @@ def _positive_integer(value: int, label: str) -> None:
         raise TypeError(f"{label} must be an integer")
     if value <= 0:
         raise ValueError(f"{label} must be positive")
-

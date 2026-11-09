@@ -1,0 +1,55 @@
+{
+  "$schema": "../schemas/campaign_v1.schema.json",
+  "_documentation": {
+    "purpose": "Ejemplo ejecutable del GA real-coded de afcs v2 en un benchmark continuo.",
+    "methodology": "SBX acotado, mutación polinómica acotada, torneo binario y elitismo de un individuo; ver documentation/architecture/REAL_CODED_GA.md.",
+    "budget": "N * (G + 1) evaluaciones, con N individuos y G generaciones."
+  },
+  "schema_version": 1,
+  "campaign": {
+    "id": "real-coded-ga-v2-example",
+    "name": "Real-coded GA on classical continuous benchmark",
+    "replicas": 5,
+    "metrics": "optimizer"
+  },
+  "randomness": {
+    "protocol": "paired_by_replica_v1",
+    "base_seed": 42,
+    "engine": "numpy_seedsequence_pcg64_v1"
+  },
+  "problems": [
+    {
+      "family": "CLASSICAL",
+      "functions": [1],
+      "dimensions": [10]
+    }
+  ],
+  "treatments": [
+    {
+      "id": "ga-sbx-pm-default",
+      "optimizer": "GA",
+      "parameters": {
+        "population_size": 20,
+        "max_iterations": 200,
+        "crossover_probability": 0.9,
+        "crossover_distribution_index": 20,
+        "mutation_probability": "1/d",
+        "mutation_distribution_index": 20,
+        "tournament_size": 2
+      },
+      "parameter_policy": {
+        "id": "no_adaptation",
+        "parameters": {}
+      }
+    }
+  ],
+  "execution": {
+    "parallel_workers": 1
+  },
+  "trace": {
+    "enabled": true,
+    "every_iterations": 1,
+    "include_initial": true,
+    "include_final": true
+  }
+}

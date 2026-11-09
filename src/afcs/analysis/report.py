@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
 import csv
-from dataclasses import asdict, dataclass
 import hashlib
 import json
 import math
 import os
-from pathlib import Path
 import sqlite3
 import tempfile
+from collections import Counter, defaultdict
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 from .export import (
@@ -28,6 +28,7 @@ from .statistics import (
     ConvergenceSummary,
     FriedmanPostHocResult,
     FriedmanResult,
+    InstanceIdentity,
     ObjectiveSummary,
     aggregate_objective_ranks,
     friedman_objective_test,
@@ -36,10 +37,9 @@ from .statistics import (
     summarize_objectives,
 )
 
-
-ANALYSIS_REPORT_SCHEMA_VERSION = 3
-ANALYSIS_TABLES_SCHEMA_VERSION = 3
-ANALYSIS_FIGURES_SCHEMA_VERSION = 3
+ANALYSIS_REPORT_SCHEMA_VERSION = 4
+ANALYSIS_TABLES_SCHEMA_VERSION = 4
+ANALYSIS_FIGURES_SCHEMA_VERSION = 4
 _FIGURE_FILENAMES = (
     "aggregate_mean_ranks.png",
     "friedman_mean_ranks.png",
@@ -49,6 +49,7 @@ _TABLE_COLUMNS = {
     "run_status_counts.csv": ("campaign_id", "run_status", "run_count"),
     "objective_summaries.csv": (
         "campaign_id",
+        "instance_identity_json",
         "problem_family",
         "instance",
         "dimension",
@@ -70,6 +71,7 @@ _TABLE_COLUMNS = {
     ),
     "convergence_summaries.csv": (
         "campaign_id",
+        "instance_identity_json",
         "problem_family",
         "instance",
         "dimension",
@@ -89,6 +91,7 @@ _TABLE_COLUMNS = {
     ),
     "convergence_coverage.csv": (
         "campaign_id",
+        "instance_identity_json",
         "problem_family",
         "instance",
         "dimension",
@@ -106,6 +109,8 @@ _TABLE_COLUMNS = {
         "optimizer_version",
         "instances_ranked",
         "total_instances",
+        "ranked_instances_json",
+        "available_instances_json",
         "mean_rank",
         "median_rank",
         "unique_best_count",
@@ -249,9 +254,7 @@ class CampaignAnalysisFiguresReconciliation:
 
     @property
     def matches(self) -> bool:
-        return self.manifest_matches and all(
-            figure.matches for figure in self.figures
-        )
+        return self.manifest_matches and all(figure.matches for figure in self.figures)
 
 
 @dataclass(frozen=True, slots=True)
@@ -280,13 +283,9 @@ def build_campaign_analysis_report(
         connection, campaign_id, runs_path, traces_path
     )
     _validate_objective_provenance(run_rows, trace_rows)
-    run_status_counts = Counter(
-        str(row.get("run_status", "")) for row in run_rows
-    )
+    run_status_counts = Counter(str(row.get("run_status", "")) for row in run_rows)
     summaries = summarize_objectives(run_rows)
-    convergence, convergence_coverage = summarize_convergence(
-        run_rows, trace_rows
-    )
+    convergence, convergence_coverage = summarize_convergence(run_rows, trace_rows)
     ranks = aggregate_objective_ranks(run_rows)
 
     configurations_by_family: dict[str, set[str]] = defaultdict(set)
@@ -295,13 +294,9 @@ def build_campaign_analysis_report(
         family = row.get("problem_family")
         configuration_id = row.get("configuration_id")
         if not isinstance(family, str) or not family:
-            raise AnalysisExportError(
-                "Canonical run row is missing a problem family"
-            )
+            raise AnalysisExportError("Canonical run row is missing a problem family")
         if not isinstance(configuration_id, str) or not configuration_id:
-            raise AnalysisExportError(
-                "Canonical run row is missing a configuration ID"
-            )
+            raise AnalysisExportError("Canonical run row is missing a configuration ID")
         configurations_by_family[family].add(configuration_id)
         rows_by_family[family].append(row)
 
@@ -322,9 +317,7 @@ def build_campaign_analysis_report(
         family_rows = rows_by_family[family]
         family_friedman = friedman_objective_test(family_rows, alpha)
         friedman_results.extend(family_friedman)
-        posthoc_results.extend(
-            friedman_posthoc_objective_tests(family_rows, alpha)
-        )
+        posthoc_results.extend(friedman_posthoc_objective_tests(family_rows, alpha))
 
     return CampaignAnalysisReport(
         schema_version=ANALYSIS_REPORT_SCHEMA_VERSION,
@@ -359,8 +352,10 @@ def _validate_objective_provenance(
                 "objective_best provenance"
             )
         try:
+            if metric_value is None or row.get("objective_best") is None:
+                raise TypeError("objective_best cannot be None")
             metric_objective = float(metric_value)
-            run_objective = float(row.get("objective_best"))
+            run_objective = float(row["objective_best"])
         except (TypeError, ValueError) as error:
             raise AnalysisExportError(
                 f"Completed run {row.get('run_id')!r} has no numeric "
@@ -392,13 +387,16 @@ def _validate_objective_provenance(
 
 def _report_json(report: CampaignAnalysisReport) -> str:
     try:
-        return json.dumps(
-            asdict(report),
-            ensure_ascii=False,
-            allow_nan=False,
-            indent=2,
-            sort_keys=True,
-        ) + "\n"
+        return (
+            json.dumps(
+                asdict(report),
+                ensure_ascii=False,
+                allow_nan=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        )
     except (TypeError, ValueError) as error:
         raise AnalysisExportError(
             f"Campaign {report.campaign_id!r} report is not valid JSON: {error}"
@@ -441,9 +439,7 @@ def _analysis_table_rows(
         "convergence_coverage.csv": [
             asdict(result) for result in report.convergence_coverage
         ],
-        "aggregate_ranks.csv": [
-            asdict(result) for result in report.aggregate_ranks
-        ],
+        "aggregate_ranks.csv": [asdict(result) for result in report.aggregate_ranks],
         "friedman_results.csv": [],
         "friedman_posthoc.csv": [
             asdict(result) for result in report.friedman_posthoc_results
@@ -466,21 +462,27 @@ def _analysis_table_rows(
         tables["objective_summaries.csv"].append(row)
 
     for row in tables["convergence_summaries.csv"]:
-        row["provenance_counts_json"] = _json_value(
-            row.pop("provenance_counts")
-        )
+        row["provenance_counts_json"] = _json_value(row.pop("provenance_counts"))
 
     for result in report.friedman_results:
         row = asdict(result)
         row["configurations_json"] = _json_value(row.pop("configurations"))
-        row["included_instances_json"] = _json_value(
-            row.pop("included_instances")
-        )
-        row["excluded_instances_json"] = _json_value(
-            row.pop("excluded_instances")
-        )
+        row["included_instances_json"] = _json_value(row.pop("included_instances"))
+        row["excluded_instances_json"] = _json_value(row.pop("excluded_instances"))
         row["average_ranks_json"] = _json_value(row.pop("average_ranks"))
         tables["friedman_results.csv"].append(row)
+
+    for row in tables["aggregate_ranks.csv"]:
+        row["ranked_instances_json"] = _json_value(row.pop("ranked_instances"))
+        row["available_instances_json"] = _json_value(row.pop("available_instances"))
+
+    for name in (
+        "objective_summaries.csv",
+        "convergence_summaries.csv",
+        "convergence_coverage.csv",
+    ):
+        for row in tables[name]:
+            row["instance_identity_json"] = _json_value(row.pop("instance_identity"))
 
     return tables
 
@@ -504,10 +506,7 @@ def _write_analysis_tables_to_directory(
                 )
                 writer.writeheader()
                 writer.writerows(
-                    {
-                        column: _table_value(row.get(column))
-                        for column in columns
-                    }
+                    {column: _table_value(row.get(column)) for column in columns}
                     for row in tables[filename]
                 )
         except (OSError, csv.Error, TypeError, ValueError) as error:
@@ -577,9 +576,7 @@ def write_campaign_analysis_tables(
             dir=output_directory,
         ) as staged_name:
             staged_directory = Path(staged_name)
-            row_counts = _write_analysis_tables_to_directory(
-                report, staged_directory
-            )
+            row_counts = _write_analysis_tables_to_directory(report, staged_directory)
             filenames = tuple(_TABLE_COLUMNS)
             for filename in filenames:
                 os.replace(
@@ -593,8 +590,7 @@ def write_campaign_analysis_tables(
             )
     except OSError as error:
         raise AnalysisExportError(
-            f"Could not write campaign analysis tables to "
-            f"{output_directory}: {error}"
+            f"Could not write campaign analysis tables to {output_directory}: {error}"
         ) from error
     return CampaignAnalysisTablesExport(
         campaign_id=report.campaign_id,
@@ -625,9 +621,7 @@ def reconcile_campaign_analysis_tables(
         )
         expected_manifest_path = expected_directory / "manifest.json"
         actual_manifest_path = output_directory / "manifest.json"
-        expected_manifest_text = expected_manifest_path.read_text(
-            encoding="utf-8"
-        )
+        expected_manifest_text = expected_manifest_path.read_text(encoding="utf-8")
         expected_manifest_hash = hashlib.sha256(
             expected_manifest_text.encode("utf-8")
         ).hexdigest()
@@ -642,9 +636,7 @@ def reconcile_campaign_analysis_tables(
                 actual_manifest_sha256=None,
             )
         try:
-            actual_manifest_text = actual_manifest_path.read_text(
-                encoding="utf-8"
-            )
+            actual_manifest_text = actual_manifest_path.read_text(encoding="utf-8")
             actual_manifest = json.loads(actual_manifest_text)
         except (OSError, UnicodeError, json.JSONDecodeError) as error:
             if isinstance(error, OSError):
@@ -698,10 +690,8 @@ def _render_campaign_analysis_figures(
         key=lambda item: (item.mean_rank, item.configuration_id),
     )
     if ranked:
-        labels = [
-            f"{item.algorithm} ({item.configuration_id})" for item in ranked
-        ]
-        values = [item.mean_rank for item in ranked]
+        labels = [f"{item.algorithm} ({item.configuration_id})" for item in ranked]
+        values = [item.mean_rank for item in ranked if item.mean_rank is not None]
         positions = list(range(len(ranked)))
         axis.barh(positions, values, color="#4472C4")
         axis.set_yticks(positions, labels)
@@ -806,34 +796,26 @@ def _render_campaign_analysis_figures(
     finally:
         figure.clear()
 
-    convergence_groups: dict[
-        tuple[str, str, int | None, str], list[ConvergenceSummary]
-    ] = defaultdict(list)
+    convergence_groups: dict[InstanceIdentity, list[ConvergenceSummary]] = defaultdict(
+        list
+    )
     for summary in report.convergence_summaries:
-        convergence_groups[
-            (
-                summary.problem_family,
-                summary.instance,
-                summary.dimension,
-                summary.direction,
-            )
-        ].append(summary)
+        convergence_groups[summary.instance_identity].append(summary)
     sorted_groups = sorted(
         convergence_groups.items(),
         key=lambda item: (
-            item[0][0],
-            item[0][1],
-            -1 if item[0][2] is None else item[0][2],
-            item[0][3],
+            item[0].problem_family,
+            item[0].instance,
+            -1 if item[0].dimension is None else item[0].dimension,
+            item[0].direction,
+            item[0].instance_id,
         ),
     )
     figure_height = max(3.2, 3.2 * max(1, len(sorted_groups)))
     figure = Figure(figsize=(10, figure_height), dpi=160)
     FigureCanvasAgg(figure)
     if sorted_groups:
-        for panel_index, (group_key, summaries) in enumerate(
-            sorted_groups, start=1
-        ):
+        for panel_index, (group_key, summaries) in enumerate(sorted_groups, start=1):
             axis = figure.add_subplot(len(sorted_groups), 1, panel_index)
             for configuration_id in sorted(
                 {item.configuration_id for item in summaries}
@@ -850,9 +832,7 @@ def _render_campaign_analysis_figures(
                 medians = [item.median_objective for item in points]
                 lower = [item.q25_objective for item in points]
                 upper = [item.q75_objective for item in points]
-                (line,) = axis.plot(
-                    evaluations, medians, label=configuration_id
-                )
+                (line,) = axis.plot(evaluations, medians, label=configuration_id)
                 axis.fill_between(
                     evaluations,
                     lower,
@@ -860,13 +840,15 @@ def _render_campaign_analysis_figures(
                     color=line.get_color(),
                     alpha=0.16,
                 )
-            family, instance, dimension, direction = group_key
-            dimension_label = (
-                "unspecified" if dimension is None else str(dimension)
-            )
+            family = group_key.problem_family
+            instance = group_key.instance
+            dimension = group_key.dimension
+            direction = group_key.direction
+            dimension_label = "unspecified" if dimension is None else str(dimension)
             axis.set_title(
                 f"{family} {instance} (dimension={dimension_label}, "
-                f"{direction})"
+                f"{direction}, instance_id={group_key.instance_id}, "
+                f"identity={group_key.semantic_sha256[:12]})"
             )
             axis.set_xlabel("Objective evaluations")
             axis.set_ylabel("Best objective (median; IQR)")
@@ -936,9 +918,7 @@ def _write_analysis_figures_to_directory(
     directory: Path,
 ) -> str:
     matplotlib_version = _render_campaign_analysis_figures(report, directory)
-    manifest = _analysis_figures_manifest(
-        report, directory, matplotlib_version
-    )
+    manifest = _analysis_figures_manifest(report, directory, matplotlib_version)
     try:
         (directory / "manifest.json").write_text(
             json.dumps(
@@ -954,8 +934,7 @@ def _write_analysis_figures_to_directory(
         )
     except (OSError, TypeError, ValueError) as error:
         raise AnalysisExportError(
-            f"Could not generate analysis figures manifest in {directory}: "
-            f"{error}"
+            f"Could not generate analysis figures manifest in {directory}: {error}"
         ) from error
     return matplotlib_version
 
@@ -989,8 +968,7 @@ def write_campaign_analysis_figures(
             )
     except OSError as error:
         raise AnalysisExportError(
-            f"Could not write campaign analysis figures to "
-            f"{output_directory}: {error}"
+            f"Could not write campaign analysis figures to {output_directory}: {error}"
         ) from error
     return CampaignAnalysisFiguresExport(
         campaign_id=report.campaign_id,
@@ -1048,9 +1026,7 @@ def reconcile_campaign_analysis_figures(
 
         expected_manifest_path = expected_directory / "manifest.json"
         actual_manifest_path = output_directory / "manifest.json"
-        expected_manifest_text = expected_manifest_path.read_text(
-            encoding="utf-8"
-        )
+        expected_manifest_text = expected_manifest_path.read_text(encoding="utf-8")
         expected_manifest_hash = hashlib.sha256(
             expected_manifest_text.encode("utf-8")
         ).hexdigest()
@@ -1065,9 +1041,7 @@ def reconcile_campaign_analysis_figures(
                 actual_manifest_sha256=None,
             )
         try:
-            actual_manifest_text = actual_manifest_path.read_text(
-                encoding="utf-8"
-            )
+            actual_manifest_text = actual_manifest_path.read_text(encoding="utf-8")
             actual_manifest = json.loads(actual_manifest_text)
         except (OSError, UnicodeError, json.JSONDecodeError) as error:
             if isinstance(error, OSError):
@@ -1093,9 +1067,7 @@ def reconcile_campaign_analysis_figures(
             figures=tuple(figure_results),
             manifest_path=str(actual_manifest_path),
             manifest_matches=manifest_matches,
-            manifest_mismatch_kind=(
-                None if manifest_matches else "content_mismatch"
-            ),
+            manifest_mismatch_kind=(None if manifest_matches else "content_mismatch"),
             expected_manifest_sha256=expected_manifest_hash,
             actual_manifest_sha256=actual_manifest_hash,
         )

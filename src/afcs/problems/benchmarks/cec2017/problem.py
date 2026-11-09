@@ -10,15 +10,12 @@ from afcs.core import Evaluation, OptimizationDirection, SearchSpace
 from afcs.problems.base import ProblemMetadata
 
 from .functions import all_functions
-
+from .transforms import CEC2017_DATA_SHA256
 
 CEC2017_SUPPORTED_DIMENSIONS = frozenset((10, 30, 50, 100))
 CEC2017_DEPRECATED_FUNCTIONS = frozenset((2,))
 CEC2017_FUNCTION_NUMBERS = tuple(
     number for number in range(1, 31) if number not in CEC2017_DEPRECATED_FUNCTIONS
-)
-CEC2017_DATA_SHA256 = (
-    "5f978ec6620e659ea933e21c4c4398b47b811467d3eed3dcb204566c3965924b"
 )
 
 
@@ -85,4 +82,3 @@ class CEC2017Problem:
                 "dimension": self.metadata.dimension,
             },
         )
-

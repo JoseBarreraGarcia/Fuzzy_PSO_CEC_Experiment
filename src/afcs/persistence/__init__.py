@@ -6,11 +6,19 @@ from .database import (
     MigrationError,
     apply_migrations,
     configure_campaign_metrics,
+    connect_readonly_v2_database,
     connect_v2_database,
     current_schema_version,
     discover_migrations,
     initialize_v2_database,
     sync_metric_definitions,
+    validate_current_schema,
+)
+from .integrity import (
+    CampaignIntegrityIssue,
+    CampaignIntegrityReport,
+    CampaignIntegrityWarning,
+    audit_campaign_integrity,
 )
 from .repository import (
     ExperimentRepository,
@@ -21,12 +29,6 @@ from .repository import (
     encode_metric_value,
     sha256_text,
     utc_now,
-)
-from .integrity import (
-    CampaignIntegrityIssue,
-    CampaignIntegrityReport,
-    CampaignIntegrityWarning,
-    audit_campaign_integrity,
 )
 
 __all__ = [
@@ -45,6 +47,7 @@ __all__ = [
     "canonical_json",
     "configure_campaign_metrics",
     "connect_v2_database",
+    "connect_readonly_v2_database",
     "current_schema_version",
     "discover_migrations",
     "encode_metric_value",
@@ -52,5 +55,5 @@ __all__ = [
     "sha256_text",
     "sync_metric_definitions",
     "utc_now",
+    "validate_current_schema",
 ]
-

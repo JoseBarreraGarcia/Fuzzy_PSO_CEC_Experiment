@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 import csv
-from dataclasses import dataclass
 import json
 import os
-from pathlib import Path
 import sqlite3
 import tempfile
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Generator
 
+from afcs.persistence.database import validate_current_schema
+from afcs.persistence.metric_contracts import metric_evidence_issues
+from afcs.persistence.run_contracts import run_evidence_issues
 
 RUN_COLUMNS = (
     "campaign_id",
@@ -27,6 +30,7 @@ RUN_COLUMNS = (
     "seed_protocol",
     "rng_engine",
     "configuration_id",
+    "configuration_key",
     "algorithm",
     "optimizer_version",
     "algorithm_parameters_json",
@@ -46,6 +50,9 @@ RUN_COLUMNS = (
     "run_id",
     "replica_index",
     "random_seed",
+    "initial_population_sha256",
+    "initial_velocity_sha256",
+    "initial_state_hash_version",
     "run_status",
     "started_at",
     "finished_at",
@@ -57,11 +64,16 @@ RUN_COLUMNS = (
     "constraint_violation",
     "error_type",
     "error_message",
+    "failure_phase",
+    "finalization_status",
+    "finalization_error_type",
+    "finalization_error_message",
 )
 
 TRACE_COLUMNS = (
     "campaign_id",
     "configuration_id",
+    "configuration_key",
     "algorithm",
     "optimizer_version",
     "instance_id",
@@ -137,6 +149,7 @@ _MAX_RECONCILIATION_EXAMPLES = 50
 
 @contextmanager
 def _read_snapshot(connection: sqlite3.Connection) -> Generator[None, None, None]:
+    validate_current_schema(connection)
     owns_transaction = not connection.in_transaction
     if owns_transaction:
         connection.execute("BEGIN")
@@ -189,8 +202,7 @@ def _write_csv(
         writer = csv.DictWriter(file, fieldnames=columns, extrasaction="raise")
         writer.writeheader()
         writer.writerows(
-            {column: _csv_value(row.get(column)) for column in columns}
-            for row in rows
+            {column: _csv_value(row.get(column)) for column in columns} for row in rows
         )
 
 
@@ -225,9 +237,7 @@ def _reconcile_csv(
         nonlocal mismatch_count
         mismatch_count += 1
         if len(mismatches) < _MAX_RECONCILIATION_EXAMPLES:
-            mismatches.append(
-                CsvMismatch(kind, csv_line, column, expected, actual)
-            )
+            mismatches.append(CsvMismatch(kind, csv_line, column, expected, actual))
 
     if not path.is_file():
         record("file_missing", expected=str(path), actual=None)
@@ -421,6 +431,14 @@ def export_campaign_csv(
         raise AnalysisExportError("Run and trace exports must use different paths")
 
     with _read_snapshot(connection):
+        issues = metric_evidence_issues(connection, campaign_id) + run_evidence_issues(
+            connection, campaign_id
+        )
+        if issues:
+            raise AnalysisExportError(
+                "Invalid metric evidence: "
+                + "; ".join(f"{code}: {message}" for code, message, _ in issues)
+            )
         campaign_rows = _query_rows(
             connection,
             "SELECT campaign_id FROM campaigns WHERE campaign_id = ?",
@@ -484,7 +502,8 @@ def export_campaign_csv(
                 c.base_seed,
                 c.seed_protocol,
                 c.rng_engine,
-                ac.configuration_id,
+                COALESCE(ac.treatment_id, ac.configuration_id) AS configuration_id,
+                ac.configuration_id AS configuration_key,
                 ac.algorithm,
                 ac.optimizer_version,
                 ac.parameters_json AS algorithm_parameters_json,
@@ -504,6 +523,9 @@ def export_campaign_csv(
                 r.run_id,
                 r.replica_index,
                 r.random_seed,
+                r.initial_population_sha256,
+                r.initial_velocity_sha256,
+                r.initial_state_hash_version,
                 r.status AS run_status,
                 r.started_at,
                 r.finished_at,
@@ -514,7 +536,11 @@ def export_campaign_csv(
                 r.feasible,
                 r.constraint_violation,
                 r.error_type,
-                r.error_message
+                r.error_message,
+                r.failure_phase,
+                r.finalization_status,
+                r.finalization_error_type,
+                r.finalization_error_message
             FROM runs AS r
             JOIN campaigns AS c ON c.campaign_id = r.campaign_id
             JOIN algorithm_configurations AS ac
@@ -546,7 +572,8 @@ def export_campaign_csv(
             """
             SELECT
                 c.campaign_id,
-                ac.configuration_id,
+                COALESCE(ac.treatment_id, ac.configuration_id) AS configuration_id,
+                ac.configuration_id AS configuration_key,
                 ac.algorithm,
                 ac.optimizer_version,
                 pi.instance_id,

@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import math
 import sqlite3
+from dataclasses import dataclass
+
+from .database import validate_current_schema
+from .metric_contracts import metric_evidence_issues
+from .run_contracts import run_evidence_issues
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,13 +46,20 @@ def audit_campaign_integrity(
 ) -> CampaignIntegrityReport:
     """Inspect relational and lifecycle invariants without changing campaign data."""
 
+    validate_current_schema(connection)
     campaign = connection.execute(
         "SELECT status FROM campaigns WHERE campaign_id = ?", (campaign_id,)
     ).fetchone()
     if campaign is None:
         raise ValueError(f"Unknown campaign: {campaign_id!r}")
 
-    issues: list[CampaignIntegrityIssue] = []
+    issues = [
+        CampaignIntegrityIssue(code, message, run_id)
+        for code, message, run_id in (
+            metric_evidence_issues(connection, campaign_id)
+            + run_evidence_issues(connection, campaign_id)
+        )
+    ]
     warnings: list[CampaignIntegrityWarning] = []
     integrity = connection.execute("PRAGMA integrity_check").fetchall()
     if [row[0] for row in integrity] != ["ok"]:
@@ -104,6 +115,14 @@ def audit_campaign_integrity(
             (run_id,),
         ).fetchall()
         attempt_count += len(attempts)
+        if not attempts and run["status"] in {"completed", "failed", "running"}:
+            issues.append(
+                CampaignIntegrityIssue(
+                    "missing_execution_attempt",
+                    "Executed run lacks an execution attempt",
+                    run_id,
+                )
+            )
         expected_indices = list(range(1, len(attempts) + 1))
         observed_indices = [int(row["attempt_index"]) for row in attempts]
         if observed_indices != expected_indices:

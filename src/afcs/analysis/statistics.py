@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import math
+import statistics
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-import math
 from numbers import Number
-import statistics
-from typing import Any
+from typing import Any, SupportsFloat, cast
+
+from afcs.persistence import canonical_json
 
 
 class AnalysisError(ValueError):
@@ -16,8 +20,29 @@ class AnalysisError(ValueError):
 
 
 @dataclass(frozen=True, slots=True)
+class InstanceIdentity:
+    """Local reference plus a versioned semantic fingerprint, never a plot label."""
+
+    instance_id: int
+    problem_family: str
+    instance: str
+    dimension: int | None
+    direction: str
+    optimum: float | None
+    parameters_json: str
+    data_sha256: str | None
+    fingerprint_version: str
+    semantic_sha256: str
+
+
+ProblemGroupKey = tuple[str, str, str, int | None, str, InstanceIdentity]
+ConvergenceGroupKey = tuple[str, str, str, int | None, str, InstanceIdentity]
+
+
+@dataclass(frozen=True, slots=True)
 class ObjectiveSummary:
     campaign_id: str
+    instance_identity: InstanceIdentity
     problem_family: str
     instance: str
     dimension: int | None
@@ -41,6 +66,7 @@ class ObjectiveSummary:
 @dataclass(frozen=True, slots=True)
 class PairedObjectiveSummary:
     campaign_id: str
+    instance_identity: InstanceIdentity
     problem_family: str
     instance: str
     dimension: int | None
@@ -71,6 +97,8 @@ class AggregateObjectiveRank:
     optimizer_version: str | None
     instances_ranked: int
     total_instances: int
+    ranked_instances: tuple[InstanceIdentity, ...]
+    available_instances: tuple[InstanceIdentity, ...]
     mean_rank: float | None
     median_rank: float | None
     unique_best_count: int
@@ -101,6 +129,7 @@ class PairedObjectiveTest:
 @dataclass(frozen=True, slots=True)
 class ConvergenceSummary:
     campaign_id: str
+    instance_identity: InstanceIdentity
     problem_family: str
     instance: str
     dimension: int | None
@@ -122,6 +151,7 @@ class ConvergenceSummary:
 @dataclass(frozen=True, slots=True)
 class ConvergenceCoverage:
     campaign_id: str
+    instance_identity: InstanceIdentity
     problem_family: str
     instance: str
     dimension: int | None
@@ -155,8 +185,8 @@ class FriedmanResult:
     campaign_id: str
     problem_family: str
     configurations: tuple[str, ...]
-    included_instances: tuple[tuple[str, int | None, str], ...]
-    excluded_instances: tuple[tuple[str, int | None, str], ...]
+    included_instances: tuple[InstanceIdentity, ...]
+    excluded_instances: tuple[InstanceIdentity, ...]
     block_count: int
     incomplete_block_count: int
     statistic: float | None
@@ -201,7 +231,19 @@ def _required_text(row: Mapping[str, Any], field: str) -> str:
     return value
 
 
-def _group_key(row: Mapping[str, Any]) -> tuple[str, str, str, int | None, str]:
+def _positive_integer(value: Any, field: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, (str, int)):
+        raise AnalysisError(f"Run row {field} must be a positive integer")
+    try:
+        normalized = int(value)
+    except ValueError as error:
+        raise AnalysisError(f"Run row {field} must be a positive integer") from error
+    if normalized < 1:
+        raise AnalysisError(f"Run row {field} must be positive")
+    return normalized
+
+
+def _group_key(row: Mapping[str, Any]) -> ProblemGroupKey:
     campaign_id = _required_text(row, "campaign_id")
     problem_family = _required_text(row, "problem_family")
     instance = _required_text(row, "instance")
@@ -213,13 +255,73 @@ def _group_key(row: Mapping[str, Any]) -> tuple[str, str, str, int | None, str]:
     if dimension_value in (None, ""):
         dimension = None
     else:
-        try:
-            dimension = int(dimension_value)
-        except (TypeError, ValueError) as error:
-            raise AnalysisError("Run row dimension must be an integer or empty") from error
-        if dimension < 1:
-            raise AnalysisError("Run row dimension must be positive")
-    return campaign_id, problem_family, instance, dimension, direction
+        dimension = _positive_integer(dimension_value, "dimension")
+    instance_id = _positive_integer(row.get("instance_id"), "instance_id")
+    parameters_text = _required_text(row, "problem_parameters_json")
+    try:
+        parameters = json.loads(parameters_text)
+        if not isinstance(parameters, dict):
+            raise ValueError("parameters must be an object")
+        parameters_json = canonical_json(parameters)
+    except (TypeError, ValueError) as error:
+        raise AnalysisError(
+            "Problem parameters must be a finite JSON object"
+        ) from error
+    optimum_value = row.get("optimum")
+    try:
+        optimum = None if optimum_value in (None, "") else float(optimum_value)
+    except (TypeError, ValueError) as error:
+        raise AnalysisError("Instance optimum must be finite or empty") from error
+    if isinstance(optimum_value, bool) or (
+        optimum is not None and not math.isfinite(optimum)
+    ):
+        raise AnalysisError("Instance optimum must be finite or empty")
+    data_value = row.get("data_sha256")
+    data_sha256 = None if data_value in (None, "") else data_value
+    if data_sha256 is not None and (
+        not isinstance(data_sha256, str)
+        or len(data_sha256) != 64
+        or any(char not in "0123456789abcdef" for char in data_sha256)
+    ):
+        raise AnalysisError("Instance data_sha256 must be a lowercase SHA-256 or empty")
+    version = "problem_instance_v1"
+    payload = canonical_json(
+        {
+            "version": version,
+            "problem_family": problem_family,
+            "instance": instance,
+            "dimension": dimension,
+            "direction": direction,
+            "optimum": optimum,
+            "parameters": parameters,
+            "data_sha256": data_sha256,
+        }
+    )
+    identity = InstanceIdentity(
+        instance_id,
+        problem_family,
+        instance,
+        dimension,
+        direction,
+        optimum,
+        parameters_json,
+        data_sha256,
+        version,
+        hashlib.sha256(payload.encode("utf-8")).hexdigest(),
+    )
+    return campaign_id, problem_family, instance, dimension, direction, identity
+
+
+def _validated_rows(run_rows: Iterable[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+    rows = list(run_rows)
+    identities: dict[tuple[str, int], InstanceIdentity] = {}
+    for row in rows:
+        key = _group_key(row)
+        reference = (key[0], key[5].instance_id)
+        previous = identities.setdefault(reference, key[5])
+        if previous != key[5]:
+            raise AnalysisError(f"inconsistent metadata for instance_id {reference!r}")
+    return rows
 
 
 def _objective(row: Mapping[str, Any]) -> float:
@@ -255,7 +357,9 @@ def _quantile(sorted_values: list[float], probability: float) -> float:
     )
 
 
-def _describe(values: list[float]) -> tuple[
+def _describe(
+    values: list[float],
+) -> tuple[
     float | None,
     float | None,
     float | None,
@@ -293,21 +397,24 @@ def summarize_objectives(
 ) -> tuple[ObjectiveSummary, ...]:
     """Summarize objective values per campaign, problem instance, and configuration.
 
-    Only ``completed`` runs contribute objective values. Counts for every
-    observed run status are retained so exclusions are explicit. Standard
+    ``instance_id`` and ``problem_parameters_json`` must be explicit; labels
+    never reconstruct identity. Only ``completed`` runs contribute values.
+    Counts for every observed run status are retained so exclusions are explicit. Standard
     deviation is the sample standard deviation; quartiles use type 7.
     """
 
     groups: dict[
-        tuple[tuple[str, str, str, int | None, str], str, str, str | None],
+        tuple[ProblemGroupKey, str, str, str | None],
         list[Mapping[str, Any]],
     ] = defaultdict(list)
-    for row in run_rows:
+    for row in _validated_rows(run_rows):
         key = _group_key(row)
         configuration_id = _required_text(row, "configuration_id")
         algorithm = _required_text(row, "algorithm")
         version_value = row.get("optimizer_version")
-        version = version_value if isinstance(version_value, str) and version_value else None
+        version = (
+            version_value if isinstance(version_value, str) and version_value else None
+        )
         groups[(key, configuration_id, algorithm, version)].append(row)
 
     summaries: list[ObjectiveSummary] = []
@@ -317,14 +424,13 @@ def summarize_objectives(
             _objective(row) for row in rows if row.get("run_status") == "completed"
         ]
         provenance_counts = Counter(
-            _provenance(row)
-            for row in rows
-            if row.get("run_status") == "completed"
+            _provenance(row) for row in rows if row.get("run_status") == "completed"
         )
         mean, sample_std, median, q25, q75, minimum, maximum = _describe(values)
         summaries.append(
             ObjectiveSummary(
                 campaign_id=key[0],
+                instance_identity=key[5],
                 problem_family=key[1],
                 instance=key[2],
                 dimension=key[3],
@@ -335,9 +441,7 @@ def summarize_objectives(
                 run_count=len(rows),
                 completed_count=len(values),
                 status_counts=tuple(sorted(status_counts.items())),
-                objective_provenance_counts=tuple(
-                    sorted(provenance_counts.items())
-                ),
+                objective_provenance_counts=tuple(sorted(provenance_counts.items())),
                 mean=mean,
                 sample_std=sample_std,
                 median=median,
@@ -355,6 +459,7 @@ def summarize_objectives(
                 item.problem_family,
                 item.instance,
                 -1 if item.dimension is None else item.dimension,
+                item.instance_identity.instance_id,
                 item.configuration_id,
             ),
         )
@@ -381,12 +486,12 @@ def compare_paired_objectives(
 
     selected_configs = {baseline_configuration_id, candidate_configuration_id}
     selected: dict[
-        tuple[str, str, str, int | None, str],
+        ProblemGroupKey,
         dict[str, list[Mapping[str, Any]]],
     ] = defaultdict(
         lambda: {baseline_configuration_id: [], candidate_configuration_id: []}
     )
-    for row in run_rows:
+    for row in _validated_rows(run_rows):
         configuration_id = row.get("configuration_id")
         if configuration_id not in selected_configs:
             continue
@@ -424,6 +529,7 @@ def compare_paired_objectives(
         summaries.append(
             PairedObjectiveSummary(
                 campaign_id=key[0],
+                instance_identity=key[5],
                 problem_family=key[1],
                 instance=key[2],
                 dimension=key[3],
@@ -441,9 +547,7 @@ def compare_paired_objectives(
                 - len(candidate_completed),
                 mean_baseline=mean_baseline,
                 mean_candidate=mean_candidate,
-                mean_improvement=statistics.fmean(differences)
-                if differences
-                else None,
+                mean_improvement=statistics.fmean(differences) if differences else None,
                 median_improvement=statistics.median(differences)
                 if differences
                 else None,
@@ -466,6 +570,7 @@ def compare_paired_objectives(
                 item.problem_family,
                 item.instance,
                 -1 if item.dimension is None else item.dimension,
+                item.instance_identity.instance_id,
                 item.baseline_configuration_id,
             ),
         )
@@ -485,9 +590,7 @@ def aggregate_objective_ranks(
 
     rows = list(run_rows)
     summaries = summarize_objectives(rows)
-    instance_groups: dict[
-        tuple[str, str, str, int | None, str], list[ObjectiveSummary]
-    ] = defaultdict(list)
+    instance_groups: dict[ProblemGroupKey, list[ObjectiveSummary]] = defaultdict(list)
     for summary in summaries:
         key = (
             summary.campaign_id,
@@ -495,19 +598,20 @@ def aggregate_objective_ranks(
             summary.instance,
             summary.dimension,
             summary.direction,
+            summary.instance_identity,
         )
         instance_groups[key].append(summary)
 
-    total_instances: Counter[str] = Counter(
-        campaign_id for campaign_id, _, _, _, _ in instance_groups
-    )
-    rank_values: dict[
-        tuple[str, str], list[float]
-    ] = defaultdict(list)
+    total_instances: Counter[str] = Counter(key[0] for key in instance_groups)
+    rank_values: dict[tuple[str, str], list[float]] = defaultdict(list)
+    ranked_instances: dict[tuple[str, str], list[InstanceIdentity]] = defaultdict(list)
+    available_instances: dict[str, list[InstanceIdentity]] = defaultdict(list)
+    for key in instance_groups:
+        available_instances[key[0]].append(key[5])
     placements: Counter[tuple[str, str, str]] = Counter()
     metadata: dict[tuple[str, str], tuple[str, str | None]] = {}
 
-    for (campaign_id, _, _, _, direction), group in instance_groups.items():
+    for (campaign_id, _, _, _, direction, identity), group in instance_groups.items():
         eligible = [summary for summary in group if summary.median is not None]
         if not eligible:
             continue
@@ -536,6 +640,7 @@ def aggregate_objective_ranks(
                 )
             metadata[metadata_key] = current
             rank_values[metadata_key].append(ranks[configuration_id])
+            ranked_instances[metadata_key].append(identity)
 
         best_score = ordered_scores[0]
         worst_score = ordered_scores[-1]
@@ -545,15 +650,15 @@ def aggregate_objective_ranks(
             if score == best_score
         ]
         for configuration_id, score in scores.items():
-            placements[
-                (campaign_id, configuration_id, "unique_best")
-            ] += int(len(best_configurations) == 1 and score == best_score)
-            placements[
-                (campaign_id, configuration_id, "tied_best")
-            ] += int(len(best_configurations) > 1 and score == best_score)
-            placements[
-                (campaign_id, configuration_id, "worst")
-            ] += int(score == worst_score)
+            placements[(campaign_id, configuration_id, "unique_best")] += int(
+                len(best_configurations) == 1 and score == best_score
+            )
+            placements[(campaign_id, configuration_id, "tied_best")] += int(
+                len(best_configurations) > 1 and score == best_score
+            )
+            placements[(campaign_id, configuration_id, "worst")] += int(
+                score == worst_score
+            )
 
     results: list[AggregateObjectiveRank] = []
     for (campaign_id, configuration_id), ranks in rank_values.items():
@@ -566,6 +671,10 @@ def aggregate_objective_ranks(
                 optimizer_version=version,
                 instances_ranked=len(ranks),
                 total_instances=total_instances[campaign_id],
+                ranked_instances=tuple(
+                    ranked_instances[(campaign_id, configuration_id)]
+                ),
+                available_instances=tuple(available_instances[campaign_id]),
                 mean_rank=statistics.fmean(ranks),
                 median_rank=statistics.median(ranks),
                 unique_best_count=placements[
@@ -603,17 +712,17 @@ def summarize_convergence(
 
     runs_by_id: dict[str, Mapping[str, Any]] = {}
     coverage_state: dict[
-        tuple[str, str, str, int | None, str],
+        ConvergenceGroupKey,
         dict[str, Any],
     ] = {}
-    for row in run_rows:
+    for row in _validated_rows(run_rows):
         run_id = _required_text(row, "run_id")
         if run_id in runs_by_id:
             raise AnalysisError(f"Duplicate run_id in convergence input: {run_id!r}")
         runs_by_id[run_id] = row
-        campaign_id, family, instance, dimension, direction = _group_key(row)
+        campaign_id, family, instance, dimension, direction, identity = _group_key(row)
         configuration_id = _required_text(row, "configuration_id")
-        key = (campaign_id, family, instance, dimension, configuration_id)
+        key = (campaign_id, family, instance, dimension, configuration_id, identity)
         state = coverage_state.setdefault(
             key,
             {
@@ -640,16 +749,14 @@ def summarize_convergence(
             state["completed_run_count"] += 1
 
     latest_points: dict[
-        tuple[str, tuple[str, str, str, int | None, str], int],
+        tuple[str, ConvergenceGroupKey, int],
         tuple[int, float, str],
     ] = {}
     for trace in trace_rows:
         run_id = _required_text(trace, "run_id")
         run = runs_by_id.get(run_id)
         if run is None:
-            raise AnalysisError(
-                f"Trace references unknown run_id {run_id!r}"
-            )
+            raise AnalysisError(f"Trace references unknown run_id {run_id!r}")
         run_group = _group_key(run)
         trace_dimension_value = trace.get("dimension")
         try:
@@ -667,25 +774,29 @@ def summarize_convergence(
             trace.get("problem_family"),
             trace.get("instance"),
             trace_dimension,
+            _positive_integer(trace.get("instance_id"), "instance_id"),
         )
-        run_identity = run_group[:4]
+        run_identity = (*run_group[:4], run_group[5].instance_id)
         configuration_id = _required_text(trace, "configuration_id")
-        if trace_identity != run_identity or configuration_id != run.get("configuration_id"):
-            raise AnalysisError(
-                f"Trace identity does not match run {run_id!r}"
-            )
+        if trace_identity != run_identity or configuration_id != run.get(
+            "configuration_id"
+        ):
+            raise AnalysisError(f"Trace identity does not match run {run_id!r}")
         key = (
             run_group[0],
             run_group[1],
             run_group[2],
             run_group[3],
             configuration_id,
+            run_group[5],
         )
         state = coverage_state[key]
         state["trace_run_ids"].add(run_id)
         checkpoint_index_value = trace.get("checkpoint_index")
         evaluations_value = trace.get("evaluations")
         try:
+            if checkpoint_index_value is None or evaluations_value is None:
+                raise TypeError("trace indices cannot be None")
             checkpoint_index = int(checkpoint_index_value)
             evaluations = int(evaluations_value)
         except (TypeError, ValueError) as error:
@@ -711,9 +822,7 @@ def summarize_convergence(
         if not math.isfinite(objective):
             raise AnalysisError("Trace objective_best must be finite")
         provenance_value = trace.get("provenance__objective_best")
-        provenance = (
-            provenance_value if isinstance(provenance_value, str) else ""
-        )
+        provenance = provenance_value if isinstance(provenance_value, str) else ""
         point_key = (run_id, key, evaluations)
         current = latest_points.get(point_key)
         if current is None or checkpoint_index > current[0]:
@@ -737,21 +846,26 @@ def summarize_convergence(
         state["noncompleted_runs_with_trace"] = traced_noncompleted
 
     grouped_points: dict[
-        tuple[tuple[str, str, str, int | None, str], int],
+        tuple[ConvergenceGroupKey, int],
         list[tuple[float, str]],
     ] = defaultdict(list)
-    for (_, group_key, evaluations), (_, objective, provenance) in latest_points.items():
+    for (_, group_key, evaluations), (
+        _,
+        objective,
+        provenance,
+    ) in latest_points.items():
         grouped_points[(group_key, evaluations)].append((objective, provenance))
 
     summaries: list[ConvergenceSummary] = []
     for (key, evaluations), points in grouped_points.items():
-        campaign_id, family, instance, dimension, configuration_id = key
+        campaign_id, family, instance, dimension, configuration_id, identity = key
         state = coverage_state[key]
         objectives = [objective for objective, _ in points]
         ordered = sorted(objectives)
         summaries.append(
             ConvergenceSummary(
                 campaign_id=campaign_id,
+                instance_identity=identity,
                 problem_family=family,
                 instance=instance,
                 dimension=dimension,
@@ -786,18 +900,15 @@ def summarize_convergence(
     coverage = tuple(
         ConvergenceCoverage(
             campaign_id=campaign_id,
+            instance_identity=identity,
             problem_family=family,
             instance=instance,
             dimension=dimension,
             configuration_id=configuration_id,
             completed_run_count=state["completed_run_count"],
             completed_runs_with_trace=state["completed_runs_with_trace"],
-            completed_runs_without_trace=state[
-                "completed_runs_without_trace"
-            ],
-            noncompleted_runs_with_trace=state[
-                "noncompleted_runs_with_trace"
-            ],
+            completed_runs_without_trace=state["completed_runs_without_trace"],
+            noncompleted_runs_with_trace=state["noncompleted_runs_with_trace"],
             completed_trace_points_without_objective=state[
                 "completed_trace_points_without_objective"
             ],
@@ -808,16 +919,29 @@ def summarize_convergence(
             instance,
             dimension,
             configuration_id,
-        ), state in sorted(coverage_state.items())
+            identity,
+        ), state in sorted(
+            coverage_state.items(),
+            key=lambda item: (
+                item[0][0],
+                item[0][1],
+                item[0][2],
+                -1 if item[0][3] is None else item[0][3],
+                item[0][5].instance_id,
+                item[0][4],
+            ),
+        )
     )
     return (
         tuple(
             sorted(
                 summaries,
                 key=lambda item: (
+                    item.campaign_id,
                     item.problem_family,
                     item.instance,
                     -1 if item.dimension is None else item.dimension,
+                    item.instance_identity.instance_id,
                     item.configuration_id,
                     item.evaluations,
                 ),
@@ -833,9 +957,9 @@ def summarize_convergence_curve(
 ) -> ConvergenceCurveSummary:
     """Summarize equal-length best-fitness traces using mean and population SD.
 
-    Checkpoints retain their zero-based iteration indices. The expected run
-    count is required so incomplete campaign data cannot yield a plausible
-    curve silently.
+    ``iterations`` contains zero-based sample positions, not observed iteration
+    or evaluation indices. Callers must establish alignment. The expected run
+    count prevents silently summarizing fewer traces than declared.
     """
 
     if (
@@ -858,9 +982,7 @@ def summarize_convergence_curve(
         if not values:
             raise AnalysisError(f"Trace {run_index} has no checkpoints")
         if any(not math.isfinite(value) for value in values):
-            raise AnalysisError(
-                f"Trace {run_index} contains a non-finite objective"
-            )
+            raise AnalysisError(f"Trace {run_index} contains a non-finite objective")
         if traces and len(values) != len(traces[0]):
             raise AnalysisError(
                 f"Trace {run_index} has {len(values)} checkpoints; "
@@ -920,7 +1042,8 @@ def aggregate_iteration_values(
         if any(
             value is None
             or value == ""
-            or isinstance(value, Number) and math.isnan(float(value))
+            or isinstance(value, Number)
+            and math.isnan(float(cast(SupportsFloat, value)))
             for value in key_values
         ):
             continue
@@ -985,7 +1108,7 @@ def friedman_objective_test(
     family_blocks: dict[
         tuple[str, str],
         dict[
-            tuple[str, int | None, str],
+            InstanceIdentity,
             dict[str, ObjectiveSummary],
         ],
     ] = defaultdict(lambda: defaultdict(dict))
@@ -993,7 +1116,7 @@ def friedman_objective_test(
 
     for summary in summaries:
         family_key = (summary.campaign_id, summary.problem_family)
-        block_key = (summary.instance, summary.dimension, summary.direction)
+        block_key = summary.instance_identity
         existing = family_blocks[family_key][block_key].get(summary.configuration_id)
         if existing is not None:
             raise AnalysisError(
@@ -1022,11 +1145,16 @@ def friedman_objective_test(
             )
 
         blocks = family_blocks[family_key]
-        included: list[tuple[str, int | None, str]] = []
-        excluded: list[tuple[str, int | None, str]] = []
+        included: list[InstanceIdentity] = []
+        excluded: list[InstanceIdentity] = []
         for block_key in sorted(
             blocks,
-            key=lambda item: (item[0], -1 if item[1] is None else item[1], item[2]),
+            key=lambda item: (
+                item.instance,
+                -1 if item.dimension is None else item.dimension,
+                item.direction,
+                item.instance_id,
+            ),
         ):
             by_configuration = blocks[block_key]
             complete = all(
@@ -1044,7 +1172,7 @@ def friedman_objective_test(
         }
         ties_present = False
         for block_key in included:
-            direction = block_key[2]
+            direction = block_key.direction
             scores: dict[str, float] = {}
             for configuration_id in configurations:
                 median = blocks[block_key][configuration_id].median
@@ -1142,16 +1270,11 @@ def friedman_posthoc_objective_tests(
     rows = list(run_rows)
     omnibus_results = friedman_objective_test(rows, alpha)
     summaries = summarize_objectives(rows)
-    summary_by_key: dict[
-        tuple[str, str, str, int | None, str, str], ObjectiveSummary
-    ] = {}
+    summary_by_key: dict[tuple[str, InstanceIdentity, str], ObjectiveSummary] = {}
     for summary in summaries:
         key = (
             summary.campaign_id,
-            summary.problem_family,
-            summary.instance,
-            summary.dimension,
-            summary.direction,
+            summary.instance_identity,
             summary.configuration_id,
         )
         if key in summary_by_key:
@@ -1189,16 +1312,13 @@ def friedman_posthoc_objective_tests(
         for baseline_id, candidate_id in pairs:
             rank_differences: list[float] = []
             if gate_status == "tested":
-                for instance, dimension, direction in omnibus.included_instances:
+                for identity in omnibus.included_instances:
                     scores: dict[str, float] = {}
                     for configuration_id in omnibus.configurations:
                         median = summary_by_key[
                             (
                                 omnibus.campaign_id,
-                                omnibus.problem_family,
-                                instance,
-                                dimension,
-                                direction,
+                                identity,
                                 configuration_id,
                             )
                         ].median
@@ -1207,12 +1327,10 @@ def friedman_posthoc_objective_tests(
                                 "Friedman complete block unexpectedly lacks a median"
                             )
                         scores[configuration_id] = (
-                            median if direction == "minimize" else -median
+                            median if identity.direction == "minimize" else -median
                         )
                     ranks = _average_ranks(scores)
-                    rank_differences.append(
-                        ranks[baseline_id] - ranks[candidate_id]
-                    )
+                    rank_differences.append(ranks[baseline_id] - ranks[candidate_id])
 
             if gate_status != "tested":
                 status = gate_status
@@ -1228,9 +1346,7 @@ def friedman_posthoc_objective_tests(
                 mean_rank_difference = statistics.fmean(rank_differences)
                 config_count = len(omnibus.configurations)
                 scale = math.sqrt(
-                    config_count
-                    * (config_count + 1)
-                    / (6 * omnibus.block_count)
+                    config_count * (config_count + 1) / (6 * omnibus.block_count)
                 )
                 studentized_range_statistic = (
                     abs(mean_rank_difference) * math.sqrt(2) / scale
@@ -1264,9 +1380,9 @@ def friedman_posthoc_objective_tests(
     results: list[FriedmanPostHocResult] = []
     for result in pending:
         omnibus = result["omnibus"]
-        family_size = len(omnibus.configurations) * (
-            len(omnibus.configurations) - 1
-        ) // 2
+        family_size = (
+            len(omnibus.configurations) * (len(omnibus.configurations) - 1) // 2
+        )
         family_id = (
             f"campaign={omnibus.campaign_id!r}:"
             f"problem_family={omnibus.problem_family!r}:"
@@ -1289,9 +1405,7 @@ def friedman_posthoc_objective_tests(
                 family_size=family_size,
                 alpha=alpha,
                 mean_rank_difference=result["mean_rank_difference"],
-                studentized_range_statistic=result[
-                    "studentized_range_statistic"
-                ],
+                studentized_range_statistic=result["studentized_range_statistic"],
                 p_value=result["p_value"],
                 reject_null=(
                     result["p_value"] <= alpha
@@ -1358,6 +1472,7 @@ def infer_paired_objectives(
             comparison.instance,
             comparison.dimension,
             comparison.direction,
+            comparison.instance_identity,
         )
         grouped_rows = {
             baseline_configuration_id: [],
@@ -1402,8 +1517,13 @@ def infer_paired_objectives(
                 method="auto",
                 zero_method="wilcox",
             )
-            statistic = float(result.statistic)
-            p_value = float(result.pvalue)
+            statistic_value, p_value_value = result
+            if not isinstance(statistic_value, SupportsFloat) or not isinstance(
+                p_value_value, SupportsFloat
+            ):
+                raise AnalysisError("SciPy Wilcoxon returned nonnumeric scalar results")
+            statistic = float(statistic_value)
+            p_value = float(p_value_value)
             effect = _matched_pairs_rank_biserial(nonzero_improvements)
         else:
             statistic = 0.0
@@ -1500,11 +1620,7 @@ def _matched_pairs_rank_biserial(improvements: list[float]) -> float | None:
                     negative_rank_sum += average_rank
         start = end
     rank_sum = positive_rank_sum + negative_rank_sum
-    return (
-        (positive_rank_sum - negative_rank_sum) / rank_sum
-        if rank_sum
-        else None
-    )
+    return (positive_rank_sum - negative_rank_sum) / rank_sum if rank_sum else None
 
 
 def _completed_by_pair(
@@ -1517,6 +1633,8 @@ def _completed_by_pair(
         replica_index = row.get("replica_index")
         random_seed = row.get("random_seed")
         try:
+            if replica_index is None or random_seed is None:
+                raise TypeError("replica identity cannot be None")
             pair = (int(replica_index), int(random_seed))
         except (TypeError, ValueError) as error:
             raise AnalysisError(

@@ -9,11 +9,14 @@ from pathlib import Path
 from afcs.metrics import load_metric_registry
 from afcs.persistence import (
     ExperimentRepository,
+    PlannedRun,
     RepositoryError,
     connect_v2_database,
+    utc_now,
 )
 
 from .configuration import LoadedCampaignConfig
+from .contracts import RunnableOptimizer
 from .factory import OptimizerFactory
 from .planning import CampaignPlanner, PersistedCampaignPlan
 from .runner import ExperimentRunExecutor
@@ -116,7 +119,9 @@ class CampaignOrchestrator:
         selected_metrics = self._repository.selected_metric_ids(campaign_id)
         for run_id in run_ids:
             plan = self._repository.get_planned_run(run_id)
-            optimizer = self._factory.build(plan, selected_metrics=selected_metrics)
+            optimizer = _prepare_optimizer(
+                self._repository, self._factory, plan, selected_metrics
+            )
             self._executor.execute(run_id, optimizer)
             executed += 1
         return executed
@@ -213,22 +218,43 @@ class CampaignOrchestrator:
         )
 
 
-def _execute_persisted_run(
-    database_path: Path, campaign_id: str, run_id: int
-) -> None:
+def _execute_persisted_run(database_path: Path, campaign_id: str, run_id: int) -> None:
     """Process-safe worker entry point; all mutable state is worker-local."""
 
     connection = connect_v2_database(database_path)
     try:
         repository = ExperimentRepository(connection, load_metric_registry())
         plan = repository.get_planned_run(run_id)
-        optimizer = OptimizerFactory().build(
+        optimizer = _prepare_optimizer(
+            repository,
+            OptimizerFactory(),
             plan,
-            selected_metrics=repository.selected_metric_ids(campaign_id),
+            repository.selected_metric_ids(campaign_id),
         )
         ExperimentRunExecutor(repository).execute(run_id, optimizer)
     finally:
         connection.close()
+
+
+def _prepare_optimizer(
+    repository: ExperimentRepository,
+    factory: OptimizerFactory,
+    plan: PlannedRun,
+    selected_metrics: tuple[str, ...],
+) -> RunnableOptimizer:
+    started_at = utc_now()
+    try:
+        return factory.build(plan, selected_metrics=selected_metrics)
+    except Exception as error:
+        with repository.transaction():
+            repository.start_run(plan.run_id, started_at=started_at)
+            repository.fail_run(
+                plan.run_id,
+                type(error).__name__,
+                str(error),
+                failure_phase="preparation",
+            )
+        raise
 
 
 # Compatibility name retained while callers migrate to the general API.

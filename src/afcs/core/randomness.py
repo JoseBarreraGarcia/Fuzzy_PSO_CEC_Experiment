@@ -6,9 +6,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-
 PAIRED_SEED_PROTOCOL = "paired_by_replica_v1"
 NUMPY_RNG_ENGINE = "numpy_seedsequence_pcg64_v1"
+MAX_SEED = 2**63 - 1
 _STREAM_IDS = {
     "initialization": 0,
     "dynamics": 1,
@@ -28,8 +28,8 @@ class RandomnessConfig:
     def __post_init__(self) -> None:
         if isinstance(self.base_seed, bool) or not isinstance(self.base_seed, int):
             raise TypeError("base_seed must be an integer")
-        if self.base_seed < 0:
-            raise ValueError("base_seed must be non-negative")
+        if not 0 <= self.base_seed <= MAX_SEED:
+            raise ValueError(f"base_seed must be between 0 and {MAX_SEED}")
         if self.protocol != PAIRED_SEED_PROTOCOL:
             raise ValueError(f"Unsupported seed protocol: {self.protocol!r}")
         if self.engine != NUMPY_RNG_ENGINE:
@@ -40,7 +40,10 @@ class RandomnessConfig:
             raise TypeError("replica_index must be an integer")
         if replica_index < 0:
             raise ValueError("replica_index must be non-negative")
-        return self.base_seed + replica_index
+        seed = self.base_seed + replica_index
+        if seed > MAX_SEED:
+            raise ValueError(f"replica seed must be between 0 and {MAX_SEED}")
+        return seed
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,8 +58,8 @@ class ReplicaRandomStreams:
             self.replica_seed, int
         ):
             raise TypeError("replica_seed must be an integer")
-        if self.replica_seed < 0:
-            raise ValueError("replica_seed must be non-negative")
+        if not 0 <= self.replica_seed <= MAX_SEED:
+            raise ValueError(f"replica_seed must be between 0 and {MAX_SEED}")
         if self.engine != NUMPY_RNG_ENGINE:
             raise ValueError(f"Unsupported RNG engine: {self.engine!r}")
 

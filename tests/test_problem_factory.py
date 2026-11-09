@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import unittest
 
-from afcs.core import Evaluation, OptimizationDirection, ReplicaRandomStreams, SearchSpace
+from afcs.core import (
+    Evaluation,
+    OptimizationDirection,
+    ReplicaRandomStreams,
+    SearchSpace,
+)
 from afcs.problems import CallableProblem, ProblemFactory, ProblemMetadata
 
 
@@ -66,9 +71,7 @@ class TestProblemFactory(unittest.TestCase):
                 lambda candidate: Evaluation(sum(value * value for value in candidate)),
             )
 
-        problem = ProblemFactory(
-            {"ENGINEERING_CONTINUOUS": build_fixture}
-        ).build(
+        problem = ProblemFactory({"ENGINEERING_CONTINUOUS": build_fixture}).build(
             family="ENGINEERING_CONTINUOUS",
             dimension=2,
             parameters={},

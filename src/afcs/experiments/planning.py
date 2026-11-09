@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from types import MappingProxyType
 from typing import Any
 
+from afcs.core import RandomnessConfig
+from afcs.core.serialization import freeze_json, freeze_json_mapping
 from afcs.optimizers import OptimizerRunMetadata
 from afcs.persistence import ExperimentRepository, canonical_json
-from afcs.core import RandomnessConfig
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,9 +41,11 @@ class CampaignDefinition:
             raise ValueError("replicas must be positive")
         if not isinstance(self.randomness, RandomnessConfig):
             raise TypeError("randomness must be RandomnessConfig")
+        self.randomness.seed_for_replica(self.replicas - 1)
         object.__setattr__(
-            self, "source_config", MappingProxyType(dict(self.source_config))
+            self, "source_config", freeze_json_mapping(self.source_config)
         )
+        object.__setattr__(self, "metric_selection", freeze_json(self.metric_selection))
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +56,10 @@ class TreatmentDefinition:
     run_metadata: OptimizerRunMetadata
 
     def __post_init__(self) -> None:
-        if not isinstance(self.configuration_id, str) or not self.configuration_id.strip():
+        if (
+            not isinstance(self.configuration_id, str)
+            or not self.configuration_id.strip()
+        ):
             raise ValueError("configuration_id must be a non-empty string")
         if not isinstance(self.run_metadata, OptimizerRunMetadata):
             raise TypeError("run_metadata must be OptimizerRunMetadata")
@@ -87,6 +92,7 @@ class CampaignPlanner:
         self._validate_treatments(normalized)
 
         configuration_metadata: dict[str, OptimizerRunMetadata] = {}
+        configuration_keys: dict[str, str] = {}
         problem_ids: dict[str, int] = {}
         run_ids: list[int] = []
 
@@ -119,8 +125,14 @@ class CampaignPlanner:
                     )
                 if treatment.configuration_id not in configuration_metadata:
                     configuration_metadata[treatment.configuration_id] = metadata
+                    configuration_keys[treatment.configuration_id] = (
+                        "campaign_configuration_v1:"
+                        + canonical_json(
+                            [campaign.campaign_id, treatment.configuration_id]
+                        )
+                    )
                     self._repository.add_algorithm_configuration(
-                        configuration_id=treatment.configuration_id,
+                        configuration_id=configuration_keys[treatment.configuration_id],
                         campaign_id=campaign.campaign_id,
                         algorithm=metadata.optimizer.optimizer_id,
                         optimizer_version=metadata.optimizer.version,
@@ -133,12 +145,15 @@ class CampaignPlanner:
                         budget_evaluations=metadata.evaluation_budget,
                         budget_iterations=metadata.iteration_budget,
                         population_size=metadata.population_size,
+                        treatment_id=treatment.configuration_id,
                     )
                 for replica_index in range(campaign.replicas):
                     run_ids.append(
                         self._repository.plan_run(
                             campaign_id=campaign.campaign_id,
-                            configuration_id=treatment.configuration_id,
+                            configuration_id=configuration_keys[
+                                treatment.configuration_id
+                            ],
                             instance_id=problem_ids[problem_key],
                             replica_index=replica_index,
                             random_seed=campaign.randomness.seed_for_replica(
@@ -149,7 +164,7 @@ class CampaignPlanner:
 
         return PersistedCampaignPlan(
             campaign_id=campaign.campaign_id,
-            configuration_ids=tuple(configuration_metadata),
+            configuration_ids=tuple(configuration_keys.values()),
             instance_ids=tuple(problem_ids.values()),
             run_ids=tuple(run_ids),
         )

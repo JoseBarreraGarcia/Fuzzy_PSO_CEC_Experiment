@@ -16,7 +16,6 @@ from .benchmarks import (
 )
 from .benchmarks.cec2017 import CEC2017Problem
 
-
 ProblemBuilder = Callable[
     [int, Mapping[str, Any], ReplicaRandomStreams], OptimizationProblem
 ]
@@ -36,9 +35,7 @@ class ProblemFactory:
             else builders
         )
         if not configured or any(
-            not isinstance(family, str)
-            or not family.strip()
-            or not callable(builder)
+            not isinstance(family, str) or not family.strip() or not callable(builder)
             for family, builder in configured.items()
         ):
             raise ValueError("builders must map problem family IDs to callables")

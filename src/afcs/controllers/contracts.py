@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-import math
 from types import MappingProxyType
 from typing import Any, Protocol, runtime_checkable
 
@@ -47,18 +47,18 @@ class ParameterPolicy(Protocol):
 
     policy_id: str
     policy_version: str
-    compatible_parameters: tuple[str, ...]
 
     @property
-    def configuration(self) -> Mapping[str, Any]:
-        ...
+    def compatible_parameters(self) -> tuple[str, ...]: ...
+
+    @property
+    def configuration(self) -> Mapping[str, Any]: ...
 
     def propose(
         self,
         state: SearchState,
         current_parameters: Mapping[str, float],
-    ) -> ParameterUpdate:
-        ...
+    ) -> ParameterUpdate: ...
 
 
 class NoAdaptation:
@@ -82,4 +82,3 @@ class NoAdaptation:
         if not isinstance(current_parameters, Mapping):
             raise TypeError("current_parameters must be a mapping")
         return ParameterUpdate(self.policy_id, self.policy_version)
-

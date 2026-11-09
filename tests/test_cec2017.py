@@ -1,18 +1,10 @@
 import unittest
 import warnings
-import sys
-from pathlib import Path
 
 import numpy as np
 
-SRC = Path(__file__).resolve().parents[1] / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
 from afcs.problems.benchmarks.cec2017 import composition, functions, transforms
 from afcs.problems.benchmarks.cec2017.problem import CEC2017Problem
-from Problem.Benchmark.Problem import fitness
-
 
 EXPERIMENT_DIMENSIONS = (10, 30, 50, 100)
 OFFICIAL_FUNCTION_NUMBERS = tuple(i for i in range(1, 31) if i != 2)
@@ -75,23 +67,23 @@ class TestCEC2017Suite(unittest.TestCase):
                     self.assertTrue(np.all(np.isfinite(first)))
                     np.testing.assert_array_equal(first, second)
 
-    def test_dispatcher_accepts_supported_dimension(self):
-        value = fitness("F21CEC2017", np.zeros(30))
+    def test_adapter_accepts_supported_dimension(self):
+        value = CEC2017Problem(21, 30).evaluate(np.zeros(30)).objective
         self.assertTrue(np.isfinite(value))
 
-    def test_dispatcher_rejects_deprecated_f2(self):
-        with self.assertRaisesRegex(ValueError, "retirada"):
-            fitness("F2CEC2017", np.zeros(30))
+    def test_adapter_rejects_deprecated_f2(self):
+        with self.assertRaisesRegex(ValueError, "F2"):
+            CEC2017Problem(2, 30)
 
-    def test_dispatcher_rejects_unsupported_dimension(self):
-        with self.assertRaisesRegex(ValueError, "Dimension CEC2017 no admitida"):
-            fitness("F1CEC2017", np.zeros(7))
+    def test_adapter_rejects_unsupported_dimension(self):
+        with self.assertRaisesRegex(ValueError, "dimension"):
+            CEC2017Problem(1, 7)
 
-    def test_dispatcher_rejects_non_finite_input(self):
+    def test_adapter_rejects_non_finite_input(self):
         point = np.zeros(30)
         point[0] = np.nan
-        with self.assertRaisesRegex(ValueError, "NaN o infinitas"):
-            fitness("F1CEC2017", point)
+        with self.assertRaisesRegex(ValueError, "finite"):
+            CEC2017Problem(1, 30).evaluate(point)
 
     def test_v2_adapter_matches_raw_implementation(self):
         rng = np.random.default_rng(20261019)

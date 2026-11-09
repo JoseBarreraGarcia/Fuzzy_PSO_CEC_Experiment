@@ -1,20 +1,19 @@
 """Versioned SQLite schema bootstrap for v2 experimental campaigns.
 
-This module intentionally coexists with :mod:`BD.sqlite`. It prepares the new
-schema without changing legacy databases or the current experiment runner.
+This module prepares the campaign schema without importing or automatically
+converting historical databases.
 """
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import hashlib
 import json
-from pathlib import Path
 import re
 import sqlite3
+from dataclasses import asdict, dataclass
+from pathlib import Path
 
 from afcs.metrics import MetricRegistry
-
 
 DEFAULT_MIGRATIONS_DIR = Path(__file__).with_name("migrations")
 MIGRATION_NAME_PATTERN = re.compile(r"^(?P<version>[0-9]{3})_[a-z0-9_]+\.sql$")
@@ -35,9 +34,29 @@ def connect_v2_database(path: str | Path) -> sqlite3.Connection:
     """Open a v2 database connection with integrity settings enabled."""
 
     connection = sqlite3.connect(Path(path), timeout=30)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA foreign_keys = ON")
-    connection.execute("PRAGMA journal_mode = WAL")
+    try:
+        connection.row_factory = sqlite3.Row
+        current_schema_version(connection)
+        connection.execute("PRAGMA foreign_keys = ON")
+        connection.execute("PRAGMA journal_mode = WAL")
+    except Exception:
+        connection.close()
+        raise
+    return connection
+
+
+def connect_readonly_v2_database(path: str | Path) -> sqlite3.Connection:
+    """Open existing current-schema evidence without bootstrap or migration."""
+
+    uri = Path(path).resolve().as_uri() + "?mode=ro"
+    connection = sqlite3.connect(uri, uri=True, timeout=30)
+    try:
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA query_only = ON")
+        validate_current_schema(connection)
+    except Exception:
+        connection.close()
+        raise
     return connection
 
 
@@ -73,12 +92,80 @@ def discover_migrations(
     return tuple(migrations)
 
 
+def _validated_schema_version(
+    connection: sqlite3.Connection, migrations: tuple[Migration, ...]
+) -> int:
+    ledger = connection.execute(
+        "SELECT type FROM sqlite_master WHERE name='schema_migrations'"
+    ).fetchone()
+    if ledger is None:
+        rows = []
+    else:
+        if ledger[0] != "table":
+            raise MigrationError("schema_migrations must be a table")
+        try:
+            rows = connection.execute(
+                "SELECT version, name FROM schema_migrations ORDER BY version"
+            ).fetchall()
+        except sqlite3.Error as error:
+            raise MigrationError(f"Invalid migration ledger: {error}") from error
+    versions = [row[0] for row in rows]
+    latest = migrations[-1].version
+    if any(not isinstance(version, int) for version in versions):
+        raise MigrationError("Migration ledger versions must be integers")
+    if any(version > latest for version in versions):
+        raise MigrationError(
+            f"Unsupported future schema: found={versions}, latest supported={latest}"
+        )
+    if versions != list(range(1, len(versions) + 1)):
+        raise MigrationError(
+            f"Migration ledger must be a contiguous prefix: {versions}"
+        )
+    for row, migration in zip(rows, migrations):
+        if row[1] != migration.name:
+            raise MigrationError(
+                f"Migration {migration.version} name mismatch: "
+                f"database={row[1]!r}, file={migration.name!r}"
+            )
+    if (
+        not versions
+        and connection.execute(
+            """
+        SELECT name FROM sqlite_master
+        WHERE name NOT LIKE 'sqlite_%' AND name != 'schema_migrations'
+        LIMIT 1
+        """
+        ).fetchone()
+        is not None
+    ):
+        raise MigrationError("Cannot bootstrap a nonempty unversioned database")
+    return len(versions)
+
+
+def validate_current_schema(connection: sqlite3.Connection) -> None:
+    """Require the current known ledger, without changing the connection's data."""
+
+    migrations = discover_migrations()
+    version = _validated_schema_version(connection, migrations)
+    if version != migrations[-1].version:
+        raise MigrationError(
+            f"Operation requires current schema {migrations[-1].version}; "
+            f"found {version}. Migrate explicitly before inspection."
+        )
+
+
 def apply_migrations(
     connection: sqlite3.Connection,
     migrations_dir: str | Path = DEFAULT_MIGRATIONS_DIR,
 ) -> tuple[int, ...]:
     """Apply missing migrations and return the versions applied in this call."""
 
+    if connection.in_transaction:
+        raise MigrationError("Cannot apply migrations inside an active transaction")
+    migrations = discover_migrations(migrations_dir)
+    version = _validated_schema_version(connection, migrations)
+    if version == migrations[-1].version:
+        return ()
     connection.execute(
         """
         CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -90,22 +177,9 @@ def apply_migrations(
     )
     connection.commit()
 
-    applied_rows = connection.execute(
-        "SELECT version, name FROM schema_migrations ORDER BY version"
-    ).fetchall()
-    applied = {int(row["version"]): str(row["name"]) for row in applied_rows}
     newly_applied: list[int] = []
 
-    for migration in discover_migrations(migrations_dir):
-        if migration.version in applied:
-            if applied[migration.version] != migration.name:
-                raise MigrationError(
-                    f"Migration {migration.version} name mismatch: "
-                    f"database={applied[migration.version]!r}, "
-                    f"file={migration.name!r}"
-                )
-            continue
-
+    for migration in migrations[version:]:
         sql = migration.path.read_text(encoding="utf-8")
         try:
             connection.executescript(sql)
@@ -132,10 +206,9 @@ def initialize_v2_database(path: str | Path) -> sqlite3.Connection:
 
 
 def current_schema_version(connection: sqlite3.Connection) -> int:
-    row = connection.execute(
-        "SELECT COALESCE(MAX(version), 0) AS version FROM schema_migrations"
-    ).fetchone()
-    return int(row["version"])
+    """Return a validated known prefix version, not an unchecked MAX marker."""
+
+    return _validated_schema_version(connection, discover_migrations())
 
 
 def sync_metric_definitions(
@@ -151,7 +224,10 @@ def sync_metric_definitions(
     inserted = 0
     for definition in registry.metrics.values():
         payload = json.dumps(
-            asdict(definition), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            asdict(definition),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
         )
         digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         existing = connection.execute(
@@ -195,7 +271,9 @@ def configure_campaign_metrics(
     if campaign is None:
         raise MigrationError(f"Unknown campaign: {campaign_id!r}")
     if campaign["status"] != "draft":
-        raise MigrationError("Metric selection can only change while a campaign is draft")
+        raise MigrationError(
+            "Metric selection can only change while a campaign is draft"
+        )
 
     sync_metric_definitions(connection, registry)
     resolved = registry.resolve(selection)

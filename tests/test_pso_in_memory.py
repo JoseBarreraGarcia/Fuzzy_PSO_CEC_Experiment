@@ -1,7 +1,9 @@
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
+from afcs.controllers import ParameterUpdate
 from afcs.core import OptimizationDirection, ReplicaRandomStreams, SearchSpace
 from afcs.metrics import PSOTraceCollector, TraceSampling
 from afcs.optimizers.pso import (
@@ -10,6 +12,7 @@ from afcs.optimizers.pso import (
     LegacyCompatiblePSO,
     LegacyLinearInertia,
     LegacyPSORunConfig,
+    advance_swarm,
 )
 from afcs.problems import CallableProblem, ProblemMetadata
 
@@ -30,6 +33,73 @@ def sphere_problem(
 
 
 class TestPSOInMemory(unittest.TestCase):
+    def test_motion_consumes_cognitive_then_social_matrices_from_dynamics_stream(self):
+        config = LegacyPSORunConfig(population_size=3, max_iterations=2)
+        expected_rng = ReplicaRandomStreams(42).generator("dynamics")
+        with patch(
+            "afcs.optimizers.pso.optimizer.advance_swarm", wraps=advance_swarm
+        ) as motion:
+            LegacyCompatiblePSO(
+                problem=sphere_problem(),
+                config=config,
+                inertia_policy=FixedInertia(0.5),
+                random_streams=ReplicaRandomStreams(42),
+            ).run()
+
+        self.assertEqual(motion.call_count, config.max_iterations)
+        for call in motion.call_args_list:
+            np.testing.assert_array_equal(
+                call.kwargs["cognitive_random"], expected_rng.random((3, 2))
+            )
+            np.testing.assert_array_equal(
+                call.kwargs["social_random"], expected_rng.random((3, 2))
+            )
+
+    def test_fuzzy_and_replayed_inertia_share_the_same_search_trajectory(self):
+        config = LegacyPSORunConfig(population_size=5, max_iterations=2)
+        fuzzy = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=FuzzyInertiaPolicy(
+                max_iterations=2, granularity=3, rule_base="R1", overlap=1.0
+            ),
+            random_streams=ReplicaRandomStreams(42),
+        ).run()
+
+        class ReplayInertia:
+            policy_id = "test_replay_inertia"
+            policy_version = "1"
+            compatible_parameters = ("w",)
+            configuration = {"values": fuzzy.inertia_history}
+
+            def propose(self, state, current_parameters):
+                return ParameterUpdate(
+                    policy_id=self.policy_id,
+                    policy_version=self.policy_version,
+                    values={"w": fuzzy.inertia_history[state.iteration - 1]},
+                    reason="replaying observed inertia for motion regression",
+                )
+
+        replayed = LegacyCompatiblePSO(
+            problem=sphere_problem(),
+            config=config,
+            inertia_policy=ReplayInertia(),
+            random_streams=ReplicaRandomStreams(42),
+        ).run()
+        self.assertEqual(len(fuzzy.inertia_history), 2)
+        self.assertEqual(fuzzy.inertia_history, replayed.inertia_history)
+        np.testing.assert_array_equal(fuzzy.positions, replayed.positions)
+        np.testing.assert_array_equal(fuzzy.objective_values, replayed.objective_values)
+        self.assertEqual(fuzzy.best_objective, replayed.best_objective)
+        self.assertEqual(fuzzy.evaluations, 15)
+        self.assertEqual(replayed.evaluations, fuzzy.evaluations)
+        self.assertEqual(
+            fuzzy.initial_population_sha256, replayed.initial_population_sha256
+        )
+        self.assertEqual(
+            fuzzy.initial_velocity_sha256, replayed.initial_velocity_sha256
+        )
+
     def test_component_times_are_measured_at_explicit_boundaries(self):
         class StepClock:
             def __init__(self):
@@ -157,9 +227,7 @@ class TestPSOInMemory(unittest.TestCase):
         self.assertEqual(
             fixed.initial_population_sha256, linear.initial_population_sha256
         )
-        self.assertEqual(
-            fixed.initial_velocity_sha256, linear.initial_velocity_sha256
-        )
+        self.assertEqual(fixed.initial_velocity_sha256, linear.initial_velocity_sha256)
 
     def test_fuzzy_policy_uses_initial_population_then_persists_diagnostics(self):
         config = LegacyPSORunConfig(population_size=5, max_iterations=2)

@@ -1,8 +1,9 @@
 import unittest
+from dataclasses import fields
 
 from afcs.controllers import NoAdaptation, ParameterPolicy, ParameterUpdate
 from afcs.optimizers import OptimizerMetadata, SearchState
-from afcs.optimizers.pso import LegacyLinearInertia
+from afcs.optimizers.pso import FixedInertia, LegacyLinearInertia
 
 
 class TestOptimizerContracts(unittest.TestCase):
@@ -49,7 +50,14 @@ class TestOptimizerContracts(unittest.TestCase):
         self.assertAlmostEqual(update.values["w"], 0.74)
         self.assertEqual(update.policy_id, "legacy_ldiw")
 
+    def test_policy_capabilities_are_not_dataclass_constructor_parameters(self):
+        for policy in (FixedInertia(0.7), LegacyLinearInertia(10)):
+            self.assertIsInstance(policy, ParameterPolicy)
+            self.assertEqual(policy.compatible_parameters, ("w",))
+            self.assertNotIn(
+                "compatible_parameters", {field.name for field in fields(policy)}
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
-

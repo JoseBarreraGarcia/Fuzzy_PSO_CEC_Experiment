@@ -11,4 +11,3 @@ __all__ = [
     "ProblemFactory",
     "ProblemMetadata",
 ]
-

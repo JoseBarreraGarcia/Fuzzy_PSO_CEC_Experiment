@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -87,18 +87,11 @@ def advance_swarm(
 
     new_velocities = (
         inertia * velocities
-        + config.cognitive
-        * cognitive_random
-        * (personal_best - positions)
-        + config.social
-        * social_random
-        * (global_best - positions)
+        + config.cognitive * cognitive_random * (personal_best - positions)
+        + config.social * social_random * (global_best - positions)
     )
-    new_velocities = np.clip(
-        new_velocities, -maximum_velocity, maximum_velocity
-    )
+    new_velocities = np.clip(new_velocities, -maximum_velocity, maximum_velocity)
     return PSOStepResult(
         positions=positions + new_velocities,
         velocities=new_velocities,
     )
-

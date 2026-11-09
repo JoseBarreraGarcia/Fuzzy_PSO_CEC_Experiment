@@ -1,8 +1,9 @@
 import sqlite3
 import tempfile
-from pathlib import Path
 import unittest
+from pathlib import Path
 
+from afcs.metrics import load_metric_registry
 from afcs.persistence import (
     MigrationError,
     apply_migrations,
@@ -11,8 +12,6 @@ from afcs.persistence import (
     initialize_v2_database,
     sync_metric_definitions,
 )
-from afcs.metrics import load_metric_registry
-
 
 HASH = "0" * 64
 
@@ -74,7 +73,7 @@ class TestPersistenceV2(unittest.TestCase):
         return instance_id
 
     def test_migration_is_idempotent(self):
-        self.assertEqual(current_schema_version(self.connection), 5)
+        self.assertEqual(current_schema_version(self.connection), 7)
         self.assertEqual(apply_migrations(self.connection), ())
 
     def test_expected_tables_exist(self):
@@ -103,7 +102,9 @@ class TestPersistenceV2(unittest.TestCase):
         )
 
     def test_foreign_keys_are_enforced(self):
-        self.assertEqual(self.connection.execute("PRAGMA foreign_keys").fetchone()[0], 1)
+        self.assertEqual(
+            self.connection.execute("PRAGMA foreign_keys").fetchone()[0], 1
+        )
         with self.assertRaises(sqlite3.IntegrityError):
             self.connection.execute(
                 """
@@ -260,12 +261,15 @@ class TestPersistenceV2(unittest.TestCase):
 
     def test_registry_snapshots_are_immutable_and_idempotent(self):
         registry = load_metric_registry()
-        self.assertEqual(sync_metric_definitions(self.connection, registry), 40)
+        expected_count = len(registry.metrics)
+        self.assertEqual(
+            sync_metric_definitions(self.connection, registry), expected_count
+        )
         self.assertEqual(sync_metric_definitions(self.connection, registry), 0)
         count = self.connection.execute(
             "SELECT COUNT(*) FROM metric_definitions"
         ).fetchone()[0]
-        self.assertEqual(count, 40)
+        self.assertEqual(count, expected_count)
 
     def test_campaign_metric_profile_is_persisted(self):
         self._insert_campaign_graph()

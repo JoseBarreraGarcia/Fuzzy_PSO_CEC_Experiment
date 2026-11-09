@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-
-DEFAULT_REGISTRY_PATH = (
-    Path(__file__).with_name("definitions.json")
-)
+DEFAULT_REGISTRY_PATH = Path(__file__).with_name("definitions.json")
 
 REQUIRED_DEFINITION_FIELDS = frozenset(
     {
@@ -50,6 +47,12 @@ class MetricDefinition:
     aggregation: str
     missing_policy: str
 
+    @property
+    def available(self) -> bool:
+        """Historical definitions remain readable, but have no v2 producer."""
+
+        return not self.source.startswith("historical_review:")
+
 
 @dataclass(frozen=True)
 class MetricRegistry:
@@ -69,7 +72,9 @@ class MetricRegistry:
 
         if isinstance(selection, str):
             if selection == "all":
-                selected.update(self.metrics)
+                selected.update(
+                    key for key, item in self.metrics.items() if item.available
+                )
             elif selection in self.profiles:
                 selected.update(self.profiles[selection])
             else:
@@ -85,7 +90,9 @@ class MetricRegistry:
 
             profile = selection.get("profile", "minimal")
             if profile == "all":
-                selected.update(self.metrics)
+                selected.update(
+                    key for key, item in self.metrics.items() if item.available
+                )
             elif profile in self.profiles:
                 selected.update(self.profiles[profile])
             else:
@@ -109,6 +116,12 @@ class MetricRegistry:
                 "Metric selection must be a profile name, 'all', a list, or an object"
             )
 
+        unavailable = [key for key in selected if not self.metrics[key].available]
+        if unavailable:
+            raise MetricRegistryError(
+                "Metrics not available as v2 calculations: "
+                + ", ".join(sorted(unavailable))
+            )
         return tuple(metric_id for metric_id in self.metrics if metric_id in selected)
 
     def _validate_metric_ids(
@@ -165,8 +178,10 @@ def parse_metric_registry(raw: Mapping[str, Any]) -> MetricRegistry:
         if not isinstance(definition["version"], int) or definition["version"] < 1:
             raise MetricRegistryError(f"Metric {metric_id!r} has invalid version")
         scope = definition["scope"]
-        if not isinstance(scope, list) or not scope or not all(
-            isinstance(value, str) and value for value in scope
+        if (
+            not isinstance(scope, list)
+            or not scope
+            or not all(isinstance(value, str) and value for value in scope)
         ):
             raise MetricRegistryError(f"Metric {metric_id!r} has invalid scope")
 
@@ -199,11 +214,15 @@ def parse_metric_registry(raw: Mapping[str, Any]) -> MetricRegistry:
 def _validate_registry_metric_list(
     values: Any, definitions: Mapping[str, MetricDefinition], field_name: str
 ) -> tuple[str, ...]:
-    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+    if not isinstance(values, list) or not all(
+        isinstance(value, str) for value in values
+    ):
         raise MetricRegistryError(f"{field_name} must be a list of metric IDs")
     if len(values) != len(set(values)):
         raise MetricRegistryError(f"{field_name} contains duplicate metric IDs")
     unknown = set(values) - set(definitions)
     if unknown:
-        raise MetricRegistryError(f"Unknown metric IDs in {field_name}: {sorted(unknown)}")
+        raise MetricRegistryError(
+            f"Unknown metric IDs in {field_name}: {sorted(unknown)}"
+        )
     return tuple(values)

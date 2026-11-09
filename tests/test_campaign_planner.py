@@ -1,6 +1,6 @@
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
@@ -22,9 +22,7 @@ class TestCampaignPlanner(unittest.TestCase):
         self.connection = initialize_v2_database(
             Path(self.temp_dir.name) / "planner.db"
         )
-        self.repository = ExperimentRepository(
-            self.connection, load_metric_registry()
-        )
+        self.repository = ExperimentRepository(self.connection, load_metric_registry())
         self.planner = CampaignPlanner(self.repository)
 
     def tearDown(self):
@@ -38,18 +36,17 @@ class TestCampaignPlanner(unittest.TestCase):
         )
         result = self.planner.persist(self._campaign(replicas=3), treatments)
 
-        self.assertEqual(result.configuration_ids, ("pso-fixed",))
+        self.assertEqual(
+            result.configuration_ids,
+            ('campaign_configuration_v1:["campaign","pso-fixed"]',),
+        )
         self.assertEqual(len(result.instance_ids), 2)
         self.assertEqual(len(result.run_ids), 6)
         rows = self.connection.execute(
             "SELECT replica_index, random_seed FROM runs ORDER BY run_id"
         ).fetchall()
-        self.assertEqual(
-            [row["replica_index"] for row in rows], [0, 1, 2, 0, 1, 2]
-        )
-        self.assertEqual(
-            [row["random_seed"] for row in rows], [42, 43, 44, 42, 43, 44]
-        )
+        self.assertEqual([row["replica_index"] for row in rows], [0, 1, 2, 0, 1, 2])
+        self.assertEqual([row["random_seed"] for row in rows], [42, 43, 44, 42, 43, 44])
 
     def test_31_replicas_use_seeds_42_through_72_for_every_treatment(self):
         treatments = (
@@ -69,7 +66,13 @@ class TestCampaignPlanner(unittest.TestCase):
             by_configuration.setdefault(row["configuration_id"], []).append(
                 row["random_seed"]
             )
-        self.assertEqual(set(by_configuration), {"pso-fixed-04", "pso-fixed-08"})
+        self.assertEqual(
+            set(by_configuration),
+            {
+                'campaign_configuration_v1:["campaign","pso-fixed-04"]',
+                'campaign_configuration_v1:["campaign","pso-fixed-08"]',
+            },
+        )
         for seeds in by_configuration.values():
             self.assertEqual(seeds, list(range(42, 73)))
 

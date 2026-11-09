@@ -1,0 +1,69 @@
+{
+  "$schema": "../schemas/campaign_v1.schema.json",
+  "_documentation": {
+    "purpose": "Plantilla técnica de las variantes aprobadas en R2-G; no es un protocolo científico autorizado.",
+    "comparability": "Los tres tratamientos comparten velocidad por amplitud, coeficientes, población y NFE. Cambia sólo la política de inercia.",
+    "precision": "FCS usa Hussain v2 sin redondeo interno. La telemetría diversity_hussain histórica conserva su definición v1; fuzzy_input_diversity es la entrada efectiva del FIS.",
+    "compatibility": "Los ejemplos históricos y las opciones omitidas no cambian de fórmula automáticamente."
+  },
+  "schema_version": 1,
+  "campaign": {
+    "id": "classical-pso-recommended-v2-example",
+    "name": "Versioned PSO definitions technical example",
+    "replicas": 1,
+    "metrics": "fuzzy"
+  },
+  "randomness": {
+    "protocol": "paired_by_replica_v1",
+    "base_seed": 42,
+    "engine": "numpy_seedsequence_pcg64_v1"
+  },
+  "problems": [{"family": "CLASSICAL", "functions": [1], "dimensions": [2]}],
+  "treatments": [
+    {
+      "id": "pso-width-fixed",
+      "optimizer": "PSO",
+      "parameters": {
+        "population_size": 4, "max_iterations": 2,
+        "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1,
+        "velocity_rule": "domain_width_v1"
+      },
+      "parameter_policy": {"id": "fixed_inertia", "parameters": {"value": 0.7}}
+    },
+    {
+      "id": "pso-width-linear",
+      "optimizer": "PSO",
+      "parameters": {
+        "population_size": 4, "max_iterations": 2,
+        "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1,
+        "velocity_rule": "domain_width_v1"
+      },
+      "parameter_policy": {
+        "id": "linear_endpoints_v1", "parameters": {"maximum": 0.9, "minimum": 0.1}
+      }
+    },
+    {
+      "id": "pso-width-fuzzy",
+      "optimizer": "PSO",
+      "parameters": {
+        "population_size": 4, "max_iterations": 2,
+        "cognitive": 2.0, "social": 2.0, "velocity_factor": 0.1,
+        "velocity_rule": "domain_width_v1"
+      },
+      "parameter_policy": {
+        "id": "fuzzy_inertia_mamdani",
+        "parameters": {
+          "minimum": 0.1, "maximum": 0.9, "granularity": 3, "rule_base": "R1",
+          "membership_family": "triangular_v1",
+          "overlap": {"mode": "shared", "value": 0.5},
+          "zero_overlap_boundary_policy": "nearest_center_tie_upper",
+          "diversity_metric": "hussain_diversity_v2"
+        }
+      }
+    }
+  ],
+  "execution": {"parallel_workers": 1},
+  "trace": {
+    "enabled": true, "every_iterations": 1, "include_initial": true, "include_final": true
+  }
+}

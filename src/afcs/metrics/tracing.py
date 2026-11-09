@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-import math
 from types import MappingProxyType
 
 import numpy as np
 
-
-PSO_TRACE_METRICS = frozenset(
+OPTIMIZATION_TRACE_METRICS = frozenset(
     {
         "iteration_index",
         "iteration_time_seconds",
         "objective_best",
         "evaluations",
+    }
+)
+
+POPULATION_TRACE_METRICS = frozenset(
+    {
         "objective_mean",
         "objective_std",
         "diversity_hussain",
@@ -25,6 +29,24 @@ PSO_TRACE_METRICS = frozenset(
         "diversity_dimension_mean",
         "diversity_dimension_min",
         "diversity_dimension_max",
+    }
+)
+
+PSO_TRACE_METRICS = frozenset(
+    {
+        "inertia_weight",
+    }
+)
+
+GA_TRACE_METRICS = frozenset(
+    {
+        "crossover_probability",
+        "mutation_probability",
+    }
+)
+
+CONTROLLER_TRACE_METRICS = frozenset(
+    {
         "progress_ratio",
         "fuzzy_input_diversity",
         "fuzzy_membership_degrees",
@@ -37,8 +59,14 @@ PSO_TRACE_METRICS = frozenset(
         "fuzzy_boundary_event_count",
         "fuzzy_no_activation_count",
         "fuzzy_fallback_count",
-        "inertia_weight",
     }
+)
+ALL_TRACE_METRICS = (
+    OPTIMIZATION_TRACE_METRICS
+    | POPULATION_TRACE_METRICS
+    | PSO_TRACE_METRICS
+    | GA_TRACE_METRICS
+    | CONTROLLER_TRACE_METRICS
 )
 
 
@@ -70,10 +98,7 @@ class TraceSampling:
             return False
         if iteration == 0:
             return self.include_initial
-        return (
-            iteration % self.every_iterations == 0
-            or iteration == maximum_iteration
-        )
+        return iteration % self.every_iterations == 0 or iteration == maximum_iteration
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,8 +122,38 @@ class OptimizationTracePoint:
         object.__setattr__(self, "metrics", MappingProxyType(dict(self.metrics)))
 
 
-class PSOTraceCollector:
-    """Collect selected PSO metrics without influencing swarm dynamics."""
+@dataclass(frozen=True, slots=True)
+class OptimizationObservation:
+    """Method-neutral state recorded at one completed optimization checkpoint."""
+
+    iteration: int
+    evaluations: int
+    best_objective: float
+    elapsed_seconds: float
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("iteration", self.iteration),
+            ("evaluations", self.evaluations),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{name} must be a non-negative integer")
+        if not math.isfinite(float(self.best_objective)):
+            raise ValueError("best_objective must be finite")
+        if not math.isfinite(float(self.elapsed_seconds)) or self.elapsed_seconds < 0:
+            raise ValueError("elapsed_seconds must be finite and non-negative")
+
+
+@dataclass(frozen=True, slots=True)
+class PopulationObservation:
+    """Population state shared by population-based optimizer metric providers."""
+
+    positions: np.ndarray
+    objective_values: np.ndarray
+
+
+class OptimizationTraceCollector:
+    """Collect method-neutral and optional population metrics."""
 
     def __init__(
         self,
@@ -106,14 +161,26 @@ class PSOTraceCollector:
         selected_metrics: Iterable[str],
         sampling: TraceSampling,
         maximum_iteration: int,
-        lower_bounds: Iterable[float],
-        upper_bounds: Iterable[float],
+        lower_bounds: Iterable[float] | None = None,
+        upper_bounds: Iterable[float] | None = None,
     ) -> None:
-        self._selected = frozenset(selected_metrics).intersection(PSO_TRACE_METRICS)
+        if (lower_bounds is None) != (upper_bounds is None):
+            raise ValueError("lower_bounds and upper_bounds must be provided together")
+        self._selected = frozenset(selected_metrics).intersection(
+            OPTIMIZATION_TRACE_METRICS | POPULATION_TRACE_METRICS
+        )
         self._sampling = sampling
         self._maximum_iteration = maximum_iteration
-        self._lower = np.asarray(tuple(lower_bounds), dtype=float)
-        self._upper = np.asarray(tuple(upper_bounds), dtype=float)
+        self._lower = (
+            np.asarray(tuple(lower_bounds), dtype=float)
+            if lower_bounds is not None
+            else None
+        )
+        self._upper = (
+            np.asarray(tuple(upper_bounds), dtype=float)
+            if upper_bounds is not None
+            else None
+        )
         self._maximum_diversity = 0.0
         self._points: list[OptimizationTracePoint] = []
 
@@ -124,15 +191,42 @@ class PSOTraceCollector:
     def observe(
         self,
         *,
-        iteration: int,
-        evaluations: int,
-        positions: np.ndarray,
-        objective_values: np.ndarray,
-        best_objective: float,
-        elapsed_seconds: float,
-        inertia_weight: float | None,
-        policy_diagnostics: Mapping[str, object] | None = None,
+        observation: OptimizationObservation,
+        population: PopulationObservation | None = None,
     ) -> None:
+        if not isinstance(observation, OptimizationObservation):
+            raise TypeError("observation must be OptimizationObservation")
+        metrics = {
+            "iteration_index": observation.iteration,
+            "iteration_time_seconds": observation.elapsed_seconds,
+            "objective_best": observation.best_objective,
+            "evaluations": observation.evaluations,
+        }
+        if population is not None:
+            metrics.update(self._population_metrics(population))
+        self._record(observation, metrics)
+
+    def _population_metrics(
+        self, population: PopulationObservation
+    ) -> dict[str, object]:
+        if not isinstance(population, PopulationObservation):
+            raise TypeError("population must be PopulationObservation")
+        positions = _population(population.positions)
+        objective_values = np.asarray(population.objective_values, dtype=float)
+        if (
+            objective_values.ndim != 1
+            or not objective_values.size
+            or objective_values.size != positions.shape[0]
+            or not np.all(np.isfinite(objective_values))
+        ):
+            raise ValueError(
+                "objective_values must be a finite vector matching the population"
+            )
+        metrics: dict[str, object] = {}
+        if self._selected.intersection({"objective_mean", "objective_std"}):
+            metrics["objective_mean"] = float(np.mean(objective_values))
+            metrics["objective_std"] = float(np.std(objective_values))
+
         diversity_metrics = {
             "diversity_hussain",
             "exploration_percent",
@@ -142,29 +236,18 @@ class PSOTraceCollector:
         if self._selected.intersection(diversity_metrics):
             diversity = hussain_diversity_v1(positions)
             self._maximum_diversity = max(self._maximum_diversity, diversity)
-        if not self._sampling.includes(iteration, self._maximum_iteration):
-            return
-
-        candidates: dict[str, object] = {
-            "iteration_index": iteration,
-            "iteration_time_seconds": elapsed_seconds,
-            "objective_best": best_objective,
-            "evaluations": evaluations,
-            "objective_mean": float(np.mean(objective_values)),
-            "objective_std": float(np.std(objective_values)),
-        }
         if diversity is not None:
-            candidates["diversity_hussain"] = diversity
+            metrics["diversity_hussain"] = diversity
             exploration, exploitation = exploration_exploitation_v1(
                 diversity, self._maximum_diversity
             )
-            candidates["exploration_percent"] = exploration
-            candidates["exploitation_percent"] = exploitation
+            metrics["exploration_percent"] = exploration
+            metrics["exploitation_percent"] = exploitation
         if "population_entropy" in self._selected:
             entropy, _ = population_entropy_v1(
                 positions, lower_bounds=self._lower, upper_bounds=self._upper
             )
-            candidates["population_entropy"] = entropy
+            metrics["population_entropy"] = entropy
         dimension_metrics = {
             "diversity_dimension_mean",
             "diversity_dimension_min",
@@ -174,59 +257,122 @@ class PSOTraceCollector:
             _, div_mean, div_minimum, div_maximum = diversity_per_dimension_v1(
                 positions
             )
-            candidates.update(
+            metrics.update(
                 {
                     "diversity_dimension_mean": div_mean,
                     "diversity_dimension_min": div_minimum,
                     "diversity_dimension_max": div_maximum,
                 }
             )
-        if inertia_weight is not None:
-            candidates["inertia_weight"] = inertia_weight
-        if policy_diagnostics:
-            candidates.update(
-                {
-                    "progress_ratio": policy_diagnostics.get("progress_ratio"),
-                    "fuzzy_input_diversity": policy_diagnostics.get("diversity_ratio"),
-                    "fuzzy_membership_degrees": policy_diagnostics.get("membership_degrees"),
-                    "fuzzy_active_rules": policy_diagnostics.get("active_rules"),
-                    "fuzzy_rule_firing_strengths": policy_diagnostics.get("rule_firing_strengths"),
-                    "fuzzy_output_normalized": policy_diagnostics.get("normalized_output"),
-                    "fuzzy_inference_time_seconds": policy_diagnostics.get("inference_time_seconds"),
-                    "fuzzy_evaluated_rule_count": policy_diagnostics.get("evaluated_rule_count"),
-                    "fuzzy_skipped_rule_count": policy_diagnostics.get("skipped_rule_count"),
-                    "fuzzy_boundary_event_count": policy_diagnostics.get("boundary_event_count"),
-                    "fuzzy_no_activation_count": policy_diagnostics.get("no_activation_count"),
-                    "fuzzy_fallback_count": policy_diagnostics.get("fallback_count"),
-                }
-            )
-            candidates = {
-                metric_id: value
-                for metric_id, value in candidates.items()
-                if value is not None
-            }
-        metrics = {
+        return metrics
+
+    def _record(
+        self,
+        observation: OptimizationObservation,
+        metrics: Mapping[str, object],
+    ) -> None:
+        if not self._sampling.includes(observation.iteration, self._maximum_iteration):
+            return
+        selected = {
             metric_id: value
-            for metric_id, value in candidates.items()
+            for metric_id, value in metrics.items()
             if metric_id in self._selected
         }
         self._points.append(
             OptimizationTracePoint(
                 checkpoint_index=len(self._points),
-                iteration_index=iteration,
-                evaluations=evaluations,
-                elapsed_seconds=elapsed_seconds,
-                metrics=metrics,
+                iteration_index=observation.iteration,
+                evaluations=observation.evaluations,
+                elapsed_seconds=observation.elapsed_seconds,
+                metrics=selected,
             )
         )
+
+
+class PSOTraceCollector(OptimizationTraceCollector):
+    """Add PSO parameter and controller telemetry to general trace metrics."""
+
+    def __init__(
+        self,
+        *,
+        selected_metrics: Iterable[str],
+        sampling: TraceSampling,
+        maximum_iteration: int,
+        lower_bounds: Iterable[float],
+        upper_bounds: Iterable[float],
+    ) -> None:
+        selected = tuple(selected_metrics)
+        super().__init__(
+            selected_metrics=selected,
+            sampling=sampling,
+            maximum_iteration=maximum_iteration,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
+        )
+        self._selected = frozenset(selected).intersection(ALL_TRACE_METRICS)
+
+    def observe(
+        self,
+        *,
+        observation: OptimizationObservation,
+        population: PopulationObservation | None = None,
+        inertia_weight: float | None = None,
+        policy_diagnostics: Mapping[str, object] | None = None,
+    ) -> None:
+        if not isinstance(observation, OptimizationObservation):
+            raise TypeError("observation must be OptimizationObservation")
+        metrics = {
+            "iteration_index": observation.iteration,
+            "iteration_time_seconds": observation.elapsed_seconds,
+            "objective_best": observation.best_objective,
+            "evaluations": observation.evaluations,
+        }
+        if population is not None:
+            metrics.update(self._population_metrics(population))
+        if inertia_weight is not None:
+            metrics.update(self._pso_metrics(inertia_weight))
+        metrics.update(self._controller_metrics(policy_diagnostics))
+        self._record(observation, metrics)
+
+    @staticmethod
+    def _pso_metrics(inertia_weight: float) -> dict[str, object]:
+        return {"inertia_weight": inertia_weight}
+
+    @staticmethod
+    def _controller_metrics(
+        diagnostics: Mapping[str, object] | None,
+    ) -> dict[str, object]:
+        if not diagnostics:
+            return {}
+        values = {
+            "progress_ratio": diagnostics.get("progress_ratio"),
+            "fuzzy_input_diversity": diagnostics.get("diversity_ratio"),
+            "fuzzy_membership_degrees": diagnostics.get("membership_degrees"),
+            "fuzzy_active_rules": diagnostics.get("active_rules"),
+            "fuzzy_rule_firing_strengths": diagnostics.get("rule_firing_strengths"),
+            "fuzzy_output_normalized": diagnostics.get("normalized_output"),
+            "fuzzy_inference_time_seconds": diagnostics.get("inference_time_seconds"),
+            "fuzzy_evaluated_rule_count": diagnostics.get("evaluated_rule_count"),
+            "fuzzy_skipped_rule_count": diagnostics.get("skipped_rule_count"),
+            "fuzzy_boundary_event_count": diagnostics.get("boundary_event_count"),
+            "fuzzy_no_activation_count": diagnostics.get("no_activation_count"),
+            "fuzzy_fallback_count": diagnostics.get("fallback_count"),
+        }
+        return {key: value for key, value in values.items() if value is not None}
 
 
 def hussain_diversity_v1(population: np.ndarray) -> float:
     """Exact vectorized equivalent of legacy ``diversidadHussain``."""
 
+    return round(hussain_diversity_v2(population), 3)
+
+
+def hussain_diversity_v2(population: np.ndarray) -> float:
+    """Mean absolute distance from the centroid, without internal quantization."""
+
     values = _population(population)
     centre = np.mean(values, axis=0)
-    return round(float(np.mean(np.abs(values - centre))), 3)
+    return float(np.mean(np.abs(values - centre)))
 
 
 def exploration_exploitation_v1(
@@ -272,9 +418,7 @@ def population_entropy_v1(
         probabilities = probabilities[probabilities > 0.0]
         if probabilities.size:
             entropy = -np.sum(probabilities * np.log(probabilities))
-            entropy_by_dimension[index] = float(
-                entropy / np.log(effective_bins)
-            )
+            entropy_by_dimension[index] = float(entropy / np.log(effective_bins))
     return float(np.mean(entropy_by_dimension)), entropy_by_dimension
 
 

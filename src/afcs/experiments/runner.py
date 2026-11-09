@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
 import math
+from collections.abc import Callable, Iterable, Mapping
 from time import perf_counter
 
 from afcs.experiments.contracts import RunnableOptimizer
-from afcs.persistence import ExperimentRepository, PlannedRun, canonical_json
+from afcs.persistence import (
+    ExperimentRepository,
+    PlannedRun,
+    RepositoryError,
+    canonical_json,
+)
 
 
 class RunBindingError(ValueError):
@@ -48,11 +53,18 @@ class ExperimentRunExecutor:
 
         plan = self._repository.get_planned_run(run_id)
         self._validate_binding(plan, optimizer)
-        wall_started = self._read_persistence_clock()
+        if self._repository.connection.in_transaction:
+            raise RepositoryError(
+                "Execution requires ownership of the result commit, not an active caller transaction"
+            )
         self._repository.start_run(run_id)
+        phase = "execution_setup"
         try:
+            wall_started = self._read_persistence_clock()
             started = self._read_clock()
+            phase = "optimization"
             result = optimizer.run()
+            phase = "result_validation"
             objective = _finite_float(result.best_objective, "best_objective")
             evaluations = _non_negative_integer(result.evaluations, "evaluations")
             if (
@@ -64,6 +76,10 @@ class ExperimentRunExecutor:
                     f"observed={evaluations}, planned={plan.budget_evaluations}"
                 )
             solution = _finite_solution(result.best_position)
+            if plan.dimension is not None and len(solution) != plan.dimension:
+                raise ValueError(
+                    "best_position dimension does not match planned dimension"
+                )
             finished = self._read_clock()
             runtime = finished - started
             if runtime < 0:
@@ -79,6 +95,7 @@ class ExperimentRunExecutor:
                 raise ValueError(
                     "final trace evaluations do not match the optimizer result"
                 )
+            phase = "persistence"
             persistence_started = self._read_persistence_clock()
             with self._repository.transaction():
                 for point in trace_points:
@@ -103,7 +120,11 @@ class ExperimentRunExecutor:
                     initial_velocity_sha256=getattr(
                         result, "initial_velocity_sha256", None
                     ),
+                    initial_state_hash_version=getattr(
+                        result, "initial_state_hash_version", None
+                    ),
                 )
+            phase = "finalization"
             persistence_finished = self._read_persistence_clock()
             persistence_elapsed = persistence_finished - persistence_started
             wall_elapsed = persistence_finished - wall_started
@@ -129,6 +150,11 @@ class ExperimentRunExecutor:
                     run_id,
                     error_type=type(error).__name__,
                     error_message=str(error),
+                    failure_phase=phase,
+                )
+            elif self._repository.run_status(run_id) == "completed":
+                self._repository.fail_run_finalization(
+                    run_id, error_type=type(error).__name__, error_message=str(error)
                 )
             raise
 
@@ -216,9 +242,7 @@ def _non_negative_integer(value: int, label: str) -> int:
 def _finite_solution(values: Iterable[float]) -> list[float]:
     if isinstance(values, (str, bytes, Mapping)) or not isinstance(values, Iterable):
         raise TypeError("best_position must be a numeric sequence")
-    normalized = [
-        _finite_float(value, "solution coordinate") for value in values
-    ]
+    normalized = [_finite_float(value, "solution coordinate") for value in values]
     if not normalized:
         raise ValueError("best_position cannot be empty")
     return normalized

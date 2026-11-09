@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import Sequence
 
+from afcs.core.serialization import json_value
 from afcs.metrics import load_metric_registry
 from afcs.persistence import (
     ExperimentRepository,
     audit_campaign_integrity,
+    connect_readonly_v2_database,
     initialize_v2_database,
 )
 
@@ -22,25 +24,37 @@ from .orchestration import CampaignOrchestrator
 def campaign_preview(loaded: LoadedCampaignConfig) -> dict:
     """Return an auditable preview without writing a database."""
 
-    return {
-        "campaign_id": loaded.campaign.campaign_id,
-        "name": loaded.campaign.name,
-        "code_commit": loaded.campaign.code_commit,
-        "summary": asdict(loaded.summary),
-        "metrics": loaded.campaign.metric_selection,
-        "randomness": dict(loaded.resolved_config["randomness"]),
-        "problems": list(loaded.resolved_config["problems"]),
-        "treatments": list(loaded.resolved_config["treatments"]),
-        "execution": dict(loaded.resolved_config["execution"]),
-        "trace": dict(loaded.resolved_config["trace"]),
-    }
+    return json_value(
+        {
+            "campaign_id": loaded.campaign.campaign_id,
+            "name": loaded.campaign.name,
+            "code_commit": loaded.campaign.code_commit,
+            "summary": asdict(loaded.summary),
+            "metrics": loaded.campaign.metric_selection,
+            "randomness": dict(loaded.resolved_config["randomness"]),
+            "problems": list(loaded.resolved_config["problems"]),
+            "treatments": list(loaded.resolved_config["treatments"]),
+            "execution": dict(loaded.resolved_config["execution"]),
+            "trace": dict(loaded.resolved_config["trace"]),
+        }
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _parser()
     arguments = parser.parse_args(argv)
-    registry = load_metric_registry()
+    if arguments.command == "audit":
+        connection = connect_readonly_v2_database(arguments.database)
+        try:
+            report = audit_campaign_integrity(connection, arguments.campaign_id)
+            payload = asdict(report)
+            payload["is_valid"] = report.is_valid
+            _print_json(payload)
+            return 0 if report.is_valid else 2
+        finally:
+            connection.close()
 
+    registry = load_metric_registry()
     if arguments.command == "preview":
         loaded = load_campaign_config(
             arguments.config,
@@ -99,16 +113,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             _print_json(
                 {
                     "campaign_id": arguments.campaign_id,
-                    "campaign_status": repository.campaign_status(arguments.campaign_id),
+                    "campaign_status": repository.campaign_status(
+                        arguments.campaign_id
+                    ),
                 }
             )
-        elif arguments.command == "audit":
-            report = audit_campaign_integrity(connection, arguments.campaign_id)
-            payload = asdict(report)
-            payload["is_valid"] = report.is_valid
-            _print_json(payload)
-            if not report.is_valid:
-                return 2
     finally:
         connection.close()
     return 0
@@ -172,7 +181,15 @@ def _config_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def _print_json(value: object) -> None:
-    print(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            json_value(value),
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":

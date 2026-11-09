@@ -10,6 +10,10 @@ plantilla. Su propiedad `$schema` permite que editores compatibles ofrezcan
 autocompletado, descripciones y validación usando
 `config/schemas/campaign_v1.schema.json`. `_documentation` es exclusivamente
 informativa y el lector la ignora.
+El ejemplo [real_coded_ga_v2.example.json](real_coded_ga_v2.example.json)
+ejecuta el GA real-coded de v2. Su identidad, operadores y fundamento
+bibliográfico se describen en
+[`REAL_CODED_GA.md`](../../documentation/architecture/REAL_CODED_GA.md).
 
 ## Bloques configurables
 
@@ -18,7 +22,7 @@ informativa y el lector la ignora.
 | `campaign` | Identidad, réplicas y métricas | `replicas >= 1`; perfiles `minimal`, `convergence`, `optimizer`, `fuzzy`, `timing`, `all`, lista u objeto selectivo |
 | `randomness` | Pareamiento y reproducibilidad | `paired_by_replica_v1`, semilla base no negativa, `numpy_seedsequence_pcg64_v1` |
 | `problems` | Matriz de problemas | `CEC2017`: F1 y F3-F30 en 10/30/50/100; `CLASSICAL`: F1-F23; `OPFUNU_CEC`: exige `suite_year` y valida cada función/dimensión en OPFUNU |
-| `treatments` | Configuraciones del optimizador | `PSO`; políticas `fixed_inertia`, `legacy_ldiw` y `fuzzy_inertia_mamdani` |
+| `treatments` | Configuraciones del optimizador | `PSO` y `GA` real-coded; GA usa `no_adaptation` en esta versión |
 | `execution` | Recursos de ejecución | `parallel_workers >= 1`; 1 es secuencial y valores mayores usan procesos aislados |
 | `trace` | Muestreo de la trayectoria | Activación, frecuencia, checkpoint inicial y checkpoint final obligatorio |
 
@@ -26,6 +30,37 @@ Los parámetros PSO obligatorios son `population_size` y `max_iterations`. Los
 opcionales y sus valores efectivos por defecto son `cognitive=2.0`,
 `social=2.0` y `velocity_factor=0.1`. `fixed_inertia` requiere `value`;
 `legacy_ldiw` acepta `maximum=0.9` y `minimum=0.1`.
+
+### Variantes recomendadas para campañas nuevas (R2-G)
+
+La [plantilla técnica recomendada](classical_pso_recommended_v2.example.json)
+declara explícitamente:
+
+- `parameters.velocity_rule="domain_width_v1"`: límite por amplitud de cada
+  dimensión, optimizador `2.0.0a1-domain-width`;
+- `parameter_policy.id="linear_endpoints_v1"`: máximo en primer movimiento y
+  mínimo en último si T>=2; T=1 usa máximo;
+- FCS con `parameter_policy.parameters.diversity_metric="hussain_diversity_v2"`:
+  no redondea diversidad internamente y declara `policy_version=2`.
+
+Estas elecciones científicas están aprobadas como definiciones, no como
+configuración de un artículo ni campañas autorizadas. Los ejemplos anteriores
+conservan deliberadamente las variantes históricas. Omitir las nuevas opciones
+equivale a `legacy_upper0_v1` y `hussain_diversity_v1`, respectivamente, para no
+cambiar trayectorias sin consentimiento; los defaults se resuelven en preview.
+El Vmax antiguo usa **el primer límite superior**, no la amplitud del dominio;
+si es cero no hay movimiento y si produce un límite negativo se rechaza.
+Elegir `domain_width_v1` evita esa dependencia de la ubicación del dominio.
+No cambiar la regla entre comparadores que pretenden aislar sólo la inercia.
+
+Los parámetros del GA real-coded son `population_size` y `max_iterations`.
+SBX y mutación polinómica usan índices de distribución 20 por defecto; la
+probabilidad de cruce por apareamiento es 0.9 y la probabilidad de mutación por
+variable es `1/d` por defecto. El presupuesto exacto es
+`population_size * (max_iterations + 1)`. La selección es por torneo y se
+conserva un individuo élite. Estos valores son una configuración inicial, no
+un protocolo científico confirmado. El GA binario heredado permanece intacto y
+fuera de v2 mientras la fase discreta siga pausada.
 
 Una suite distribuida por OPFUNU se declara sin codificar el año dentro del
 nombre de la función:
@@ -101,6 +136,16 @@ forma:
 
 No se permite excluir métricas obligatorias. Los IDs disponibles y su origen,
 unidad, rango y política de ausencia se encuentran en el registro citado.
+`all` selecciona las métricas disponibles para cálculo v2, no los metadatos
+históricos `legacy_gap_percent`/`legacy_rdp_percent`: solicitarlos explícitamente
+es un error. Las métricas se registran según scope y aplicabilidad; inercia no
+aplica a GA ni inferencia difusa a PSO fijo. El objetivo final observado sigue
+siendo obligatorio aunque `trace.enabled=false`.
+
+La selección de la campaña congela versiones y definiciones. Un registro
+ejecutor incompatible bloquea la reanudación, no actualiza la evidencia ni
+reinterpreta métricas antiguas. Los detalles están en
+[instrumentación](../../documentation/architecture/METRIC_TRACING.md).
 
 ## Semillas y tamaño de la campaña
 

@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from contextlib import redirect_stderr, redirect_stdout
 from importlib.metadata import PackageNotFoundError, version
 from io import StringIO
-import math
 
 import numpy as np
 
 from afcs.core import Evaluation, OptimizationDirection, SearchSpace
 from afcs.problems import ProblemMetadata
-
 
 OPFUNU_FAMILY = "OPFUNU_CEC"
 
@@ -120,4 +119,3 @@ class OpfunuCECProblem:
                 ],
             },
         )
-

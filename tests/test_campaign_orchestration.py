@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
+import tempfile
+import unittest
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
-import tempfile
-import unittest
 
 from afcs.experiments import (
     CampaignOrchestrator,
@@ -15,19 +15,16 @@ from afcs.experiments import (
     SequentialCampaignOrchestrator,
     parse_campaign_config,
 )
+from afcs.experiments.cli import campaign_preview, main
 from afcs.metrics import load_metric_registry
 from afcs.persistence import (
     ExperimentRepository,
     RepositoryError,
     initialize_v2_database,
 )
-from afcs.experiments.cli import campaign_preview, main
-
 
 EXAMPLE_PATH = Path("config/campaigns/cec2017_pso_v2.example.json")
-FUZZY_EXAMPLE_PATH = Path(
-    "config/campaigns/cec2017_pso_fcs_overlap.example.json"
-)
+FUZZY_EXAMPLE_PATH = Path("config/campaigns/cec2017_pso_fcs_overlap.example.json")
 
 
 def _smoke_config(
@@ -35,16 +32,17 @@ def _smoke_config(
 ):
     raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
     raw["campaign"].update(
-        {"id": campaign_id, "name": "Sequential smoke", "replicas": 2, "metrics": metrics}
+        {
+            "id": campaign_id,
+            "name": "Sequential smoke",
+            "replicas": 2,
+            "metrics": metrics,
+        }
     )
-    raw["problems"] = [
-        {"family": "CEC2017", "functions": [1], "dimensions": [10]}
-    ]
+    raw["problems"] = [{"family": "CEC2017", "functions": [1], "dimensions": [10]}]
     raw["execution"]["parallel_workers"] = parallel_workers
     for treatment in raw["treatments"]:
-        treatment["parameters"].update(
-            {"population_size": 4, "max_iterations": 2}
-        )
+        treatment["parameters"].update({"population_size": 4, "max_iterations": 2})
     return parse_campaign_config(raw, code_commit="test-commit")
 
 
@@ -54,9 +52,7 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.connection = initialize_v2_database(
             Path(self.temp_dir.name) / "campaign.db"
         )
-        self.repository = ExperimentRepository(
-            self.connection, load_metric_registry()
-        )
+        self.repository = ExperimentRepository(self.connection, load_metric_registry())
 
     def tearDown(self) -> None:
         self.connection.close()
@@ -85,7 +81,9 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         ).fetchall()
         self.assertEqual([row["random_seed"] for row in rows], [42, 43, 42, 43])
         self.assertTrue(all(row["evaluations"] == 12 for row in rows))
-        self.assertTrue(all(len(row["initial_population_sha256"]) == 64 for row in rows))
+        self.assertTrue(
+            all(len(row["initial_population_sha256"]) == 64 for row in rows)
+        )
         self.assertTrue(
             all(row["optimizer_version"] == "2.0.0a0-legacy-compatible" for row in rows)
         )
@@ -141,9 +139,9 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertEqual(sequential.completed, 4)
         sequential_rows = self.connection.execute(
             """
-            SELECT r.replica_index, ac.configuration_id, r.objective_best,
+            SELECT r.replica_index, ac.treatment_id, r.objective_best,
                    r.solution_json, r.evaluations, r.initial_population_sha256,
-                   r.initial_velocity_sha256
+                   r.initial_velocity_sha256, r.initial_state_hash_version
             FROM runs AS r JOIN algorithm_configurations AS ac
               ON ac.configuration_id = r.configuration_id
             WHERE r.campaign_id = 'sequential-reference'
@@ -152,11 +150,12 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         ).fetchall()
         sequential_trace = self.connection.execute(
             """
-            SELECT r.replica_index, r.configuration_id, tp.checkpoint_index,
+            SELECT r.replica_index, ac.treatment_id, tp.checkpoint_index,
                    tp.iteration_index, tp.evaluations, tmv.metric_id,
                    tmv.value_real, tmv.value_integer, tmv.value_text, tmv.value_json
             FROM trace_points AS tp
             JOIN runs AS r ON r.run_id = tp.run_id
+            JOIN algorithm_configurations AS ac ON ac.configuration_id = r.configuration_id
             LEFT JOIN trace_metric_values AS tmv
               ON tmv.run_id = tp.run_id
              AND tmv.checkpoint_index = tp.checkpoint_index
@@ -179,9 +178,9 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
             self.assertEqual(parallel.completed, 4)
             parallel_rows = parallel_connection.execute(
                 """
-                SELECT r.replica_index, ac.configuration_id, r.objective_best,
+                SELECT r.replica_index, ac.treatment_id, r.objective_best,
                        r.solution_json, r.evaluations, r.initial_population_sha256,
-                       r.initial_velocity_sha256
+                       r.initial_velocity_sha256, r.initial_state_hash_version
                 FROM runs AS r JOIN algorithm_configurations AS ac
                   ON ac.configuration_id = r.configuration_id
                 WHERE r.campaign_id = 'parallel-reference'
@@ -194,11 +193,12 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
             )
             parallel_trace = parallel_connection.execute(
                 """
-                SELECT r.replica_index, r.configuration_id, tp.checkpoint_index,
+                SELECT r.replica_index, ac.treatment_id, tp.checkpoint_index,
                        tp.iteration_index, tp.evaluations, tmv.metric_id,
                        tmv.value_real, tmv.value_integer, tmv.value_text, tmv.value_json
                 FROM trace_points AS tp
                 JOIN runs AS r ON r.run_id = tp.run_id
+                JOIN algorithm_configurations AS ac ON ac.configuration_id = r.configuration_id
                 LEFT JOIN trace_metric_values AS tmv
                   ON tmv.run_id = tp.run_id
                  AND tmv.checkpoint_index = tp.checkpoint_index
@@ -223,9 +223,9 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         )
         loaded = parse_campaign_config(raw, code_commit="test-commit")
 
-        summary = SequentialCampaignOrchestrator(
-            self.repository
-        ).plan_and_execute(loaded)
+        summary = SequentialCampaignOrchestrator(self.repository).plan_and_execute(
+            loaded
+        )
 
         self.assertEqual(summary.completed, 1)
         self.assertEqual(summary.failed, 0)
@@ -243,9 +243,7 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         ).fetchall()
         by_metric = {}
         for row in recorded:
-            by_metric.setdefault(row["metric_id"], []).append(
-                row["checkpoint_index"]
-            )
+            by_metric.setdefault(row["metric_id"], []).append(row["checkpoint_index"])
         self.assertEqual(
             set(by_metric),
             {
@@ -283,9 +281,7 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
             {"family": "CLASSICAL", "functions": [1, 7], "dimensions": [5]}
         ]
         for treatment in raw["treatments"]:
-            treatment["parameters"].update(
-                {"population_size": 4, "max_iterations": 1}
-            )
+            treatment["parameters"].update({"population_size": 4, "max_iterations": 1})
 
         summary = CampaignOrchestrator(self.repository).plan_and_execute(
             parse_campaign_config(raw, code_commit="test-commit")
@@ -305,6 +301,61 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
         self.assertEqual({row["name"] for row in rows}, {"F1", "F7"})
         self.assertTrue(all(row["random_seed"] == 42 for row in rows))
         self.assertTrue(all(row["evaluations"] == 8 for row in rows))
+
+    def test_real_coded_ga_campaign_persists_budget_replay_and_operator_traces(
+        self,
+    ) -> None:
+        raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
+        raw["campaign"].update(
+            {"id": "real-ga-smoke", "replicas": 2, "metrics": "optimizer"}
+        )
+        raw["problems"] = [{"family": "CLASSICAL", "functions": [1], "dimensions": [2]}]
+        raw["execution"] = {"parallel_workers": 2}
+        raw["treatments"] = [
+            {
+                "id": "ga-real",
+                "optimizer": "GA",
+                "parameters": {"population_size": 4, "max_iterations": 2},
+            }
+        ]
+
+        summary = CampaignOrchestrator(self.repository).plan_and_execute(
+            parse_campaign_config(raw, code_commit="test-commit")
+        )
+
+        self.assertEqual(summary.completed, 2)
+        rows = self.connection.execute(
+            """
+            SELECT r.random_seed, r.evaluations, r.initial_population_sha256,
+                   ac.optimizer_version
+            FROM runs AS r
+            JOIN algorithm_configurations AS ac
+              ON ac.configuration_id = r.configuration_id
+             AND ac.campaign_id = r.campaign_id
+            WHERE r.campaign_id = 'real-ga-smoke'
+            ORDER BY r.replica_index
+            """
+        ).fetchall()
+        self.assertEqual([row["random_seed"] for row in rows], [42, 43])
+        self.assertTrue(all(row["evaluations"] == 12 for row in rows))
+        self.assertTrue(
+            all(len(row["initial_population_sha256"]) == 64 for row in rows)
+        )
+        self.assertTrue(
+            all(row["optimizer_version"] == "2.0.0a0-real-coded" for row in rows)
+        )
+        metric_rows = self.connection.execute(
+            """
+            SELECT DISTINCT tm.metric_id
+            FROM trace_metric_values AS tm
+            JOIN runs AS r ON r.run_id = tm.run_id
+            WHERE r.campaign_id = 'real-ga-smoke'
+            """
+        ).fetchall()
+        metric_ids = {row["metric_id"] for row in metric_rows}
+        self.assertIn("crossover_probability", metric_ids)
+        self.assertIn("mutation_probability", metric_ids)
+        self.assertNotIn("inertia_weight", metric_ids)
 
     def test_opfunu_cec_campaign_executes_with_auditable_identity(self) -> None:
         raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
@@ -411,12 +462,8 @@ class TestSequentialCampaignOrchestrator(unittest.TestCase):
 
     def test_cli_separates_preview_plan_and_run(self) -> None:
         raw = json.loads(EXAMPLE_PATH.read_text(encoding="utf-8"))
-        raw["campaign"].update(
-            {"id": "cli-smoke", "replicas": 1, "metrics": "minimal"}
-        )
-        raw["problems"] = [
-            {"family": "CEC2017", "functions": [1], "dimensions": [10]}
-        ]
+        raw["campaign"].update({"id": "cli-smoke", "replicas": 1, "metrics": "minimal"})
+        raw["problems"] = [{"family": "CEC2017", "functions": [1], "dimensions": [10]}]
         raw["treatments"] = [raw["treatments"][0]]
         raw["treatments"][0]["parameters"].update(
             {"population_size": 4, "max_iterations": 1}

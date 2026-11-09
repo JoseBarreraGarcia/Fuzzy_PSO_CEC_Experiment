@@ -2,23 +2,38 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from contextlib import contextmanager, nullcontext
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import hashlib
 import json
 import math
-from pathlib import Path
 import sqlite3
-from types import MappingProxyType
+from collections.abc import Mapping
+from contextlib import contextmanager, nullcontext
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
+from afcs.core.randomness import MAX_SEED
+from afcs.core.serialization import freeze_json_mapping, json_value
 from afcs.metrics import MetricRegistry
 from afcs.persistence.database import (
     configure_campaign_metrics,
     current_schema_version,
     sync_metric_definitions,
+    validate_current_schema,
+)
+from afcs.persistence.metric_contracts import (
+    MetricContractError,
+    SelectedMetric,
+    metric_evidence_issues,
+    required_value_ids,
+    selected_metric_contract,
+)
+from afcs.persistence.run_contracts import (
+    POST_RUN_TIMING_METRICS,
+    run_evidence_issues,
+    trace_result_issues,
+    valid_solution,
 )
 
 
@@ -27,7 +42,13 @@ class RepositoryError(RuntimeError):
 
 
 def canonical_json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return json.dumps(
+        json_value(value),
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
 
 
 def sha256_text(value: str) -> str:
@@ -75,17 +96,17 @@ class PlannedRun:
         object.__setattr__(
             self,
             "campaign_config",
-            MappingProxyType(dict(self.campaign_config)),
+            freeze_json_mapping(self.campaign_config),
         )
         object.__setattr__(
             self,
             "algorithm_parameters",
-            MappingProxyType(dict(self.algorithm_parameters)),
+            freeze_json_mapping(self.algorithm_parameters),
         )
         object.__setattr__(
             self,
             "problem_parameters",
-            MappingProxyType(dict(self.problem_parameters)),
+            freeze_json_mapping(self.problem_parameters),
         )
 
 
@@ -112,9 +133,9 @@ def encode_metric_value(value: Any, dtype: str | None = None) -> StoredValue:
             raise RepositoryError("Expected a string metric value")
         return StoredValue(value_text=value)
     if dtype == "json":
-        if not isinstance(value, (dict, list, tuple)):
+        if not isinstance(value, (Mapping, list, tuple)):
             raise RepositoryError("Expected an object or list metric value")
-        return StoredValue(value_json=canonical_json(value))
+        return StoredValue(value_json=_metric_json(value))
     if dtype is not None:
         raise RepositoryError(f"Unsupported registered metric dtype: {dtype}")
 
@@ -128,13 +149,21 @@ def encode_metric_value(value: Any, dtype: str | None = None) -> StoredValue:
         return StoredValue(value_real=value)
     if isinstance(value, str):
         return StoredValue(value_text=value)
-    if isinstance(value, (dict, list, tuple)):
-        return StoredValue(value_json=canonical_json(value))
+    if isinstance(value, (Mapping, list, tuple)):
+        return StoredValue(value_json=_metric_json(value))
     raise RepositoryError(f"Unsupported metric value type: {type(value).__name__}")
+
+
+def _metric_json(value: Any) -> str:
+    try:
+        return canonical_json(value)
+    except (TypeError, ValueError) as error:
+        raise RepositoryError(f"Invalid JSON metric value: {error}") from error
 
 
 class ExperimentRepository:
     def __init__(self, connection: sqlite3.Connection, registry: MetricRegistry):
+        validate_current_schema(connection)
         self.connection = connection
         self.registry = registry
 
@@ -153,7 +182,7 @@ class ExperimentRepository:
         ).fetchone()
         if row is None:
             raise RepositoryError(f"Unknown campaign: {campaign_id!r}")
-        return MappingProxyType(json.loads(row["config_json"]))
+        return freeze_json_mapping(json.loads(row["config_json"]))
 
     @contextmanager
     def transaction(self):
@@ -169,11 +198,10 @@ class ExperimentRepository:
         self.connection.execute("BEGIN IMMEDIATE")
         try:
             yield
-        except Exception:
+            self.connection.commit()
+        except BaseException:
             self.connection.rollback()
             raise
-        else:
-            self.connection.commit()
 
     def _write_scope(self):
         if self.connection.in_transaction:
@@ -203,9 +231,11 @@ class ExperimentRepository:
         if base_seed is not None and (
             isinstance(base_seed, bool)
             or not isinstance(base_seed, int)
-            or base_seed < 0
+            or not 0 <= base_seed <= MAX_SEED
         ):
-            raise RepositoryError("base_seed must be a non-negative integer")
+            raise RepositoryError(
+                f"base_seed must be an integer between 0 and {MAX_SEED}"
+            )
         config_payload = canonical_json(config)
         timestamp = created_at or utc_now()
         with self._write_scope():
@@ -248,16 +278,38 @@ class ExperimentRepository:
         data_sha256: str | None = None,
     ) -> int:
         parameters_json = canonical_json(parameters or {})
+        if optimum is not None and not math.isfinite(optimum):
+            raise RepositoryError("Problem optimum must be finite or None")
+        _validate_sha256(data_sha256, "data_sha256")
         with self._write_scope():
             existing = self.connection.execute(
                 """
-                SELECT instance_id FROM problem_instances
+                SELECT instance_id, optimum, direction, data_sha256 FROM problem_instances
                 WHERE problem_family = ? AND name = ? AND dimension IS ?
                   AND parameters_json = ?
                 """,
                 (problem_family, name, dimension, parameters_json),
             ).fetchone()
             if existing is not None:
+                requested_identity = {
+                    "optimum": optimum,
+                    "direction": direction,
+                    "data_sha256": data_sha256,
+                }
+                conflicts = [
+                    field
+                    for field, requested in requested_identity.items()
+                    if existing[field] != requested
+                ]
+                if conflicts:
+                    raise RepositoryError(
+                        f"Problem identity conflict for instance {existing['instance_id']}: "
+                        + ", ".join(
+                            f"{field}: stored={existing[field]!r}, "
+                            f"requested={requested_identity[field]!r}"
+                            for field in conflicts
+                        )
+                    )
                 return int(existing["instance_id"])
             cursor = self.connection.execute(
                 """
@@ -276,7 +328,9 @@ class ExperimentRepository:
                     data_sha256,
                 ),
             )
-            return int(cursor.lastrowid)
+            if cursor.lastrowid is None:
+                raise RepositoryError("Problem instance insert did not return an ID")
+            return cursor.lastrowid
 
     def add_algorithm_configuration(
         self,
@@ -290,10 +344,14 @@ class ExperimentRepository:
         budget_iterations: int | None = None,
         population_size: int | None = None,
         created_at: str | None = None,
+        treatment_id: str | None = None,
     ) -> None:
         self._require_campaign_status(campaign_id, "draft")
         if not isinstance(optimizer_version, str) or not optimizer_version.strip():
             raise RepositoryError("optimizer_version must be a non-empty string")
+        local_id = configuration_id if treatment_id is None else treatment_id
+        if not isinstance(local_id, str) or not local_id.strip():
+            raise RepositoryError("treatment_id must be a non-empty string")
         parameters_json = canonical_json(parameters)
         with self._write_scope():
             self.connection.execute(
@@ -302,8 +360,8 @@ class ExperimentRepository:
                     configuration_id, campaign_id, algorithm, optimizer_version,
                     parameters_json,
                     parameters_sha256, budget_type, budget_evaluations,
-                    budget_iterations, population_size, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    budget_iterations, population_size, created_at, treatment_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     configuration_id,
@@ -317,6 +375,7 @@ class ExperimentRepository:
                     budget_iterations,
                     population_size,
                     created_at or utc_now(),
+                    local_id,
                 ),
             )
 
@@ -328,6 +387,14 @@ class ExperimentRepository:
         replica_index: int,
         random_seed: int | None = None,
     ) -> int:
+        if random_seed is not None and (
+            isinstance(random_seed, bool)
+            or not isinstance(random_seed, int)
+            or not 0 <= random_seed <= MAX_SEED
+        ):
+            raise RepositoryError(
+                f"random_seed must be an integer between 0 and {MAX_SEED}"
+            )
         self._require_campaign_status(campaign_id, "draft")
         with self._write_scope():
             cursor = self.connection.execute(
@@ -345,7 +412,9 @@ class ExperimentRepository:
                     random_seed,
                 ),
             )
-            return int(cursor.lastrowid)
+            if cursor.lastrowid is None:
+                raise RepositoryError("Run insert did not return an ID")
+            return cursor.lastrowid
 
     def get_planned_run(self, run_id: int) -> PlannedRun:
         """Return the normalized database plan used for preflight validation."""
@@ -426,13 +495,7 @@ class ExperimentRepository:
 
     def selected_metric_ids(self, campaign_id: str) -> tuple[str, ...]:
         self.campaign_status(campaign_id)
-        selected = {
-            str(row["metric_id"])
-            for row in self.connection.execute(
-                "SELECT metric_id FROM campaign_metrics WHERE campaign_id = ?",
-                (campaign_id,),
-            )
-        }
+        selected = self._compatible_metric_contract(campaign_id)
         return tuple(
             metric_id for metric_id in self.registry.metrics if metric_id in selected
         )
@@ -449,6 +512,7 @@ class ExperimentRepository:
 
     def start_campaign(self, campaign_id: str, started_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "draft")
+        self._compatible_metric_contract(campaign_id)
         run_count = self.connection.execute(
             "SELECT COUNT(*) FROM runs WHERE campaign_id = ?", (campaign_id,)
         ).fetchone()[0]
@@ -463,6 +527,7 @@ class ExperimentRepository:
     def start_run(self, run_id: int, started_at: str | None = None) -> None:
         row = self._get_run(run_id)
         self._require_campaign_status(row["campaign_id"], "running")
+        self._compatible_metric_contract(row["campaign_id"])
         if row["status"] != "planned":
             raise RepositoryError(f"Run {run_id} is not planned")
         timestamp = started_at or utc_now()
@@ -500,23 +565,58 @@ class ExperimentRepository:
         provenance: str = "observed",
     ) -> None:
         row = self._get_run(run_id)
+        self._require_writable_campaign(row["campaign_id"])
         if row["status"] != "running":
-            raise RepositoryError("Trace metrics can only be recorded for a running run")
+            raise RepositoryError(
+                "Trace metrics can only be recorded for a running run"
+            )
         self._validate_selected_metrics(row["campaign_id"], metrics, "iteration")
+        self._require_metric_values(run_id, metrics, "iteration", iteration_index)
+        if (
+            isinstance(checkpoint_index, bool)
+            or not isinstance(checkpoint_index, int)
+            or checkpoint_index < 0
+            or isinstance(evaluations, bool)
+            or not isinstance(evaluations, int)
+            or evaluations < 0
+        ):
+            raise RepositoryError(
+                "Trace checkpoint and evaluations must be non-negative integers"
+            )
+        budget = self.get_planned_run(run_id).budget_evaluations
+        if budget is not None and evaluations > budget:
+            raise RepositoryError("Trace evaluations exceed the planned budget")
 
         previous = self.connection.execute(
             """
-            SELECT checkpoint_index, evaluations
-            FROM trace_points WHERE run_id = ?
-            ORDER BY checkpoint_index DESC LIMIT 1
+            SELECT tp.checkpoint_index, tp.evaluations, tm.value_real AS objective
+            FROM trace_points tp LEFT JOIN trace_metric_values tm
+              ON tm.run_id=tp.run_id AND tm.checkpoint_index=tp.checkpoint_index
+             AND tm.metric_id='objective_best'
+            WHERE tp.run_id = ?
+            ORDER BY tp.checkpoint_index DESC LIMIT 1
             """,
             (run_id,),
         ).fetchone()
-        if previous is not None and (
-            checkpoint_index <= previous["checkpoint_index"]
-            or evaluations < previous["evaluations"]
+        if checkpoint_index != (
+            0 if previous is None else previous["checkpoint_index"] + 1
         ):
+            raise RepositoryError("Trace checkpoints must be contiguous")
+        if previous is not None and evaluations < previous["evaluations"]:
             raise RepositoryError("Trace checkpoints and evaluations must be monotonic")
+        if (
+            previous is not None
+            and previous["objective"] is not None
+            and "objective_best" in metrics
+        ):
+            value = encode_metric_value(metrics["objective_best"], "float").value_real
+            direction = self.get_planned_run(run_id).direction
+            if value is None:
+                raise RepositoryError("Trace objective must be numeric")
+            if (direction == "minimize" and value > previous["objective"]) or (
+                direction == "maximize" and value < previous["objective"]
+            ):
+                raise RepositoryError("Trace best-so-far objective cannot worsen")
 
         with self._write_scope():
             self.connection.execute(
@@ -526,7 +626,13 @@ class ExperimentRepository:
                     evaluations, elapsed_seconds
                 ) VALUES (?, ?, ?, ?, ?)
                 """,
-                (run_id, checkpoint_index, iteration_index, evaluations, elapsed_seconds),
+                (
+                    run_id,
+                    checkpoint_index,
+                    iteration_index,
+                    evaluations,
+                    elapsed_seconds,
+                ),
             )
             for metric_id, value in metrics.items():
                 self._insert_trace_metric(
@@ -546,12 +652,36 @@ class ExperimentRepository:
         finished_at: str | None = None,
         initial_population_sha256: str | None = None,
         initial_velocity_sha256: str | None = None,
+        initial_state_hash_version: str | None = None,
     ) -> None:
         row = self._get_run(run_id)
+        self._require_writable_campaign(row["campaign_id"])
         if row["status"] != "running":
             raise RepositoryError(f"Run {run_id} is not running")
         if not math.isfinite(objective_best):
             raise RepositoryError("Completed objective_best must be finite")
+        plan = self.get_planned_run(run_id)
+        if not valid_solution(solution, plan.dimension):
+            raise RepositoryError(
+                "Completed solution must be finite and match planned dimension"
+            )
+        if (
+            isinstance(evaluations, bool)
+            or not isinstance(evaluations, int)
+            or evaluations < 0
+        ):
+            raise RepositoryError(
+                "Completed evaluations must be a non-negative integer"
+            )
+        if (
+            isinstance(runtime_total_seconds, bool)
+            or not isinstance(runtime_total_seconds, (int, float))
+            or not math.isfinite(runtime_total_seconds)
+            or runtime_total_seconds < 0
+        ):
+            raise RepositoryError(
+                "Completed runtime_total_seconds must be finite and non-negative"
+            )
         planned_budget = self.connection.execute(
             """
             SELECT ac.budget_evaluations
@@ -569,8 +699,48 @@ class ExperimentRepository:
             )
         _validate_sha256(initial_population_sha256, "initial_population_sha256")
         _validate_sha256(initial_velocity_sha256, "initial_velocity_sha256")
+        if initial_state_hash_version is not None:
+            if (
+                not isinstance(initial_state_hash_version, str)
+                or not initial_state_hash_version.strip()
+                or initial_population_sha256 is None
+            ):
+                raise RepositoryError(
+                    "initial_state_hash_version requires a non-empty name and population hash"
+                )
         selected_metrics = metrics or {}
+        if POST_RUN_TIMING_METRICS.intersection(selected_metrics):
+            raise RepositoryError(
+                "Post-run timings must be observed after the result commit"
+            )
         self._validate_selected_metrics(row["campaign_id"], selected_metrics, "replica")
+        self._require_metric_values(run_id, selected_metrics, "replica")
+        if (
+            "objective_best" in selected_metrics
+            and selected_metrics["objective_best"] != objective_best
+        ):
+            raise RepositoryError(
+                "objective_best observation differs from completed objective"
+            )
+        issues = [
+            message
+            for _, message, issue_run_id in metric_evidence_issues(
+                self.connection, row["campaign_id"], completing_run_id=run_id
+            )
+            if issue_run_id is None or issue_run_id == run_id
+        ]
+        if issues:
+            raise RepositoryError(
+                "Invalid completed metric evidence: " + "; ".join(issues)
+            )
+        trace_issues = trace_result_issues(
+            self.connection, run_id, objective_best, evaluations
+        )
+        if trace_issues:
+            raise RepositoryError("; ".join(message for _, message, _ in trace_issues))
+        post_metrics = (
+            set(self.selected_metric_ids(row["campaign_id"])) & POST_RUN_TIMING_METRICS
+        )
         timestamp = finished_at or utc_now()
 
         with self._write_scope():
@@ -581,7 +751,8 @@ class ExperimentRepository:
                 SET status = 'completed', finished_at = ?, objective_best = ?,
                     solution_json = ?, evaluations = ?, runtime_total_seconds = ?,
                     feasible = ?, constraint_violation = ?,
-                    initial_population_sha256 = ?, initial_velocity_sha256 = ?
+                    initial_population_sha256 = ?, initial_velocity_sha256 = ?,
+                    initial_state_hash_version = ?, finalization_status = ?
                 WHERE run_id = ?
                 """,
                 (
@@ -594,6 +765,8 @@ class ExperimentRepository:
                     constraint_violation,
                     initial_population_sha256,
                     initial_velocity_sha256,
+                    initial_state_hash_version,
+                    "pending" if post_metrics else "completed",
                     run_id,
                 ),
             )
@@ -616,13 +789,60 @@ class ExperimentRepository:
     ) -> None:
         """Append measurements only knowable after the completion transaction."""
 
-        row = self._get_run(run_id)
-        if row["status"] != "completed":
-            raise RepositoryError("Post-run metrics require a completed run")
-        self._validate_selected_metrics(row["campaign_id"], metrics, "replica")
-        with self._write_scope():
+        with self.transaction():
+            row = self._get_run(run_id)
+            self._require_writable_campaign(row["campaign_id"])
+            if row["status"] != "completed" or row["finalization_status"] != "pending":
+                raise RepositoryError(
+                    "Post-run metrics require a completed run with pending finalization"
+                )
+            self._validate_selected_metrics(row["campaign_id"], metrics, "replica")
+            selected = (
+                set(self.selected_metric_ids(row["campaign_id"]))
+                & POST_RUN_TIMING_METRICS
+            )
+            if set(metrics) != selected:
+                raise RepositoryError(
+                    "Finalization requires exactly the selected post-run timings"
+                )
+            values = {
+                key: encode_metric_value(value, "float").value_real
+                for key, value in metrics.items()
+            }
+            if any(value is None or value < 0 for value in values.values()):
+                raise RepositoryError(
+                    "Post-run timings must be finite and non-negative"
+                )
+            persistence = values.get("persistence_total_seconds")
+            wall = values.get("run_wall_total_seconds")
+            if persistence is not None and wall is not None and persistence > wall:
+                raise RepositoryError(
+                    "Run wall time cannot be smaller than persistence time"
+                )
             for metric_id, value in metrics.items():
                 self._insert_run_metric(run_id, metric_id, value, provenance)
+            self.connection.execute(
+                "UPDATE runs SET finalization_status='completed' WHERE run_id=?",
+                (run_id,),
+            )
+
+    def fail_run_finalization(
+        self, run_id: int, error_type: str, error_message: str
+    ) -> None:
+        """Preserve the committed scientific result and record a closure failure."""
+
+        with self.transaction():
+            row = self._get_run(run_id)
+            self._require_writable_campaign(row["campaign_id"])
+            if row["status"] != "completed":
+                raise RepositoryError(
+                    "Finalization failure requires a committed result"
+                )
+            self.connection.execute(
+                "UPDATE runs SET finalization_status='failed',finalization_error_type=?,"
+                "finalization_error_message=? WHERE run_id=?",
+                (error_type, error_message, run_id),
+            )
 
     def fail_run(
         self,
@@ -630,8 +850,10 @@ class ExperimentRepository:
         error_type: str,
         error_message: str,
         finished_at: str | None = None,
+        failure_phase: str = "optimization",
     ) -> None:
         row = self._get_run(run_id)
+        self._require_writable_campaign(row["campaign_id"])
         if row["status"] not in {"planned", "running"}:
             raise RepositoryError(f"Run {run_id} cannot transition to failed")
         timestamp = finished_at or utc_now()
@@ -680,6 +902,15 @@ class ExperimentRepository:
                 WHERE run_id = ?
                 """,
                 (timestamp, error_type, error_message, run_id),
+            )
+            self.connection.execute(
+                "UPDATE runs SET failure_phase=? WHERE run_id=?",
+                (failure_phase, run_id),
+            )
+            self.connection.execute(
+                "UPDATE run_attempts SET failure_phase=? WHERE attempt_id=("
+                "SELECT attempt_id FROM run_attempts WHERE run_id=? ORDER BY attempt_index DESC LIMIT 1)",
+                (failure_phase, run_id),
             )
 
     def recover_interrupted_run(
@@ -753,7 +984,7 @@ class ExperimentRepository:
                     feasible = NULL, constraint_violation = NULL,
                     error_type = NULL, error_message = NULL,
                     initial_population_sha256 = NULL,
-                    initial_velocity_sha256 = NULL
+                    initial_velocity_sha256 = NULL, initial_state_hash_version = NULL
                 WHERE run_id = ?
                 """,
                 (run_id,),
@@ -799,7 +1030,9 @@ class ExperimentRepository:
                     "SELECT COUNT(*) FROM run_metric_values WHERE run_id = ?", (run_id,)
                 ).fetchone()[0]
             )
-            self.connection.execute("DELETE FROM trace_points WHERE run_id = ?", (run_id,))
+            self.connection.execute(
+                "DELETE FROM trace_points WHERE run_id = ?", (run_id,)
+            )
             self.connection.execute(
                 "DELETE FROM run_metric_values WHERE run_id = ?", (run_id,)
             )
@@ -822,7 +1055,7 @@ class ExperimentRepository:
                     runtime_total_seconds = NULL, feasible = NULL,
                     constraint_violation = NULL, error_type = NULL,
                     error_message = NULL, initial_population_sha256 = NULL,
-                    initial_velocity_sha256 = NULL
+                    initial_velocity_sha256 = NULL, initial_state_hash_version = NULL
                 WHERE run_id = ?
                 """,
                 (timestamp, reason, run_id),
@@ -831,6 +1064,16 @@ class ExperimentRepository:
 
     def finish_campaign(self, campaign_id: str, finished_at: str | None = None) -> None:
         self._require_campaign_status(campaign_id, "running")
+        finalization_issues = [
+            message
+            for code, message, _ in run_evidence_issues(self.connection, campaign_id)
+            if code.startswith("run_finalization_")
+            or code in {"missing_post_run_timing", "invalid_post_run_timing"}
+        ]
+        if finalization_issues:
+            raise RepositoryError(
+                "Campaign finalization incomplete: " + "; ".join(finalization_issues)
+            )
         pending = self.connection.execute(
             """
             SELECT COUNT(*) FROM runs
@@ -865,15 +1108,28 @@ class ExperimentRepository:
         failed = int(counts["failed"] or 0)
         cancelled = int(counts["cancelled"] or 0)
         incomplete = failed + cancelled
-        normalized_waiver = waiver_reason.strip() if isinstance(waiver_reason, str) else ""
+        normalized_waiver = (
+            waiver_reason.strip() if isinstance(waiver_reason, str) else ""
+        )
         if incomplete and not normalized_waiver:
             raise RepositoryError(
                 "Campaign has failed or cancelled runs; sealing requires an explicit waiver reason"
             )
         if not incomplete and waiver_reason is not None:
-            raise RepositoryError("A seal waiver is only valid for an incomplete campaign")
+            raise RepositoryError(
+                "A seal waiver is only valid for an incomplete campaign"
+            )
         timestamp = sealed_at or utc_now()
-        with self._write_scope():
+        with self.transaction():
+            from .integrity import audit_campaign_integrity
+
+            self._require_campaign_status(campaign_id, "completed")
+            report = audit_campaign_integrity(self.connection, campaign_id)
+            if not report.is_valid:
+                raise RepositoryError(
+                    "Cannot seal campaign with invalid integrity: "
+                    + "; ".join(issue.message for issue in report.issues)
+                )
             if incomplete:
                 self.connection.execute(
                     """
@@ -896,6 +1152,10 @@ class ExperimentRepository:
         if row is None:
             raise RepositoryError(f"Unknown run: {run_id}")
         return row
+
+    def _require_writable_campaign(self, campaign_id: str) -> None:
+        if self.campaign_status(campaign_id) == "sealed":
+            raise RepositoryError("Cannot modify a sealed campaign")
 
     def _active_attempt_id(self, run_id: int) -> int:
         rows = self.connection.execute(
@@ -925,16 +1185,8 @@ class ExperimentRepository:
     def _validate_selected_metrics(
         self, campaign_id: str, metrics: Mapping[str, Any], scope: str
     ) -> None:
-        if not metrics:
-            return
-        selected = {
-            row["metric_id"]
-            for row in self.connection.execute(
-                "SELECT metric_id FROM campaign_metrics WHERE campaign_id = ?",
-                (campaign_id,),
-            )
-        }
-        unknown = set(metrics) - selected
+        selected = self._compatible_metric_contract(campaign_id)
+        unknown = set(metrics) - set(selected)
         if unknown:
             raise RepositoryError(
                 "Metrics were not selected for this campaign: "
@@ -943,7 +1195,7 @@ class ExperimentRepository:
         invalid_scope = {
             metric_id
             for metric_id in metrics
-            if scope not in self.registry.metrics[metric_id].scope
+            if scope not in selected[metric_id].definition.scope
         }
         if invalid_scope:
             raise RepositoryError(
@@ -951,11 +1203,51 @@ class ExperimentRepository:
                 + ", ".join(sorted(invalid_scope))
             )
 
-    def _metric_version(self, metric_id: str) -> int:
+    def _compatible_metric_contract(
+        self, campaign_id: str
+    ) -> dict[str, SelectedMetric]:
         try:
-            return self.registry.metrics[metric_id].version
-        except KeyError as error:
-            raise RepositoryError(f"Unknown metric: {metric_id}") from error
+            selected = selected_metric_contract(self.connection, campaign_id)
+        except MetricContractError as error:
+            raise RepositoryError(str(error)) from error
+        for metric_id, item in selected.items():
+            live = self.registry.metrics.get(metric_id)
+            if (
+                live is None
+                or not live.available
+                or live.version != item.definition.version
+                or sha256_text(canonical_json(asdict(live))) != item.digest
+            ):
+                raise RepositoryError(
+                    f"Metric definition mismatch for selected {metric_id}"
+                )
+        return selected
+
+    def _require_metric_values(
+        self,
+        run_id: int,
+        metrics: Mapping[str, Any],
+        scope: str,
+        iteration: int | None = None,
+    ) -> None:
+        row = self.connection.execute(
+            "SELECT r.campaign_id,ac.algorithm,ac.parameters_json FROM runs r "
+            "JOIN algorithm_configurations ac ON ac.configuration_id=r.configuration_id "
+            "WHERE r.run_id=?",
+            (run_id,),
+        ).fetchone()
+        contract = self._compatible_metric_contract(row["campaign_id"])
+        missing = required_value_ids(
+            contract,
+            scope,
+            algorithm=row["algorithm"],
+            parameters=json.loads(row["parameters_json"]),
+            iteration=iteration,
+        ) - set(metrics)
+        if missing:
+            raise RepositoryError(
+                f"Missing required {scope} metrics: " + ", ".join(sorted(missing))
+            )
 
     def _insert_run_metric(
         self, run_id: int, metric_id: str, value: Any, provenance: str
@@ -972,7 +1264,7 @@ class ExperimentRepository:
             (
                 run_id,
                 metric_id,
-                self._metric_version(metric_id),
+                definition.version,
                 provenance,
                 encoded.value_real,
                 encoded.value_integer,
@@ -1002,7 +1294,7 @@ class ExperimentRepository:
                 run_id,
                 checkpoint_index,
                 metric_id,
-                self._metric_version(metric_id),
+                definition.version,
                 provenance,
                 encoded.value_real,
                 encoded.value_integer,

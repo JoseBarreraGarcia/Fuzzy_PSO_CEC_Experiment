@@ -13,7 +13,7 @@
     "campaign": {"$ref": "#/$defs/campaign"},
     "randomness": {"$ref": "#/$defs/randomness"},
     "problems": {"type": "array", "minItems": 1, "items": {"oneOf": [{"$ref": "#/$defs/cec2017Problems"}, {"$ref": "#/$defs/classicalProblems"}, {"$ref": "#/$defs/opfunuProblems"}]}},
-    "treatments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/psoTreatment"}},
+    "treatments": {"type": "array", "minItems": 1, "items": {"oneOf": [{"$ref": "#/$defs/psoTreatment"}, {"$ref": "#/$defs/realCodedGaTreatment"}]}},
     "execution": {"$ref": "#/$defs/execution"},
     "trace": {"$ref": "#/$defs/trace"}
   },
@@ -46,7 +46,7 @@
       "required": ["protocol", "base_seed", "engine"],
       "properties": {
         "protocol": {"const": "paired_by_replica_v1", "description": "Comparte la semilla de cada índice de réplica entre todos los tratamientos."},
-        "base_seed": {"type": "integer", "minimum": 0, "default": 42, "description": "Semilla de la réplica 0; las siguientes son base_seed + replica_index."},
+        "base_seed": {"type": "integer", "minimum": 0, "maximum": 9223372036854775807, "default": 42, "description": "Semilla de la réplica 0; las siguientes son base_seed + replica_index. La última réplica también debe ser <= 9223372036854775807; el lector valida esa suma."},
         "engine": {"const": "numpy_seedsequence_pcg64_v1", "description": "Motor y estrategia versionados para crear subflujos reproducibles."}
       }
     },
@@ -82,10 +82,48 @@
       "type": "object", "additionalProperties": false,
       "required": ["id", "optimizer", "parameters", "parameter_policy"],
       "properties": {
-        "id": {"type": "string", "minLength": 1, "description": "Identificador único de la configuración algorítmica."},
+        "id": {"type": "string", "minLength": 1, "description": "Etiqueta de tratamiento única dentro de esta campaña; puede repetirse en otras campañas."},
         "optimizer": {"const": "PSO"},
         "parameters": {"$ref": "#/$defs/psoParameters"},
-        "parameter_policy": {"oneOf": [{"$ref": "#/$defs/fixedInertia"}, {"$ref": "#/$defs/legacyLdiw"}, {"$ref": "#/$defs/fuzzyInertiaMamdani"}]}
+        "parameter_policy": {"oneOf": [{"$ref": "#/$defs/fixedInertia"}, {"$ref": "#/$defs/legacyLdiw"}, {"$ref": "#/$defs/endpointLinear"}, {"$ref": "#/$defs/fuzzyInertiaMamdani"}]}
+      }
+    },
+    "realCodedGaTreatment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "optimizer", "parameters"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "description": "Etiqueta de tratamiento única dentro de esta campaña; puede repetirse en otras campañas."},
+        "optimizer": {"const": "GA"},
+        "parameters": {"$ref": "#/$defs/realCodedGaParameters"},
+        "parameter_policy": {"$ref": "#/$defs/noAdaptation"}
+      }
+    },
+    "realCodedGaParameters": {
+      "type": "object", "additionalProperties": false,
+      "required": ["population_size", "max_iterations"],
+      "properties": {
+        "population_size": {"type": "integer", "minimum": 2},
+        "max_iterations": {"type": "integer", "minimum": 1},
+        "crossover_probability": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.9},
+        "crossover_distribution_index": {"type": "number", "exclusiveMinimum": 0, "default": 20, "description": "Índice de distribución eta_c de SBX."},
+        "mutation_probability": {
+          "oneOf": [
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"const": "1/d"}
+          ],
+          "default": "1/d",
+          "description": "Probabilidad por variable; 1/d es la opción de defecto basada en dimensión."
+        },
+        "mutation_distribution_index": {"type": "number", "exclusiveMinimum": 0, "default": 20, "description": "Índice de distribución eta_m de mutación polinómica."},
+        "tournament_size": {"type": "integer", "minimum": 2, "default": 2}
+      }
+    },
+    "noAdaptation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "parameters"],
+      "properties": {
+        "id": {"const": "no_adaptation"},
+        "parameters": {"type": "object", "maxProperties": 0}
       }
     },
     "psoParameters": {
@@ -96,7 +134,8 @@
         "max_iterations": {"type": "integer", "minimum": 1},
         "cognitive": {"type": "number", "default": 2.0, "description": "Coeficiente cognitivo c1."},
         "social": {"type": "number", "default": 2.0, "description": "Coeficiente social c2."},
-        "velocity_factor": {"type": "number", "minimum": 0, "default": 0.1, "description": "Fracción del rango usada como velocidad máxima."}
+        "velocity_factor": {"type": "number", "minimum": 0, "default": 0.1, "description": "Factor de la regla de velocidad explícita; no siempre es una fracción del rango."},
+        "velocity_rule": {"enum": ["legacy_upper0_v1", "domain_width_v1"], "default": "legacy_upper0_v1", "description": "Para campañas nuevas se recomienda domain_width_v1; omitir conserva la variante histórica."}
       }
     },
     "fixedInertia": {
@@ -107,6 +146,10 @@
       "type": "object", "additionalProperties": false, "required": ["id", "parameters"],
       "properties": {"id": {"const": "legacy_ldiw"}, "parameters": {"type": "object", "additionalProperties": false, "properties": {"maximum": {"type": "number", "default": 0.9}, "minimum": {"type": "number", "default": 0.1}}}}
     },
+    "endpointLinear": {
+      "type": "object", "additionalProperties": false, "required": ["id", "parameters"],
+      "properties": {"id": {"const": "linear_endpoints_v1"}, "parameters": {"type": "object", "additionalProperties": false, "properties": {"maximum": {"type": "number", "default": 0.9}, "minimum": {"type": "number", "default": 0.1}}}}
+    },
     "fuzzyInertiaMamdani": {
       "type": "object", "additionalProperties": false, "required": ["id", "parameters"],
       "properties": {
@@ -116,6 +159,7 @@
           "required": ["minimum", "maximum", "granularity", "rule_base", "membership_family", "overlap", "zero_overlap_boundary_policy"],
           "properties": {
             "minimum": {"type": "number", "description": "Límite inferior efectivo de w."},
+            "diversity_metric": {"enum": ["hussain_diversity_v1", "hussain_diversity_v2"], "default": "hussain_diversity_v1", "description": "v2 conserva precisión interna; v1 redondea a tres decimales."},
             "maximum": {"type": "number", "description": "Límite superior efectivo de w."},
             "granularity": {"type": "integer", "enum": [3, 5, 7, 9]},
             "rule_base": {"type": "string", "enum": ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"]},

@@ -1,0 +1,13 @@
+include README.md pyproject.toml MANIFEST.in
+recursive-include src/afcs *.py *.md *.json *.sql *.pkl LICENSE.txt
+recursive-include tests *.py *.csv *.md
+recursive-include config *.json *.md
+global-exclude *.py[cod] *.db *.db-shm *.db-wal *.db-journal
+global-exclude __pycache__
+prune Tesis
+prune ARCHIVE
+prune Review
+prune Resultados
+prune .venv
+prune build
+prune dist

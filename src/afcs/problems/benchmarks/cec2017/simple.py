@@ -2,10 +2,9 @@
 # Author: Duncan Tilley
 # Simple function definitions, f1 to f10
 
-from . import basic
-from . import transforms
-
 import numpy as np
+
+from . import basic, transforms
 
 
 def f1(x, rotation=None, shift=None):
@@ -42,9 +41,9 @@ def f2(x, rotation=None, shift=None):
         shift (array): Optional shift vector. If None (default), the official
             vector from the benchmark suite will be used.
     """
-    if 'warned' not in f2.__dict__:
-        f2.warned = True
-        print('WARNING: f2 has been deprecated from the CEC 2017 benchmark suite')
+    if "warned" not in f2.__dict__:
+        f2.__dict__["warned"] = True
+        print("WARNING: f2 has been deprecated from the CEC 2017 benchmark suite")
 
     x = np.array(x)
     nx = x.shape[1]
@@ -233,15 +232,4 @@ def f10(x, rotation=None, shift=None):
     return basic.modified_schwefel(x_transformed) + 1000.0
 
 
-all_functions = [
-    f1,
-    f2,
-    f3,
-    f4,
-    f5,
-    f6,
-    f7,
-    f8,
-    f9,
-    f10
-]
+all_functions = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10]

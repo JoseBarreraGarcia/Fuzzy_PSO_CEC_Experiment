@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
 import numpy as np
 
-from .membership import MembershipFunction, fuzzify, uniform_partition
-
+from .membership import fuzzify, uniform_partition
 
 RULE_PATTERNS = {
     "R1": ("decreasing", "agnostic"),

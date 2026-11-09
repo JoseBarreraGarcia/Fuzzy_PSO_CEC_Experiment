@@ -1,6 +1,6 @@
 import tempfile
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 from afcs.metrics import load_metric_registry
 from afcs.persistence import (
@@ -66,6 +66,9 @@ class TestExperimentRepository(unittest.TestCase):
                 "diversity_hussain": 2.0,
                 "inertia_weight": 0.9,
             },
+        )
+        self.repository.record_trace(
+            run_id, 1, 4, 100, {"objective_best": 0.1}, elapsed_seconds=0.5
         )
         self.repository.complete_run(
             run_id,
@@ -178,10 +181,10 @@ class TestExperimentRepository(unittest.TestCase):
         self.repository.start_campaign("campaign")
         self.repository.start_run(run_id)
         with self.assertRaises(RepositoryError):
-            self.repository.record_trace(
-                run_id, 0, 0, 20, {"inertia_weight": 0.9}
-            )
-        count = self.connection.execute("SELECT COUNT(*) FROM trace_points").fetchone()[0]
+            self.repository.record_trace(run_id, 0, 0, 20, {"inertia_weight": 0.9})
+        count = self.connection.execute("SELECT COUNT(*) FROM trace_points").fetchone()[
+            0
+        ]
         self.assertEqual(count, 0)
 
     def test_trace_budget_must_be_monotonic(self):
@@ -231,7 +234,9 @@ class TestExperimentRepository(unittest.TestCase):
             self.repository.record_trace(
                 run_id, 0, 0, 20, {"objective_best": {"not": "a float"}}
             )
-        count = self.connection.execute("SELECT COUNT(*) FROM trace_points").fetchone()[0]
+        count = self.connection.execute("SELECT COUNT(*) FROM trace_points").fetchone()[
+            0
+        ]
         self.assertEqual(count, 0)
 
     def test_campaign_cannot_finish_with_running_run(self):
@@ -259,7 +264,9 @@ class TestExperimentRepository(unittest.TestCase):
             "SELECT status, error_type, error_message FROM runs WHERE run_id = ?",
             (run_id,),
         ).fetchone()
-        self.assertEqual(tuple(row), ("failed", "FloatingPointError", "non-finite fitness"))
+        self.assertEqual(
+            tuple(row), ("failed", "FloatingPointError", "non-finite fitness")
+        )
 
     def test_planned_run_can_be_cancelled_without_creating_attempt(self):
         run_id = self._prepare_run()
@@ -273,7 +280,9 @@ class TestExperimentRepository(unittest.TestCase):
         run = self.connection.execute(
             "SELECT status, cancellation_reason FROM runs WHERE run_id = ?", (run_id,)
         ).fetchone()
-        self.assertEqual(tuple(run), ("cancelled", "excluded by the approved campaign scope"))
+        self.assertEqual(
+            tuple(run), ("cancelled", "excluded by the approved campaign scope")
+        )
         self.assertEqual(
             self.connection.execute(
                 "SELECT COUNT(*) FROM run_attempts WHERE run_id = ?", (run_id,)

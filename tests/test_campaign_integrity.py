@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 
 from afcs.experiments import SequentialCampaignOrchestrator, parse_campaign_config
 from afcs.metrics import load_metric_registry
@@ -12,7 +12,6 @@ from afcs.persistence import (
     audit_campaign_integrity,
     initialize_v2_database,
 )
-
 
 EXAMPLE_PATH = Path("config/campaigns/cec2017_pso_v2.example.json")
 
@@ -28,9 +27,7 @@ class TestCampaignIntegrityAudit(unittest.TestCase):
         raw["campaign"].update(
             {"id": "integrity", "replicas": 1, "metrics": "optimizer"}
         )
-        raw["problems"] = [
-            {"family": "CEC2017", "functions": [1], "dimensions": [10]}
-        ]
+        raw["problems"] = [{"family": "CEC2017", "functions": [1], "dimensions": [10]}]
         raw["treatments"] = [raw["treatments"][0]]
         raw["treatments"][0]["parameters"].update(
             {"population_size": 4, "max_iterations": 2}
@@ -84,7 +81,9 @@ class TestCampaignIntegrityAudit(unittest.TestCase):
             "terminal_attempt_mismatch", {issue.code for issue in report.issues}
         )
 
-    def test_cancelled_run_is_warning_but_missing_waiver_is_integrity_error(self) -> None:
+    def test_cancelled_run_is_warning_but_missing_waiver_is_integrity_error(
+        self,
+    ) -> None:
         self.connection.execute(
             """
             UPDATE runs SET status = 'cancelled', cancellation_reason = 'scope change'

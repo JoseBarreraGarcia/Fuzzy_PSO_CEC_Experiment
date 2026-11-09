@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-import math
-from types import MappingProxyType
 from typing import Any, Protocol, runtime_checkable
 
 from afcs.core import Evaluation, OptimizationDirection, SearchSpace
+from afcs.core.serialization import freeze_json_mapping
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,7 +41,7 @@ class ProblemMetadata:
             object.__setattr__(self, "known_optimum", optimum)
         if not isinstance(self.parameters, Mapping):
             raise TypeError("parameters must be a mapping")
-        object.__setattr__(self, "parameters", MappingProxyType(dict(self.parameters)))
+        object.__setattr__(self, "parameters", freeze_json_mapping(self.parameters))
 
     @property
     def dimension(self) -> int:
@@ -53,11 +53,9 @@ class OptimizationProblem(Protocol):
     """Structural interface consumed by optimizers and experiment runners."""
 
     @property
-    def metadata(self) -> ProblemMetadata:
-        ...
+    def metadata(self) -> ProblemMetadata: ...
 
-    def evaluate(self, candidate: Sequence[float]) -> Evaluation:
-        ...
+    def evaluate(self, candidate: Sequence[float]) -> Evaluation: ...
 
 
 class CallableProblem:
@@ -85,4 +83,3 @@ class CallableProblem:
         if isinstance(result, Evaluation):
             return result
         return Evaluation(objective=result)
-

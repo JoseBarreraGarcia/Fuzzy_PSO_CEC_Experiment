@@ -1,15 +1,14 @@
-from dataclasses import dataclass
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
 from afcs.core import ReplicaRandomStreams, SearchSpace
 from afcs.experiments import ExperimentRunExecutor, RunBindingError
-from afcs.metrics import load_metric_registry
-from afcs.metrics import OptimizationTracePoint
+from afcs.metrics import OptimizationTracePoint, load_metric_registry
 from afcs.optimizers.pso import FixedInertia, LegacyCompatiblePSO, LegacyPSORunConfig
 from afcs.persistence import ExperimentRepository, initialize_v2_database
 from afcs.problems import CallableProblem, ProblemMetadata
@@ -35,12 +34,8 @@ class FailingOptimizer:
 class TestExperimentRunExecutor(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.connection = initialize_v2_database(
-            Path(self.temp_dir.name) / "runner.db"
-        )
-        self.repository = ExperimentRepository(
-            self.connection, load_metric_registry()
-        )
+        self.connection = initialize_v2_database(Path(self.temp_dir.name) / "runner.db")
+        self.repository = ExperimentRepository(self.connection, load_metric_registry())
         self.repository.create_campaign(
             "campaign",
             "Runner integration",
@@ -65,9 +60,7 @@ class TestExperimentRunExecutor(unittest.TestCase):
             inertia_policy=self.policy,
             rng=np.random.default_rng(0),
         ).run_metadata
-        instance_id = self.repository.add_problem_instance(
-            "test", "sphere", 2, 0.0
-        )
+        instance_id = self.repository.add_problem_instance("test", "sphere", 2, 0.0)
         self.repository.add_algorithm_configuration(
             "pso-fixed",
             "campaign",
@@ -122,7 +115,9 @@ class TestExperimentRunExecutor(unittest.TestCase):
         self.assertEqual(row["random_seed"], 42)
         self.assertEqual(len(row["initial_population_sha256"]), 64)
         self.assertEqual(len(row["initial_velocity_sha256"]), 64)
-        self.assertEqual(json.loads(row["solution_json"]), result.best_position.tolist())
+        self.assertEqual(
+            json.loads(row["solution_json"]), result.best_position.tolist()
+        )
         self.assertEqual(row["objective_best"], result.best_objective)
 
     def test_persistence_and_wall_times_are_recorded_after_completion(self):

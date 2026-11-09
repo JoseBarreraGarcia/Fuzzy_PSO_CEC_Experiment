@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-import math
 from time import perf_counter
 from types import MappingProxyType
 
 import numpy as np
 
 from afcs.controllers import ParameterUpdate
-from afcs.fuzzy import MamdaniController, SUPPORTED_OVERLAP_DEFINITIONS
-from afcs.metrics import hussain_diversity_v1
+from afcs.fuzzy import SUPPORTED_OVERLAP_DEFINITIONS, MamdaniController
+from afcs.metrics import hussain_diversity_v1, hussain_diversity_v2
 from afcs.optimizers import SearchState
 
 
@@ -112,7 +112,23 @@ class LegacyLinearInertia:
             policy_id=self.policy_id,
             policy_version=self.policy_version,
             values={"w": self.value_at(state.iteration)},
-            reason="historical linear inertia schedule",
+            reason=f"{self.policy_id} inertia schedule",
+        )
+
+
+class EndpointLinearInertia(LegacyLinearInertia):
+    """Linear movement weights including both endpoints; one movement uses maximum."""
+
+    policy_id = "linear_endpoints_v1"
+
+    def value_at(self, iteration: int) -> float:
+        super().value_at(iteration)
+        if iteration <= 1 or self.max_iterations == 1:
+            return self.maximum
+        if iteration == self.max_iterations:
+            return self.minimum
+        return self.maximum - (self.maximum - self.minimum) * (
+            (iteration - 1) / (self.max_iterations - 1)
         )
 
 
@@ -121,7 +137,7 @@ class FuzzyInertiaPolicy:
 
     policy_id = "fuzzy_inertia_mamdani"
     policy_version = "1"
-    compatible_parameters = ("w",)
+    compatible_parameters: tuple[str, ...] = ("w",)
 
     def __init__(
         self,
@@ -140,24 +156,50 @@ class FuzzyInertiaPolicy:
         zero_overlap_boundary_policy: str = "nearest_center_tie_upper",
         centroid_grid_points: int = 501,
         inference_evaluation_mode: str = "dense_v1",
+        diversity_metric: str = "hussain_diversity_v1",
         clock: Callable[[], float] = perf_counter,
     ) -> None:
-        if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations <= 0:
+        if diversity_metric not in {"hussain_diversity_v1", "hussain_diversity_v2"}:
+            raise ValueError("Unsupported fuzzy diversity_metric")
+        self.diversity_metric = diversity_metric
+        self.policy_version = "1" if diversity_metric == "hussain_diversity_v1" else "2"
+        if (
+            isinstance(max_iterations, bool)
+            or not isinstance(max_iterations, int)
+            or max_iterations <= 0
+        ):
             raise ValueError("max_iterations must be a positive integer")
         minimum = float(minimum)
         maximum = float(maximum)
-        if not math.isfinite(minimum) or not math.isfinite(maximum) or minimum >= maximum:
-            raise ValueError("minimum and maximum must be finite with minimum < maximum")
+        if (
+            not math.isfinite(minimum)
+            or not math.isfinite(maximum)
+            or minimum >= maximum
+        ):
+            raise ValueError(
+                "minimum and maximum must be finite with minimum < maximum"
+            )
         if overlap_mode == "shared":
             if overlap is None:
                 raise ValueError("shared overlap mode requires overlap")
-            if any(value is not None for value in (diversity_overlap, progress_overlap, output_overlap)):
-                raise ValueError("shared overlap mode cannot declare independent overlaps")
+            if any(
+                value is not None
+                for value in (diversity_overlap, progress_overlap, output_overlap)
+            ):
+                raise ValueError(
+                    "shared overlap mode cannot declare independent overlaps"
+                )
             diversity_overlap = progress_overlap = output_overlap = overlap
         elif overlap_mode == "independent":
             if overlap is not None:
-                raise ValueError("independent overlap mode cannot declare shared overlap")
-            if any(value is None for value in (diversity_overlap, progress_overlap, output_overlap)):
+                raise ValueError(
+                    "independent overlap mode cannot declare shared overlap"
+                )
+            if (
+                diversity_overlap is None
+                or progress_overlap is None
+                or output_overlap is None
+            ):
                 raise ValueError("independent overlap mode requires all three overlaps")
         else:
             raise ValueError("overlap_mode must be 'shared' or 'independent'")
@@ -222,9 +264,11 @@ class FuzzyInertiaPolicy:
                 "granularity": self.granularity,
                 "rule_base": self.rule_base,
                 "membership_family": self.membership_family,
-                "overlap_definition": SUPPORTED_OVERLAP_DEFINITIONS[self.membership_family],
+                "overlap_definition": SUPPORTED_OVERLAP_DEFINITIONS[
+                    self.membership_family
+                ],
                 "overlap": overlap_config,
-                "diversity_metric": "hussain_diversity_v1",
+                "diversity_metric": self.diversity_metric,
                 "diversity_normalization": "running_max_ratio_v1",
                 "progress": "iteration_over_max_iterations_v1",
                 "zero_overlap_boundary_policy": self.zero_overlap_boundary_policy,
@@ -264,10 +308,16 @@ class FuzzyInertiaPolicy:
         positions = state.observations.get("positions")
         if positions is None:
             raise ValueError("fuzzy policy requires the current swarm positions")
-        diversity = hussain_diversity_v1(np.asarray(positions, dtype=float))
+        diversity_function = (
+            hussain_diversity_v1
+            if self.diversity_metric == "hussain_diversity_v1"
+            else hussain_diversity_v2
+        )
+        diversity = diversity_function(np.asarray(positions, dtype=float))
         self._maximum_diversity = max(self._maximum_diversity, diversity)
         diversity_ratio = (
-            0.0 if self._maximum_diversity == 0.0
+            0.0
+            if self._maximum_diversity == 0.0
             else diversity / self._maximum_diversity
         )
         progress = state.iteration / self.max_iterations
@@ -310,8 +360,7 @@ class FuzzyInertiaPolicy:
                     },
                 },
                 "active_rules": [
-                    f"D{d}:P{p}->W{w}"
-                    for d, p, w, _firing in inference.active_rules
+                    f"D{d}:P{p}->W{w}" for d, p, w, _firing in inference.active_rules
                 ],
                 "rule_firing_strengths": {
                     f"D{d}:P{p}->W{w}": firing
@@ -325,4 +374,3 @@ class FuzzyInertiaPolicy:
             values={"w": inertia},
             reason="Mamdani control from Hussain diversity and iteration progress",
         )
-

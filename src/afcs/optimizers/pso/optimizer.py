@@ -1,26 +1,32 @@
-"""In-memory, legacy-compatible Particle Swarm Optimization cycle."""
+"""Versioned in-memory PSO cycle with explicit historical or domain-width limits."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-import hashlib
 import math
-from time import perf_counter
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
+from time import perf_counter
 from types import MappingProxyType
 
 import numpy as np
 
 from afcs.controllers import ParameterPolicy
 from afcs.core import EvaluationBudget, OptimizationDirection, ReplicaRandomStreams
+from afcs.core.hashing import INITIAL_STATE_HASH_VERSION, array_sha256
+from afcs.metrics import (
+    OptimizationObservation,
+    OptimizationTracePoint,
+    PopulationObservation,
+    PSOTraceCollector,
+)
 from afcs.optimizers import OptimizerMetadata, OptimizerRunMetadata, SearchState
-from afcs.metrics import OptimizationTracePoint, PSOTraceCollector
+from afcs.optimizers.contracts import unconstrained_objective
 from afcs.problems import OptimizationProblem
 
 from .core import PSOConfig, advance_swarm
 
-
 PSO_IMPLEMENTATION_VERSION = "2.0.0a0-legacy-compatible"
+PSO_DOMAIN_WIDTH_VERSION = "2.0.0a1-domain-width"
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,8 +38,11 @@ class LegacyPSORunConfig:
     cognitive: float = 2.0
     social: float = 2.0
     velocity_factor: float = 0.1
+    velocity_rule: str = "legacy_upper0_v1"
 
     def __post_init__(self) -> None:
+        if self.velocity_rule not in {"legacy_upper0_v1", "domain_width_v1"}:
+            raise ValueError("Unsupported PSO velocity_rule")
         for name, value in (
             ("population_size", self.population_size),
             ("max_iterations", self.max_iterations),
@@ -77,17 +86,20 @@ class PSORunResult:
     initial_velocity_sha256: str
     trace_points: tuple[OptimizationTracePoint, ...] = ()
     run_metrics: Mapping[str, object] = field(default_factory=dict)
+    initial_state_hash_version: str | None = None
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "run_metrics", MappingProxyType(dict(self.run_metrics)))
+        object.__setattr__(
+            self, "run_metrics", MappingProxyType(dict(self.run_metrics))
+        )
 
 
 class LegacyCompatiblePSO:
-    """Run PSO without persistence, controllers, or seed derivation.
+    """Run single-use PSO with an injected inertia policy and explicit RNG.
 
-    The caller owns and injects the NumPy generator. This is dependency
-    injection only: it intentionally does not define the campaign seed
-    protocol or derive per-replica random streams.
+    ``rng`` is a shared in-memory stream without replica provenance;
+    ``random_streams`` is the auditable campaign protocol. Velocity semantics
+    are explicit and determine the implementation version.
     """
 
     def __init__(
@@ -134,7 +146,10 @@ class LegacyCompatiblePSO:
         self._component_clock = component_clock
         self._problem_time_seconds = 0.0
         self._metric_time_seconds = 0.0
+        self._run_started = False
         if random_streams is None:
+            if rng is None:
+                raise ValueError("rng is required without random_streams")
             self._initialization_rng = rng
             self._dynamics_rng = rng
             self._replica_seed = None
@@ -150,12 +165,21 @@ class LegacyCompatiblePSO:
         return OptimizerRunMetadata(
             optimizer=OptimizerMetadata(
                 optimizer_id="PSO",
-                version=PSO_IMPLEMENTATION_VERSION,
+                version=(
+                    PSO_IMPLEMENTATION_VERSION
+                    if self._config.velocity_rule == "legacy_upper0_v1"
+                    else PSO_DOMAIN_WIDTH_VERSION
+                ),
                 configurable_parameters=(
                     "w",
                     "cognitive",
                     "social",
                     "velocity_factor",
+                    *(
+                        ("velocity_rule",)
+                        if self._config.velocity_rule != "legacy_upper0_v1"
+                        else ()
+                    ),
                 ),
                 adaptable_parameters=("w",),
             ),
@@ -164,6 +188,11 @@ class LegacyCompatiblePSO:
                 "cognitive": self._config.cognitive,
                 "social": self._config.social,
                 "velocity_factor": self._config.velocity_factor,
+                **(
+                    {"velocity_rule": self._config.velocity_rule}
+                    if self._config.velocity_rule != "legacy_upper0_v1"
+                    else {}
+                ),
                 "inertia_policy": {
                     "policy_id": self._inertia_policy.policy_id,
                     "policy_version": self._inertia_policy.policy_version,
@@ -178,24 +207,38 @@ class LegacyCompatiblePSO:
         )
 
     def run(self) -> PSORunResult:
+        """Execute one attempt; this instance cannot be run again, even on failure."""
+
+        if self._run_started:
+            raise RuntimeError(
+                "Optimizer instances are single-use; create a new instance"
+            )
+        self._run_started = True
         self._problem_time_seconds = 0.0
         self._metric_time_seconds = 0.0
         initialization_started = self._clock()
         space = self._problem.metadata.search_space
         lower = np.asarray(space.lower_bounds, dtype=float)
         upper = np.asarray(space.upper_bounds, dtype=float)
-        maximum_velocity = self._config.velocity_factor * upper[0]
-        if maximum_velocity < 0:
-            raise ValueError(
-                "legacy Vmax requires the first upper bound to be non-negative"
+        maximum_velocity = self._config.velocity_factor * (
+            upper - lower
+            if self._config.velocity_rule == "domain_width_v1"
+            else upper[0]
+        )
+        if not np.all(np.isfinite(maximum_velocity)) or np.any(maximum_velocity < 0):
+            label = (
+                "legacy Vmax"
+                if self._config.velocity_rule == "legacy_upper0_v1"
+                else "domain-width Vmax"
             )
+            raise ValueError(f"{label} must produce finite non-negative limits")
 
         budget = EvaluationBudget(self._config.evaluation_budget)
         shape = (self._config.population_size, space.dimension)
         positions = self._initialization_rng.uniform(lower, upper, size=shape)
         velocities = np.zeros(shape, dtype=float)
-        initial_population_sha256 = _array_sha256(positions)
-        initial_velocity_sha256 = _array_sha256(velocities)
+        initial_population_sha256 = array_sha256(positions)
+        initial_velocity_sha256 = array_sha256(velocities)
         objective_values = self._evaluate_population(positions, budget)
         personal_best = positions.copy()
         personal_best_values = objective_values.copy()
@@ -203,12 +246,13 @@ class LegacyCompatiblePSO:
         global_best = personal_best[best_index].copy()
         global_best_value = float(personal_best_values[best_index])
         self._observe(
-            iteration=0,
-            evaluations=budget.consumed,
-            positions=positions,
-            objective_values=objective_values,
-            best_objective=global_best_value,
-            elapsed_seconds=self._clock() - initialization_started,
+            observation=OptimizationObservation(
+                iteration=0,
+                evaluations=budget.consumed,
+                best_objective=global_best_value,
+                elapsed_seconds=self._clock() - initialization_started,
+            ),
+            population=PopulationObservation(positions, objective_values),
             inertia_weight=None,
         )
 
@@ -256,9 +300,7 @@ class LegacyCompatiblePSO:
             velocities = step.velocities
             objective_values = self._evaluate_population(positions, budget)
 
-            improved = self._improvement_mask(
-                objective_values, personal_best_values
-            )
+            improved = self._improvement_mask(objective_values, personal_best_values)
             personal_best[improved] = positions[improved]
             personal_best_values[improved] = objective_values[improved]
             candidate_index = self._best_index(personal_best_values)
@@ -269,12 +311,13 @@ class LegacyCompatiblePSO:
                 global_best = personal_best[candidate_index].copy()
                 global_best_value = candidate_value
             self._observe(
-                iteration=iteration,
-                evaluations=budget.consumed,
-                positions=positions,
-                objective_values=objective_values,
-                best_objective=global_best_value,
-                elapsed_seconds=self._clock() - iteration_started,
+                observation=OptimizationObservation(
+                    iteration=iteration,
+                    evaluations=budget.consumed,
+                    best_objective=global_best_value,
+                    elapsed_seconds=self._clock() - iteration_started,
+                ),
+                population=PopulationObservation(positions, objective_values),
                 inertia_weight=inertia,
                 policy_diagnostics=getattr(
                     self._inertia_policy, "last_diagnostics", None
@@ -293,6 +336,7 @@ class LegacyCompatiblePSO:
             inertia_history=tuple(inertia_history),
             initial_population_sha256=initial_population_sha256,
             initial_velocity_sha256=initial_velocity_sha256,
+            initial_state_hash_version=INITIAL_STATE_HASH_VERSION,
             trace_points=(
                 self._trace_collector.points
                 if self._trace_collector is not None
@@ -300,15 +344,28 @@ class LegacyCompatiblePSO:
             ),
             run_metrics={
                 **getattr(self._inertia_policy, "summary_metrics", {}),
+                "objective_best": global_best_value,
                 "problem_evaluation_total_seconds": self._problem_time_seconds,
                 "metric_collection_total_seconds": self._metric_time_seconds,
             },
         )
 
-    def _observe(self, **observation) -> None:
+    def _observe(
+        self,
+        *,
+        observation: OptimizationObservation,
+        population: PopulationObservation,
+        inertia_weight: float | None,
+        policy_diagnostics: Mapping[str, object] | None = None,
+    ) -> None:
         if self._trace_collector is not None:
             started = self._read_component_clock()
-            self._trace_collector.observe(**observation)
+            self._trace_collector.observe(
+                observation=observation,
+                population=population,
+                inertia_weight=inertia_weight,
+                policy_diagnostics=policy_diagnostics,
+            )
             self._metric_time_seconds += self._component_elapsed(started)
 
     def _evaluate_population(
@@ -318,7 +375,7 @@ class LegacyCompatiblePSO:
         for index, position in enumerate(positions):
             budget.consume()
             started = self._read_component_clock()
-            values[index] = self._problem.evaluate(position).objective
+            values[index] = unconstrained_objective(self._problem.evaluate(position))
             self._problem_time_seconds += self._component_elapsed(started)
         return values
 
@@ -351,13 +408,3 @@ def _readonly_copy(values: np.ndarray) -> np.ndarray:
     snapshot = np.array(values, dtype=float, copy=True)
     snapshot.setflags(write=False)
     return snapshot
-
-
-def _array_sha256(values: np.ndarray) -> str:
-    canonical = np.ascontiguousarray(values, dtype="<f8")
-    payload = (
-        str(canonical.shape).encode("ascii")
-        + canonical.dtype.str.encode("ascii")
-        + canonical.tobytes()
-    )
-    return hashlib.sha256(payload).hexdigest()

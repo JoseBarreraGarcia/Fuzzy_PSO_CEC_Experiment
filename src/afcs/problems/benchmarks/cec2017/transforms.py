@@ -4,59 +4,74 @@
 # Note that these correspond to the many .txt files provided along with the
 # original implementation and should be used for final benchmark results.
 
-import numpy as np
+import hashlib
 import pickle
-import os
+from pathlib import Path
 
-with open(os.path.join(os.path.dirname(__file__), 'data.pkl'), 'rb') as _pkl_file:
-    _pkl = pickle.load(_pkl_file)
+import numpy as np
+
+CEC2017_DATA_SHA256 = "5f978ec6620e659ea933e21c4c4398b47b811467d3eed3dcb204566c3965924b"
+
+
+def _load_data(path: Path) -> dict:
+    payload = path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if digest != CEC2017_DATA_SHA256:
+        raise ValueError(
+            f"CEC2017 data SHA-256 mismatch: expected={CEC2017_DATA_SHA256}, "
+            f"observed={digest}, path={path}"
+        )
+    return pickle.loads(payload)
+
+
+_pkl = _load_data(Path(__file__).with_name("data.pkl"))
 
 # Each has shape (20, N, N) containing an N-dimensional rotation matrix
 # for functions f1 to f20
 rotations = {
-    2: _pkl['M_D2'],
-    10: _pkl['M_D10'],
-    20: _pkl['M_D20'],
-    30: _pkl['M_D30'],
-    50: _pkl['M_D50'],
-    100: _pkl['M_D100']
+    2: _pkl["M_D2"],
+    10: _pkl["M_D10"],
+    20: _pkl["M_D20"],
+    30: _pkl["M_D30"],
+    50: _pkl["M_D50"],
+    100: _pkl["M_D100"],
 }
 
 # Each has shape (10, 10, N, N) containing 10 N-dimensional rotation matrices
 # for functions f21 to f30
 rotations_cf = {
-    2: _pkl['M_cf_d2'],
-    10: _pkl['M_cf_D10'],
-    20: _pkl['M_cf_D20'],
-    30: _pkl['M_cf_D30'],
-    50: _pkl['M_cf_D50'],
-    100: _pkl['M_cf_D100']
+    2: _pkl["M_cf_d2"],
+    10: _pkl["M_cf_D10"],
+    20: _pkl["M_cf_D20"],
+    30: _pkl["M_cf_D30"],
+    50: _pkl["M_cf_D50"],
+    100: _pkl["M_cf_D100"],
 }
 
 # Shape (20, 100)
 # Contains 100-dimension shift vectors for functions f1 to f20
-shifts = _pkl['shift']
+shifts = _pkl["shift"]
 
 # Shape (10, 10, 100)
 # Contains 10 100-dimension shift vectors for functions f21 to f30
-shifts_cf = _pkl['shift_cf']
+shifts_cf = _pkl["shift_cf"]
 
 # Each has shape (10, N) containing N-dimensional permutations for functions f11
 # to f20 (note: the original were 1-indexed, these are 0-indexed)
 shuffles = {
-    10: _pkl['shuffle_D10'],
-    30: _pkl['shuffle_D30'],
-    50: _pkl['shuffle_D50'],
-    100: _pkl['shuffle_D100']
+    10: _pkl["shuffle_D10"],
+    30: _pkl["shuffle_D30"],
+    50: _pkl["shuffle_D50"],
+    100: _pkl["shuffle_D100"],
 }
 
 # Each has shape (2, 10, N) containing 10 N-dimensional permutations for
 # functions f29 and f30 (note: the original were 1-indexed, these are 0-indexed)
 shuffles_cf = {
-    10: _pkl['shuffle_cf_D10'],
-    30: _pkl['shuffle_cf_D30'],
-    50: _pkl['shuffle_cf_D50'],
-    100: _pkl['shuffle_cf_D100']
+    10: _pkl["shuffle_cf_D10"],
+    30: _pkl["shuffle_cf_D30"],
+    50: _pkl["shuffle_cf_D50"],
+    100: _pkl["shuffle_cf_D100"],
 }
 
 

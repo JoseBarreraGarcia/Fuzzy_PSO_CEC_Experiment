@@ -1,11 +1,6 @@
 import csv
-from pathlib import Path
-import sys
 import unittest
-
-SRC = Path(__file__).resolve().parents[1] / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+from pathlib import Path
 
 from afcs.analysis import (
     AnalysisError,
@@ -21,14 +16,11 @@ from afcs.analysis import (
     summarize_objectives,
 )
 
-
 FIXTURES = Path(__file__).with_name("fixtures")
 
 
 def load_run_fixture():
-    with (FIXTURES / "analysis_runs.csv").open(
-        newline="", encoding="utf-8"
-    ) as file:
+    with (FIXTURES / "analysis_runs.csv").open(newline="", encoding="utf-8") as file:
         return list(csv.DictReader(file))
 
 
@@ -52,6 +44,8 @@ def make_friedman_fixture():
                         "configuration_id": configuration_id,
                         "problem_family": "BEN",
                         "instance": f"F{instance_index + 1}",
+                        "instance_id": str(instance_index + 1),
+                        "problem_parameters_json": "{}",
                         "dimension": "10",
                         "direction": direction,
                         "algorithm": configuration_id.upper(),
@@ -71,6 +65,7 @@ def make_friedman_fixture():
                 "configuration_id": configuration_id,
                 "algorithm": configuration_id.upper(),
                 "instance": "F5",
+                "instance_id": "5",
                 "replica_index": "0",
                 "random_seed": "3000",
                 "objective_best": "1.0",
@@ -97,6 +92,8 @@ def make_scale_heterogeneity_fixture():
                     "configuration_id": configuration_id,
                     "problem_family": "BEN",
                     "instance": f"F{instance_index + 1}",
+                    "instance_id": str(instance_index + 1),
+                    "problem_parameters_json": "{}",
                     "dimension": "10",
                     "direction": "minimize",
                     "algorithm": configuration_id.upper(),
@@ -122,6 +119,8 @@ def make_reliable_friedman_fixture():
                     "configuration_id": configuration_id,
                     "problem_family": "BEN",
                     "instance": f"F{instance_index + 1}",
+                    "instance_id": str(instance_index + 1),
+                    "problem_parameters_json": "{}",
                     "dimension": "10",
                     "direction": "minimize",
                     "algorithm": configuration_id.upper(),
@@ -172,33 +171,16 @@ class TestAnalysisStatistics(unittest.TestCase):
                 value_field="fitness",
             )
 
-    def test_legacy_convergence_adapter_preserves_dataframe_shape(self):
-        import pandas as pd
+    def test_v2_api_does_not_publish_legacy_database_imports(self):
+        import afcs.analysis as analysis
 
-        from analysis_modules_cec.convergence_curves_cec import aggregate_by_iter
-
-        frame = pd.DataFrame(
-            [
-                {"MH": "PSO", "funcion": "F1", "iter": 0, "best_fitness": 2.0},
-                {"MH": "PSO", "funcion": "F1", "iter": 0, "best_fitness": 4.0},
-                {"MH": "PSO", "funcion": "F1", "iter": 1, "best_fitness": 5.0},
-                {"MH": "GA", "funcion": "F1", "iter": 0, "best_fitness": 8.0},
-            ]
-        )
-
-        result = aggregate_by_iter(frame)
-
-        self.assertEqual(
-            list(result.columns),
-            ["MH", "funcion", "iter", "best_fitness_mean", "best_fitness_std"],
-        )
-        self.assertEqual(
-            list(result[["MH", "funcion", "iter"]].itertuples(index=False, name=None)),
-            [("GA", "F1", 0), ("PSO", "F1", 0), ("PSO", "F1", 1)],
-        )
-        pso_first_iteration = result.iloc[1]
-        self.assertEqual(pso_first_iteration["best_fitness_mean"], 3.0)
-        self.assertAlmostEqual(pso_first_iteration["best_fitness_std"], 2**0.5)
+        for name in (
+            "load_legacy_ben_iteration_rows",
+            "parse_legacy_iteration_csv",
+            "read_legacy_ben_iteration_rows",
+        ):
+            self.assertNotIn(name, analysis.__all__)
+            self.assertFalse(hasattr(analysis, name))
 
     def test_descriptive_summaries_group_by_instance_and_configuration(self):
         rows = load_run_fixture()
@@ -224,9 +206,7 @@ class TestAnalysisStatistics(unittest.TestCase):
         self.assertEqual(pso_f1.run_count, 3)
         self.assertEqual(pso_f1.completed_count, 2)
         self.assertEqual(pso_f1.status_counts, (("completed", 2), ("failed", 1)))
-        self.assertEqual(
-            pso_f1.objective_provenance_counts, (("unavailable", 2),)
-        )
+        self.assertEqual(pso_f1.objective_provenance_counts, (("unavailable", 2),))
         self.assertAlmostEqual(pso_f1.mean, 0.3)
         self.assertAlmostEqual(pso_f1.sample_std, 0.1414213562373095)
         self.assertAlmostEqual(pso_f1.median, 0.3)
@@ -236,9 +216,7 @@ class TestAnalysisStatistics(unittest.TestCase):
         self.assertAlmostEqual(pso_f1.maximum, 0.4)
 
     def test_paired_objectives_use_shared_seeds_and_orient_improvement(self):
-        summaries = compare_paired_objectives(
-            load_run_fixture(), "pso", "fcs"
-        )
+        summaries = compare_paired_objectives(load_run_fixture(), "pso", "fcs")
 
         self.assertEqual(len(summaries), 2)
         f1 = next(item for item in summaries if item.instance == "F1")
@@ -263,8 +241,7 @@ class TestAnalysisStatistics(unittest.TestCase):
         candidate = next(
             row
             for row in rows
-            if row["configuration_id"] == "fcs"
-            and row["replica_index"] == "1"
+            if row["configuration_id"] == "fcs" and row["replica_index"] == "1"
         )
         candidate["random_seed"] = "9999"
 
@@ -326,7 +303,9 @@ class TestAnalysisStatistics(unittest.TestCase):
     def test_aggregate_rank_ties_receive_average_rank(self):
         rows = load_run_fixture()
         for row in rows:
-            row["configuration_id"] = "config-a" if row["configuration_id"] == "pso" else "config-b"
+            row["configuration_id"] = (
+                "config-a" if row["configuration_id"] == "pso" else "config-b"
+            )
         tied = [
             {
                 **rows[2],
@@ -428,9 +407,7 @@ class TestAnalysisStatistics(unittest.TestCase):
             if row["configuration_id"] == "pso"
         ]
 
-        results = infer_paired_objectives(
-            rows + candidate_rows, "pso", "candidate"
-        )
+        results = infer_paired_objectives(rows + candidate_rows, "pso", "candidate")
 
         f1 = next(item for item in results if item.comparison.instance == "F1")
         self.assertEqual(f1.zero_difference_count, 1)
@@ -442,6 +419,8 @@ class TestAnalysisStatistics(unittest.TestCase):
             {
                 "run_id": "run-1",
                 "campaign_id": "campaign",
+                "instance_id": "1",
+                "problem_parameters_json": "{}",
                 "problem_family": "BEN",
                 "instance": "F1",
                 "dimension": "10",
@@ -454,6 +433,8 @@ class TestAnalysisStatistics(unittest.TestCase):
             {
                 "run_id": "run-2",
                 "campaign_id": "campaign",
+                "instance_id": "1",
+                "problem_parameters_json": "{}",
                 "problem_family": "BEN",
                 "instance": "F1",
                 "dimension": "10",
@@ -466,6 +447,8 @@ class TestAnalysisStatistics(unittest.TestCase):
             {
                 "run_id": "run-3",
                 "campaign_id": "campaign",
+                "instance_id": "1",
+                "problem_parameters_json": "{}",
                 "problem_family": "BEN",
                 "instance": "F1",
                 "dimension": "10",
@@ -485,6 +468,7 @@ class TestAnalysisStatistics(unittest.TestCase):
                 "dimension": "10",
                 "configuration_id": "pso",
                 "checkpoint_index": "0",
+                "instance_id": "1",
                 "evaluations": "5",
                 "metric__objective_best": "10",
                 "provenance__objective_best": "observed",
@@ -497,6 +481,7 @@ class TestAnalysisStatistics(unittest.TestCase):
                 "dimension": "10",
                 "configuration_id": "pso",
                 "checkpoint_index": "1",
+                "instance_id": "1",
                 "evaluations": "5",
                 "metric__objective_best": "8",
                 "provenance__objective_best": "reconstructed",
@@ -509,6 +494,7 @@ class TestAnalysisStatistics(unittest.TestCase):
                 "dimension": "10",
                 "configuration_id": "pso",
                 "checkpoint_index": "2",
+                "instance_id": "1",
                 "evaluations": "10",
                 "metric__objective_best": "",
                 "provenance__objective_best": "",
@@ -521,6 +507,7 @@ class TestAnalysisStatistics(unittest.TestCase):
                 "dimension": "10",
                 "configuration_id": "pso",
                 "checkpoint_index": "0",
+                "instance_id": "1",
                 "evaluations": "5",
                 "metric__objective_best": "12",
                 "provenance__objective_best": "expected",
@@ -533,6 +520,7 @@ class TestAnalysisStatistics(unittest.TestCase):
                 "dimension": "10",
                 "configuration_id": "pso",
                 "checkpoint_index": "0",
+                "instance_id": "1",
                 "evaluations": "5",
                 "metric__objective_best": "1",
                 "provenance__objective_best": "observed",
@@ -566,6 +554,8 @@ class TestAnalysisStatistics(unittest.TestCase):
         run_rows = [
             {
                 "run_id": "run-1",
+                "instance_id": "1",
+                "problem_parameters_json": "{}",
                 "campaign_id": "campaign",
                 "problem_family": "BEN",
                 "instance": "F1",
@@ -586,10 +576,7 @@ class TestAnalysisStatistics(unittest.TestCase):
         self.assertEqual(coverage[0].completed_runs_without_trace, 1)
 
     def test_convergence_curve_uses_mean_and_population_std_for_expected_runs(self):
-        traces = [
-            (float(run_index), float(run_index * 2))
-            for run_index in range(31)
-        ]
+        traces = [(float(run_index), float(run_index * 2)) for run_index in range(31)]
 
         summary = summarize_convergence_curve(traces, expected_run_count=31)
 
@@ -638,7 +625,13 @@ class TestAnalysisStatistics(unittest.TestCase):
         self.assertEqual(result.block_count, 4)
         self.assertEqual(result.incomplete_block_count, 1)
         self.assertEqual(len(result.included_instances), 4)
-        self.assertEqual(result.excluded_instances, (("F5", 10, "minimize"),))
+        self.assertEqual(
+            [
+                (item.instance_id, item.instance, item.dimension, item.direction)
+                for item in result.excluded_instances
+            ],
+            [(5, "F5", 10, "minimize")],
+        )
         self.assertFalse(result.p_value_approximation_recommended)
         self.assertAlmostEqual(result.statistic, 8.0)
         self.assertAlmostEqual(result.kendall_w, 1.0)
@@ -649,7 +642,9 @@ class TestAnalysisStatistics(unittest.TestCase):
             (("config-a", 1.0), ("config-b", 2.0), ("config-c", 3.0)),
         )
 
-    def test_friedman_incomplete_blocks_are_excluded_and_two_configurations_rejected(self):
+    def test_friedman_incomplete_blocks_are_excluded_and_two_configurations_rejected(
+        self,
+    ):
         rows = load_run_fixture()
         with self.assertRaisesRegex(AnalysisError, "at least three configurations"):
             friedman_objective_test(rows)
@@ -657,11 +652,13 @@ class TestAnalysisStatistics(unittest.TestCase):
     def test_friedman_handles_ties_and_requires_two_complete_blocks(self):
         rows = make_friedman_fixture()
         f2_rows = [
-            row for row in rows
+            row
+            for row in rows
             if row["instance"] == "F2" and row["configuration_id"] == "config-c"
         ]
         rows = [
-            row for row in rows
+            row
+            for row in rows
             if not (row["instance"] == "F2" and row["configuration_id"] == "config-c")
         ]
         for row in f2_rows:
@@ -675,7 +672,8 @@ class TestAnalysisStatistics(unittest.TestCase):
         self.assertEqual(result.average_ranks[2], ("config-c", 2.875))
 
         only_one_complete_block = [
-            row for row in rows
+            row
+            for row in rows
             if row["instance"] == "F1"
             or (
                 row["instance"] == "F5"
@@ -715,7 +713,9 @@ class TestAnalysisStatistics(unittest.TestCase):
         self.assertEqual(top_pair.mean_rank_difference, -6.0)
         self.assertGreater(top_pair.studentized_range_statistic, 9.0)
         self.assertLess(top_pair.p_value, 0.001)
-        self.assertEqual(top_pair.p_value_method, "nemenyi_studentized_range_infinite_df")
+        self.assertEqual(
+            top_pair.p_value_method, "nemenyi_studentized_range_infinite_df"
+        )
         self.assertTrue(top_pair.reject_null)
         adjacent_pair = next(
             item
@@ -763,9 +763,7 @@ class TestAnalysisStatistics(unittest.TestCase):
 
     def test_friedman_posthoc_marks_insufficient_omnibus_blocks(self):
         rows = [
-            row
-            for row in make_friedman_fixture()
-            if row["instance"] in {"F1", "F5"}
+            row for row in make_friedman_fixture() if row["instance"] in {"F1", "F5"}
         ]
 
         results = friedman_posthoc_objective_tests(rows)
@@ -778,9 +776,7 @@ class TestAnalysisStatistics(unittest.TestCase):
             self.assertIsNone(result.p_value)
 
     def test_friedman_posthoc_uses_within_instance_ranks_not_raw_scales(self):
-        results = friedman_posthoc_objective_tests(
-            make_scale_heterogeneity_fixture()
-        )
+        results = friedman_posthoc_objective_tests(make_scale_heterogeneity_fixture())
 
         self.assertEqual(len(results), 3)
         ab = next(

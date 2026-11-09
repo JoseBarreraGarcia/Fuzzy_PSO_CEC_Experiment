@@ -1,19 +1,13 @@
 import copy
 import csv
-from pathlib import Path
-import sys
 import unittest
-
-SRC = Path(__file__).resolve().parents[1] / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+from pathlib import Path
 
 from afcs.metrics import (
     MetricRegistryError,
     load_metric_registry,
     parse_metric_registry,
 )
-
 
 FIXTURES = Path(__file__).with_name("fixtures")
 
@@ -34,8 +28,15 @@ class TestMetricRegistry(unittest.TestCase):
             with self.subTest(profile=profile):
                 self.assertTrue(required <= set(self.registry.resolve(profile)))
 
-    def test_all_selects_every_registered_metric_in_registry_order(self):
-        self.assertEqual(self.registry.resolve("all"), tuple(self.registry.metrics))
+    def test_all_selects_available_metrics_in_registry_order(self):
+        self.assertEqual(
+            self.registry.resolve("all"),
+            tuple(
+                key
+                for key, definition in self.registry.metrics.items()
+                if definition.available
+            ),
+        )
 
     def test_explicit_list_keeps_required_metrics(self):
         resolved = set(self.registry.resolve(["inertia_weight"]))
@@ -76,7 +77,9 @@ class TestMetricRegistry(unittest.TestCase):
             parse_metric_registry(copy.deepcopy(raw))
 
     def test_run_fixture_contains_required_storage_columns(self):
-        with (FIXTURES / "analysis_runs.csv").open(newline="", encoding="utf-8") as file:
+        with (FIXTURES / "analysis_runs.csv").open(
+            newline="", encoding="utf-8"
+        ) as file:
             rows = list(csv.DictReader(file))
         self.assertEqual(len(rows), 8)
         self.assertTrue(set(self.registry.required_metrics) <= set(rows[0]))
@@ -84,7 +87,9 @@ class TestMetricRegistry(unittest.TestCase):
         self.assertEqual(len(pairs), 4)
 
     def test_trace_fixture_has_monotonic_budget_and_current_diversity_max(self):
-        with (FIXTURES / "analysis_traces.csv").open(newline="", encoding="utf-8") as file:
+        with (FIXTURES / "analysis_traces.csv").open(
+            newline="", encoding="utf-8"
+        ) as file:
             rows = list(csv.DictReader(file))
         evaluations = [int(row["evaluations"]) for row in rows]
         diversity_max = [float(row["diversity_dimension_max"]) for row in rows]

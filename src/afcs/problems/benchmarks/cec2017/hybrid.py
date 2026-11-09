@@ -2,10 +2,10 @@
 # Author: Duncan Tilley
 # Hybrid function definitions, f11 to f20
 
-from . import basic
-from . import transforms
-
 import numpy as np
+
+from . import basic, transforms
+
 
 def _shuffle_and_partition(x, shuffle, partitions):
     """
@@ -156,7 +156,9 @@ def f14(x, rotation=None, shift=None, shuffle=None):
         shuffle = transforms.shuffles[nx][3]
 
     x_transformed = transforms.shift_rotate(x, shift, rotation)
-    x_parts = transforms.shuffle_and_partition(x_transformed, shuffle, [0.2, 0.2, 0.2, 0.4])
+    x_parts = transforms.shuffle_and_partition(
+        x_transformed, shuffle, [0.2, 0.2, 0.2, 0.4]
+    )
 
     y = basic.high_conditioned_elliptic(x_parts[0])
     y += basic.ackley(x_parts[1])
@@ -189,7 +191,9 @@ def f15(x, rotation=None, shift=None, shuffle=None):
         shuffle = transforms.shuffles[nx][4]
 
     x_transformed = transforms.shift_rotate(x, shift, rotation)
-    x_parts = transforms.shuffle_and_partition(x_transformed, shuffle, [0.2, 0.2, 0.3, 0.3])
+    x_parts = transforms.shuffle_and_partition(
+        x_transformed, shuffle, [0.2, 0.2, 0.3, 0.3]
+    )
 
     y = basic.bent_cigar(x_parts[0])
     y += basic.h_g_bat(x_parts[1])
@@ -222,7 +226,9 @@ def f16(x, rotation=None, shift=None, shuffle=None):
         shuffle = transforms.shuffles[nx][5]
 
     x_transformed = transforms.shift_rotate(x, shift, rotation)
-    x_parts = transforms.shuffle_and_partition(x_transformed, shuffle, [0.2, 0.2, 0.3, 0.3])
+    x_parts = transforms.shuffle_and_partition(
+        x_transformed, shuffle, [0.2, 0.2, 0.3, 0.3]
+    )
 
     y = basic.expanded_schaffers_f6(x_parts[0])
     y += basic.h_g_bat(x_parts[1])
@@ -255,7 +261,9 @@ def f17(x, rotation=None, shift=None, shuffle=None):
         shuffle = transforms.shuffles[nx][6]
 
     x_transformed = transforms.shift_rotate(x, shift, rotation)
-    x_parts = transforms.shuffle_and_partition(x_transformed, shuffle, [0.1, 0.2, 0.2, 0.2, 0.3])
+    x_parts = transforms.shuffle_and_partition(
+        x_transformed, shuffle, [0.1, 0.2, 0.2, 0.2, 0.3]
+    )
 
     y = basic.katsuura(x_parts[0])
     y += basic.ackley(x_parts[1])
@@ -289,7 +297,9 @@ def f18(x, rotation=None, shift=None, shuffle=None):
         shuffle = transforms.shuffles[nx][7]
 
     x_transformed = transforms.shift_rotate(x, shift, rotation)
-    x_parts = transforms.shuffle_and_partition(x_transformed, shuffle, [0.2, 0.2, 0.2, 0.2, 0.2])
+    x_parts = transforms.shuffle_and_partition(
+        x_transformed, shuffle, [0.2, 0.2, 0.2, 0.2, 0.2]
+    )
 
     y = basic.high_conditioned_elliptic(x_parts[0])
     y += basic.ackley(x_parts[1])
@@ -323,7 +333,9 @@ def f19(x, rotation=None, shift=None, shuffle=None):
         shuffle = transforms.shuffles[nx][8]
 
     x_transformed = transforms.shift_rotate(x, shift, rotation)
-    x_parts = transforms.shuffle_and_partition(x_transformed, shuffle, [0.2, 0.2, 0.2, 0.2, 0.2])
+    x_parts = transforms.shuffle_and_partition(
+        x_transformed, shuffle, [0.2, 0.2, 0.2, 0.2, 0.2]
+    )
 
     y = basic.bent_cigar(x_parts[0])
     y += basic.rastrigin(x_parts[1])
@@ -357,7 +369,9 @@ def f20(x, rotation=None, shift=None, shuffle=None):
         shuffle = transforms.shuffles[nx][9]
 
     x_transformed = transforms.shift_rotate(x, shift, rotation)
-    x_parts = transforms.shuffle_and_partition(x_transformed, shuffle, [0.1, 0.1, 0.2, 0.2, 0.2, 0.2])
+    x_parts = transforms.shuffle_and_partition(
+        x_transformed, shuffle, [0.1, 0.1, 0.2, 0.2, 0.2, 0.2]
+    )
 
     y = basic.happy_cat(x_parts[0])
     y += basic.katsuura(x_parts[1])
@@ -368,15 +382,4 @@ def f20(x, rotation=None, shift=None, shuffle=None):
     return y + 2000.0
 
 
-all_functions = [
-    f11,
-    f12,
-    f13,
-    f14,
-    f15,
-    f16,
-    f17,
-    f18,
-    f19,
-    f20
-]
+all_functions = [f11, f12, f13, f14, f15, f16, f17, f18, f19, f20]

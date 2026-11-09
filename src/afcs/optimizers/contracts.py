@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import math
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, Mapping
 
+from afcs.core import Evaluation
+from afcs.core.randomness import MAX_SEED
+from afcs.core.serialization import freeze_json_mapping
 from afcs.problems import ProblemMetadata
+
+
+def unconstrained_objective(evaluation: Evaluation) -> float:
+    """Reject constraint evidence rather than silently selecting by objective alone."""
+
+    if not evaluation.feasible or evaluation.constraint_violation != 0:
+        raise ValueError(
+            "This optimizer does not support constraints; use an explicit constrained optimizer"
+        )
+    return evaluation.objective
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,11 +128,10 @@ class OptimizerRunMetadata:
                 self.replica_seed, int
             ):
                 raise TypeError("replica_seed must be an integer or None")
-            if self.replica_seed < 0:
-                raise ValueError("replica_seed must be non-negative")
+            if not 0 <= self.replica_seed <= MAX_SEED:
+                raise ValueError(f"replica_seed must be between 0 and {MAX_SEED}")
             if not isinstance(self.rng_engine, str) or not self.rng_engine:
                 raise ValueError("rng_engine is required with replica_seed")
         elif self.rng_engine is not None:
             raise ValueError("rng_engine requires replica_seed")
-        object.__setattr__(self, "parameters", MappingProxyType(dict(self.parameters)))
-
+        object.__setattr__(self, "parameters", freeze_json_mapping(self.parameters))

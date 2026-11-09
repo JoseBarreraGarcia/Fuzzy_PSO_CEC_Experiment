@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
-
+from dataclasses import dataclass
 
 SUPPORTED_MEMBERSHIP_FAMILIES = ("triangular_v1", "gaussian_v1")
 SUPPORTED_OVERLAP_DEFINITIONS = {
@@ -74,9 +73,7 @@ def uniform_partition(
             center=index * delta,
             width=width,
             left_shoulder=family == "triangular_v1" and index == 0,
-            right_shoulder=(
-                family == "triangular_v1" and index == granularity - 1
-            ),
+            right_shoulder=(family == "triangular_v1" and index == granularity - 1),
         )
         for index in range(granularity)
     )
@@ -91,7 +88,10 @@ def fuzzify(
 ) -> tuple[tuple[float, ...], bool]:
     """Return degrees and whether the zero-overlap boundary policy was used."""
 
-    x = min(1.0, max(0.0, float(value)))
+    x = float(value)
+    if not math.isfinite(x):
+        raise ValueError("fuzzy input must be finite")
+    x = min(1.0, max(0.0, x))
     degrees = tuple(membership.degree(x) for membership in partition)
     if any(degree > tolerance for degree in degrees):
         return degrees, False
@@ -105,5 +105,7 @@ def fuzzify(
         if math.isclose(distance, nearest_distance, abs_tol=tolerance, rel_tol=0.0)
     ]
     selected = max(nearest)
-    categorical = tuple(1.0 if index == selected else 0.0 for index in range(len(partition)))
+    categorical = tuple(
+        1.0 if index == selected else 0.0 for index in range(len(partition))
+    )
     return categorical, True

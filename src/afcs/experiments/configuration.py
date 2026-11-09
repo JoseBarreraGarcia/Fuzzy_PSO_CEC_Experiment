@@ -2,34 +2,37 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
 import json
 import math
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
-from types import MappingProxyType
 from typing import Any
 
 import numpy as np
 
+from afcs.controllers import NoAdaptation
 from afcs.core import RandomnessConfig
+from afcs.core.serialization import freeze_json_mapping, json_value
 from afcs.metrics import MetricRegistry, load_metric_registry
+from afcs.optimizers.ga import RealCodedGA, RealCodedGARunConfig
 from afcs.optimizers.pso import (
+    EndpointLinearInertia,
     FixedInertia,
     FuzzyInertiaPolicy,
     LegacyCompatiblePSO,
     LegacyLinearInertia,
     LegacyPSORunConfig,
 )
-from afcs.problems.benchmarks.cec2017 import (
-    CEC2017_DEPRECATED_FUNCTIONS,
-    CEC2017_SUPPORTED_DIMENSIONS,
-    CEC2017Problem,
-)
 from afcs.problems.benchmarks import (
     CLASSICAL_FUNCTIONS,
     ClassicalBenchmarkProblem,
     OpfunuCECProblem,
+)
+from afcs.problems.benchmarks.cec2017 import (
+    CEC2017_DEPRECATED_FUNCTIONS,
+    CEC2017_SUPPORTED_DIMENSIONS,
+    CEC2017Problem,
 )
 
 from .planning import CampaignDefinition, TreatmentDefinition
@@ -89,7 +92,7 @@ class LoadedCampaignConfig:
 
     def __post_init__(self) -> None:
         object.__setattr__(
-            self, "resolved_config", MappingProxyType(dict(self.resolved_config))
+            self, "resolved_config", freeze_json_mapping(self.resolved_config)
         )
 
 
@@ -120,7 +123,10 @@ def parse_campaign_config(
     code_commit: str,
     metric_registry: MetricRegistry | None = None,
 ) -> LoadedCampaignConfig:
-    root = _object(raw, "root")
+    try:
+        root = json_value(_object(raw, "root"))
+    except (TypeError, ValueError) as error:
+        raise ConfigurationError(f"root: {error}") from error
     _keys(
         root,
         required={
@@ -168,6 +174,7 @@ def parse_campaign_config(
             protocol=randomness_raw["protocol"],
             engine=randomness_raw["engine"],
         )
+        randomness.seed_for_replica(replicas - 1)
     except (TypeError, ValueError) as error:
         raise ConfigurationError(f"randomness: {error}") from error
 
@@ -177,18 +184,24 @@ def parse_campaign_config(
     trace = _parse_trace(root["trace"])
 
     treatments: list[TreatmentDefinition] = []
-    for treatment_id, run_config, policy_factory in treatment_specs:
+    for treatment_id, optimizer_id, run_config, policy_factory in treatment_specs:
         for problem in problems:
-            policy = policy_factory(run_config.max_iterations)
-            optimizer = LegacyCompatiblePSO(
-                problem=problem,
-                config=run_config,
-                inertia_policy=policy,
-                rng=np.random.default_rng(0),
-            )
-            treatments.append(
-                TreatmentDefinition(treatment_id, optimizer.run_metadata)
-            )
+            if optimizer_id == "PSO":
+                policy = policy_factory(run_config.max_iterations)
+                optimizer = LegacyCompatiblePSO(
+                    problem=problem,
+                    config=run_config,
+                    inertia_policy=policy,
+                    rng=np.random.default_rng(0),
+                )
+            else:
+                optimizer = RealCodedGA(
+                    problem=problem,
+                    config=run_config,
+                    parameter_policy=policy_factory(),
+                    rng=np.random.default_rng(0),
+                )
+            treatments.append(TreatmentDefinition(treatment_id, optimizer.run_metadata))
 
     resolved = _resolved_config(
         campaign_raw=campaign_raw,
@@ -254,18 +267,18 @@ def _parse_problems(raw: Any) -> tuple[Any, ...]:
             if isinstance(suite_year, bool) or not isinstance(suite_year, int):
                 raise ConfigurationError(f"{path}.suite_year must be an integer")
         elif suite_year is not None:
-            raise ConfigurationError(
-                f"{path}.suite_year is only valid for OPFUNU_CEC"
-            )
+            raise ConfigurationError(f"{path}.suite_year is only valid for OPFUNU_CEC")
         functions = _unique_integer_list(entry["functions"], f"{path}.functions")
-        dimensions = _unique_integer_list(
-            entry["dimensions"], f"{path}.dimensions"
-        )
+        dimensions = _unique_integer_list(entry["dimensions"], f"{path}.dimensions")
         for function_number in functions:
             if family == "CEC2017" and function_number in CEC2017_DEPRECATED_FUNCTIONS:
                 raise ConfigurationError(f"{path}.functions: CEC2017 F2 is excluded")
-            maximum = 30 if family == "CEC2017" else 23 if family == "CLASSICAL" else None
-            if function_number < 1 or (maximum is not None and function_number > maximum):
+            maximum = (
+                30 if family == "CEC2017" else 23 if family == "CLASSICAL" else None
+            )
+            if function_number < 1 or (
+                maximum is not None and function_number > maximum
+            ):
                 raise ConfigurationError(
                     f"{path}.functions: values must be positive"
                     + (f" and no greater than {maximum}" if maximum else "")
@@ -303,6 +316,10 @@ def _parse_problems(raw: Any) -> tuple[Any, ...]:
                             ),
                         )
                     else:
+                        if suite_year is None:
+                            raise ConfigurationError(
+                                f"{path}: OPFUNU requires suite_year"
+                            )
                         problem = OpfunuCECProblem(
                             suite_year, function_number, dimension
                         )
@@ -321,39 +338,99 @@ def _parse_treatments(raw: Any):
         entry = _object(value, path)
         _keys(
             entry,
-            required={"id", "optimizer", "parameters", "parameter_policy"},
-            optional=set(),
+            required={"id", "optimizer", "parameters"},
+            optional={"parameter_policy"},
             path=path,
         )
         treatment_id = _non_empty_string(entry["id"], f"{path}.id")
         if treatment_id in identifiers:
             raise ConfigurationError(f"Duplicate treatment id: {treatment_id!r}")
         identifiers.add(treatment_id)
-        if entry["optimizer"] != "PSO":
+        optimizer_id = entry["optimizer"]
+        if optimizer_id not in {"PSO", "GA"}:
             raise ConfigurationError(
-                f"{path}.optimizer: supported options are ['PSO']"
+                f"{path}.optimizer: supported options are ['GA', 'PSO']"
             )
         parameters = _object(entry["parameters"], f"{path}.parameters")
-        _keys(
-            parameters,
-            required={"population_size", "max_iterations"},
-            optional={"cognitive", "social", "velocity_factor"},
-            path=f"{path}.parameters",
-        )
-        try:
-            run_config = LegacyPSORunConfig(
-                population_size=parameters["population_size"],
-                max_iterations=parameters["max_iterations"],
-                cognitive=parameters.get("cognitive", 2.0),
-                social=parameters.get("social", 2.0),
-                velocity_factor=parameters.get("velocity_factor", 0.1),
+        if optimizer_id == "PSO":
+            _keys(
+                parameters,
+                required={"population_size", "max_iterations"},
+                optional={"cognitive", "social", "velocity_factor", "velocity_rule"},
+                path=f"{path}.parameters",
             )
-        except (TypeError, ValueError) as error:
-            raise ConfigurationError(f"{path}.parameters: {error}") from error
-        policy_factory = _parse_policy(
-            entry["parameter_policy"], f"{path}.parameter_policy"
-        )
-        parsed.append((treatment_id, run_config, policy_factory))
+            if "parameter_policy" not in entry:
+                raise ConfigurationError(f"{path}.parameter_policy is required for PSO")
+            try:
+                run_config = LegacyPSORunConfig(
+                    population_size=parameters["population_size"],
+                    max_iterations=parameters["max_iterations"],
+                    cognitive=parameters.get("cognitive", 2.0),
+                    social=parameters.get("social", 2.0),
+                    velocity_factor=parameters.get("velocity_factor", 0.1),
+                    velocity_rule=parameters.get("velocity_rule", "legacy_upper0_v1"),
+                )
+            except (TypeError, ValueError) as error:
+                raise ConfigurationError(f"{path}.parameters: {error}") from error
+            policy_factory = _parse_policy(
+                entry["parameter_policy"], f"{path}.parameter_policy"
+            )
+        else:
+            _keys(
+                parameters,
+                required={"population_size", "max_iterations"},
+                optional={
+                    "crossover_probability",
+                    "crossover_distribution_index",
+                    "mutation_probability",
+                    "mutation_distribution_index",
+                    "tournament_size",
+                },
+                path=f"{path}.parameters",
+            )
+            if "parameter_policy" in entry:
+                policy_raw = _object(
+                    entry["parameter_policy"], f"{path}.parameter_policy"
+                )
+                _keys(
+                    policy_raw,
+                    required={"id", "parameters"},
+                    optional=set(),
+                    path=f"{path}.parameter_policy",
+                )
+                if (
+                    policy_raw["id"] != "no_adaptation"
+                    or policy_raw["parameters"] != {}
+                ):
+                    raise ConfigurationError(
+                        f"{path}.parameter_policy must explicitly select "
+                        "'no_adaptation' with empty parameters"
+                    )
+            mutation_probability = parameters.get("mutation_probability")
+            if mutation_probability == "1/d":
+                mutation_probability = None
+            elif mutation_probability is not None:
+                mutation_probability = _finite_number(
+                    mutation_probability, f"{path}.parameters.mutation_probability"
+                )
+            try:
+                run_config = RealCodedGARunConfig(
+                    population_size=parameters["population_size"],
+                    max_iterations=parameters["max_iterations"],
+                    crossover_probability=parameters.get("crossover_probability", 0.9),
+                    crossover_distribution_index=parameters.get(
+                        "crossover_distribution_index", 20.0
+                    ),
+                    mutation_probability=mutation_probability,
+                    mutation_distribution_index=parameters.get(
+                        "mutation_distribution_index", 20.0
+                    ),
+                    tournament_size=parameters.get("tournament_size", 2),
+                )
+            except (TypeError, ValueError) as error:
+                raise ConfigurationError(f"{path}.parameters: {error}") from error
+            policy_factory = NoAdaptation
+        parsed.append((treatment_id, optimizer_id, run_config, policy_factory))
     return tuple(parsed)
 
 
@@ -373,7 +450,12 @@ def _parse_policy(raw: Any, path: str):
         except (TypeError, ValueError) as error:
             raise ConfigurationError(f"{path}.parameters: {error}") from error
         return lambda _max_iterations: FixedInertia(value)
-    if policy["id"] == "legacy_ldiw":
+    if policy["id"] in {"legacy_ldiw", "linear_endpoints_v1"}:
+        policy_type = (
+            LegacyLinearInertia
+            if policy["id"] == "legacy_ldiw"
+            else EndpointLinearInertia
+        )
         _keys(
             parameters,
             required=set(),
@@ -383,10 +465,10 @@ def _parse_policy(raw: Any, path: str):
         maximum = _finite_number(parameters.get("maximum", 0.9), f"{path}.maximum")
         minimum = _finite_number(parameters.get("minimum", 0.1), f"{path}.minimum")
         try:
-            LegacyLinearInertia(1, maximum=maximum, minimum=minimum)
+            policy_type(1, maximum=maximum, minimum=minimum)
         except (TypeError, ValueError) as error:
             raise ConfigurationError(f"{path}.parameters: {error}") from error
-        return lambda max_iterations: LegacyLinearInertia(
+        return lambda max_iterations: policy_type(
             max_iterations, maximum=maximum, minimum=minimum
         )
     if policy["id"] == "fuzzy_inertia_mamdani":
@@ -401,13 +483,24 @@ def _parse_policy(raw: Any, path: str):
                 "overlap",
                 "zero_overlap_boundary_policy",
             },
-            optional={"centroid_grid_points", "inference_evaluation_mode"},
+            optional={
+                "centroid_grid_points",
+                "inference_evaluation_mode",
+                "diversity_metric",
+            },
             path=f"{path}.parameters",
         )
         overlap = _parse_overlap(parameters["overlap"], f"{path}.parameters.overlap")
         common = {
-            "minimum": _finite_number(parameters["minimum"], f"{path}.parameters.minimum"),
-            "maximum": _finite_number(parameters["maximum"], f"{path}.parameters.maximum"),
+            "diversity_metric": parameters.get(
+                "diversity_metric", "hussain_diversity_v1"
+            ),
+            "minimum": _finite_number(
+                parameters["minimum"], f"{path}.parameters.minimum"
+            ),
+            "maximum": _finite_number(
+                parameters["maximum"], f"{path}.parameters.maximum"
+            ),
             "granularity": parameters["granularity"],
             "rule_base": parameters["rule_base"],
             "membership_family": parameters["membership_family"],
@@ -427,7 +520,7 @@ def _parse_policy(raw: Any, path: str):
         )
     raise ConfigurationError(
         f"{path}.id: supported options are "
-        "['fixed_inertia', 'legacy_ldiw', 'fuzzy_inertia_mamdani']"
+        "['fixed_inertia', 'legacy_ldiw', 'linear_endpoints_v1', 'fuzzy_inertia_mamdani']"
     )
 
 
@@ -449,8 +542,12 @@ def _parse_overlap(raw: Any, path: str) -> dict[str, Any]:
         )
         return {
             "overlap_mode": "independent",
-            "diversity_overlap": _bounded_overlap(overlap["diversity"], f"{path}.diversity"),
-            "progress_overlap": _bounded_overlap(overlap["progress"], f"{path}.progress"),
+            "diversity_overlap": _bounded_overlap(
+                overlap["diversity"], f"{path}.diversity"
+            ),
+            "progress_overlap": _bounded_overlap(
+                overlap["progress"], f"{path}.progress"
+            ),
             "output_overlap": _bounded_overlap(overlap["output"], f"{path}.output"),
         }
     raise ConfigurationError(f"{path}.mode must be 'shared' or 'independent'")
@@ -510,23 +607,42 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
         suite_year = problem.metadata.parameters.get("suite_year")
         problem_groups.setdefault(
             (problem.metadata.family, suite_year, function_number), []
-        ).append(
-            problem.metadata.dimension
-        )
+        ).append(problem.metadata.dimension)
     treatments = []
-    for treatment_id, config, policy_factory in treatment_specs:
-        policy = policy_factory(config.max_iterations)
+    for treatment_id, optimizer_id, config, policy_factory in treatment_specs:
+        policy = (
+            policy_factory(config.max_iterations)
+            if optimizer_id == "PSO"
+            else policy_factory()
+        )
+        if optimizer_id == "PSO":
+            parameters = {
+                "population_size": config.population_size,
+                "max_iterations": config.max_iterations,
+                "cognitive": config.cognitive,
+                "social": config.social,
+                "velocity_factor": config.velocity_factor,
+                "velocity_rule": config.velocity_rule,
+            }
+        else:
+            parameters = {
+                "population_size": config.population_size,
+                "max_iterations": config.max_iterations,
+                "crossover_probability": config.crossover_probability,
+                "crossover_distribution_index": config.crossover_distribution_index,
+                "mutation_probability": (
+                    config.mutation_probability
+                    if config.mutation_probability is not None
+                    else "1/d"
+                ),
+                "mutation_distribution_index": config.mutation_distribution_index,
+                "tournament_size": config.tournament_size,
+            }
         treatments.append(
             {
                 "id": treatment_id,
-                "optimizer": "PSO",
-                "parameters": {
-                    "population_size": config.population_size,
-                    "max_iterations": config.max_iterations,
-                    "cognitive": config.cognitive,
-                    "social": config.social,
-                    "velocity_factor": config.velocity_factor,
-                },
+                "optimizer": optimizer_id,
+                "parameters": parameters,
                 "parameter_policy": {
                     "id": policy.policy_id,
                     "parameters": dict(policy.configuration),
@@ -548,7 +664,9 @@ def _resolved_config(**parts: Any) -> dict[str, Any]:
                 function_number=function_number,
                 dimensions=dimensions,
             )
-            for (family, suite_year, function_number), dimensions in sorted(problem_groups.items())
+            for (family, suite_year, function_number), dimensions in sorted(
+                problem_groups.items()
+            )
         ],
         "treatments": treatments,
         "execution": {"parallel_workers": execution.parallel_workers},

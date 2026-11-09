@@ -1,20 +1,13 @@
-import sys
-from pathlib import Path
 import unittest
 
-
-SRC = Path(__file__).resolve().parents[1] / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
-from afcs.core import (  # noqa: E402
+from afcs.core import (
     BudgetExceededError,
     Evaluation,
     EvaluationBudget,
     OptimizationDirection,
     SearchSpace,
 )
-from afcs.problems import CallableProblem, OptimizationProblem, ProblemMetadata  # noqa: E402
+from afcs.problems import CallableProblem, OptimizationProblem, ProblemMetadata
 
 
 class TestCoreContracts(unittest.TestCase):
@@ -92,4 +85,3 @@ class TestCoreContracts(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

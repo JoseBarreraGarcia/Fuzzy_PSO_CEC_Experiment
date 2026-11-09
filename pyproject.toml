@@ -13,19 +13,37 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-opfunu = ["opfunu==1.0.1"]
+# OPFUNU 1.0.1 imports pkg_resources, removed in setuptools 82.
+opfunu = ["opfunu==1.0.1", "setuptools>=68,<82"]
+analysis = ["scipy>=1.11", "matplotlib>=3.8"]
+dev = ["build==1.6.1", "ruff==0.17.4", "pyright==1.1.414"]
 
 [project.scripts]
 afcs-campaign = "afcs.experiments.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = false
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["afcs", "afcs.*"]
+namespaces = false
 
 [tool.setuptools.package-data]
 "afcs.problems.benchmarks.cec2017" = ["data.pkl", "LICENSE.txt"]
 "afcs.metrics" = ["definitions.json"]
 "afcs.persistence" = ["migrations/*.sql"]
 
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+include = ["src/afcs/**/*.py", "tests/**/*.py", "pyproject.toml"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.pyright]
+include = ["src/afcs"]
+typeCheckingMode = "standard"
+pythonVersion = "3.11"
